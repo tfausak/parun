@@ -3,9 +3,7 @@
     {
       "blockRequirements": [
         {
-          "arity": {
-            "type": "AnySubject"
-          },
+          "arity": "AnySubject",
           "attacker": {
             "type": "Matching",
             "value": {
@@ -43,9 +41,7 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Green"
-                    }
+                    "value": "Green"
                   }
                 }
               ]
@@ -62,18 +58,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -114,9 +106,7 @@
                             "exiledFaceDown": true
                           },
                           "slot": "foretold",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -138,20 +128,12 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Alien"
-          },
-          {
-            "type": "Soldier"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Alien",
+          "Soldier",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

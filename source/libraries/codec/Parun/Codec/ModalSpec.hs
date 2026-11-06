@@ -63,7 +63,7 @@ spec s = Spec.describe s "Parun.Codec.Modal" $ do
           (ModeSelection.ChooseExactly 1)
           ModeMemory.NoMemory
       )
-      " {\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Attach\",\"value\":\"target\"}]}],\"targetSlots\":{\"target\":{\"pool\":{\"type\":\"Creatures\"},\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}}}}]} "
+      " {\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Attach\",\"value\":\"target\"}]}],\"targetSlots\":{\"target\":{\"pool\":{\"type\":\"Creatures\"},\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}}}}]} "
   Spec.it s "omits a ChooseExactly 1 selection" $
     Common.assertJsonCodec
       s

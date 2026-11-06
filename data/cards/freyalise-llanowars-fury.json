@@ -47,9 +47,7 @@
                                                       "type": "OfType",
                                                       "value": {
                                                         "type": "Colored",
-                                                        "value": {
-                                                          "type": "Green"
-                                                        }
+                                                        "value": "Green"
                                                       }
                                                     }
                                                   }
@@ -63,9 +61,7 @@
                                   }
                                 ],
                                 "colorIndicator": [
-                                  {
-                                    "type": "Green"
-                                  }
+                                  "Green"
                                 ],
                                 "name": "Elf Druid Token",
                                 "power": {
@@ -78,17 +74,11 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Druid"
-                                    },
-                                    {
-                                      "type": "Elf"
-                                    }
+                                    "Druid",
+                                    "Elf"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -133,9 +123,7 @@
                             "type": "InSlot",
                             "value": "permanent"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -148,15 +136,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Artifact"
-                          }
+                          "value": "Artifact"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Enchantment"
-                          }
+                          "value": "Enchantment"
                         }
                       ]
                     },
@@ -193,9 +177,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Count",
@@ -208,25 +190,17 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "HasColor",
-                                    "value": {
-                                      "type": "Green"
-                                    }
+                                    "value": "Green"
                                   },
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Controller",
+                                      "relation": "You"
                                     }
                                   }
                                 ]
@@ -236,13 +210,9 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   },
-                                  "zone": {
-                                    "type": "Battlefield"
-                                  }
+                                  "zone": "Battlefield"
                                 }
                               }
                             }
@@ -271,18 +241,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -290,19 +256,13 @@
       "oracleText": "[+2]: Create a 1/1 green Elf Druid creature token with \"{T}: Add {G}.\"\n[−2]: Destroy target artifact or enchantment.\n[−6]: Draw a card for each green creature you control.\nFreyalise, Llanowar's Fury can be your commander.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Freyalise"
-          }
+          "Freyalise"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

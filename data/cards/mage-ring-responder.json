@@ -87,9 +87,7 @@
                   "target": {
                     "filter": {
                       "type": "ControlledByRole",
-                      "value": {
-                        "type": "Defending"
-                      }
+                      "value": "Defending"
                     },
                     "pool": {
                       "type": "Creatures"
@@ -103,17 +101,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Golem"
-          }
+          "Golem"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       },
       "untapRestrictions": [

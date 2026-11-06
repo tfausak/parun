@@ -76,12 +76,8 @@
         "Answer": {
           "prompt": "ChooseSearchZones",
           "with": [
-            {
-              "type": "Library"
-            },
-            {
-              "type": "Graveyard"
-            }
+            "Library",
+            "Graveyard"
           ]
         }
       }

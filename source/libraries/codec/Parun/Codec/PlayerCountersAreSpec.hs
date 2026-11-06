@@ -11,6 +11,6 @@ import qualified Parun.Types.PlayerCountersAre as PlayerCountersAre.Type
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.PlayerCountersAre" $ do
   Spec.it s "a player, a kind and a count" $
-    Common.assertCodec s PlayerCountersAre.codec (PlayerCountersAre.Type.MkPlayerCountersAre (Label.Type.MkLabel (Text.pack "bob")) PlayerCounterKind.Type.Poison 3) " {\"player\":\"bob\",\"kind\":{\"type\":\"Poison\"},\"count\":3} "
+    Common.assertCodec s PlayerCountersAre.codec (PlayerCountersAre.Type.MkPlayerCountersAre (Label.Type.MkLabel (Text.pack "bob")) PlayerCounterKind.Type.Poison 3) " {\"player\":\"bob\",\"kind\":\"Poison\",\"count\":3} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s PlayerCountersAre.codec

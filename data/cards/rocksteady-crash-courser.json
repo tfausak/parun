@@ -24,19 +24,13 @@
                 "value": [
                   {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Boar"
-                    }
+                    "value": "Boar"
                   },
                   {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Controller",
+                      "relation": "You"
                     }
                   }
                 ]
@@ -60,9 +54,7 @@
             },
             "searchFor": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Forest"
-              }
+              "value": "Forest"
             }
           }
         }
@@ -76,18 +68,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -103,22 +91,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Mutant"
-          },
-          {
-            "type": "Rhino"
-          }
+          "Mutant",
+          "Rhino"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -111,9 +111,7 @@
       "player": "bob",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       },
       "source": "Don't Make a Sound"

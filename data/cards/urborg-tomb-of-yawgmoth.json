@@ -9,21 +9,15 @@
             "type": "Matching",
             "value": {
               "type": "HasCardType",
-              "value": {
-                "type": "Land"
-              }
+              "value": "Land"
             }
           },
           "modifications": [
             {
               "type": "LandSubtype",
               "value": {
-                "mode": {
-                  "type": "InAddition"
-                },
-                "subtype": {
-                  "type": "Swamp"
-                }
+                "mode": "InAddition",
+                "subtype": "Swamp"
               }
             }
           ]
@@ -31,14 +25,10 @@
       ],
       "typeLine": {
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

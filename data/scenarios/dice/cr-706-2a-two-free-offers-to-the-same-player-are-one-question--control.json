@@ -106,9 +106,7 @@
       "do": {
         "Answer": {
           "prompt": "RerollDie",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },

@@ -19,11 +19,11 @@ spec s = Spec.describe s "Parun.Codec.FromReference" $ do
       s
       FromReference.codec
       (FromReference.MkFromReference (Filter.HasCardType CardType.Creature) Nothing)
-      " {\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   Spec.it s "MkFromReference, an amount" $
     Common.assertCodec
       s
       FromReference.codec
       (FromReference.MkFromReference (Filter.Measures (Measures.MkMeasures Measure.ManaValue Comparison.Exactly Operand.EnclosingAmount)) (Just (Quantity.Literal 3)))
-      " {\"amount\":{\"type\":\"Literal\",\"value\":3},\"filter\":{\"type\":\"Measures\",\"value\":{\"measure\":{\"type\":\"ManaValue\"},\"comparison\":{\"type\":\"Exactly\"},\"operand\":{\"type\":\"EnclosingAmount\"}}}} "
+      " {\"amount\":{\"type\":\"Literal\",\"value\":3},\"filter\":{\"type\":\"Measures\",\"value\":{\"measure\":\"ManaValue\",\"comparison\":\"Exactly\",\"operand\":{\"type\":\"EnclosingAmount\"}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s FromReference.codec

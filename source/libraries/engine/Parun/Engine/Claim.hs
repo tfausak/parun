@@ -23,14 +23,13 @@ import qualified Parun.Types.Threshold as Threshold
 -- by tapping. A subset spanning two axes is satisfied whenever each axis's part
 -- is, so grouping first loses no case and saves the enumeration.
 --
--- HALL'S CONDITION over the subsets of one axis's claims (`countable`), which
--- is exactly necessary and sufficient where no claim carries a threshold. Every
--- object such a claim will take is interchangeable with every other object that
--- claim will take, so all its slots share a neighbourhood and the tightest
--- subset of slots is always some whole number of claims' worth. A greedy pass
--- would not do: a claim with the wider pool can eat the only object a narrower
--- one could have used. A per-claim check is the singleton subset of this one,
--- and so subsumed rather than replaced.
+-- HALL'S CONDITION over the subsets of one axis's claims, asked as a matching
+-- (`countable`), which is exactly necessary and sufficient where no claim
+-- carries a threshold. Every object such a claim will take is interchangeable
+-- with every other object that claim will take, so all its slots share a
+-- neighbourhood. A greedy pass would not do: a claim with the wider pool can eat
+-- the only object a narrower one could have used, which an augmenting path
+-- gives back.
 --
 -- A THRESHOLD claim breaks that premise: only the selections reaching its total
 -- serve it, so another claim can take exactly the objects it needed and leave a
@@ -45,25 +44,59 @@ satisfiable claims =
     (\axisClaims -> countable (merged axisClaims) && (all (Maybe.isNothing . Claim.threshold) axisClaims || assignable axisClaims))
     (byAxis claims)
 
--- Hall's condition over one axis's merged entries, the isolated ones taken
--- apart: `shared` is the objects two or more entries could each take, and an
--- entry drawing on none of them meets nothing, so its own singleton check is the
--- whole of what it owes.
---
--- ISOLATED POOLS ARE TAKEN OUT FIRST, which is exact and not a prune. A pool
--- that meets no other pool in its axis contributes its whole size to every
--- subset it joins and its whole count to that subset's demand, so a subset
--- holds iff the isolated part holds on its own and the rest holds without it.
--- Asking every subset containing it therefore proves nothing the singleton did
--- not. What it buys is the enumeration: a board of twenty lands is twenty
--- singleton self-pools that meet nothing, and that is twenty checks rather than
--- 2^20; see #1725.
+-- Hall's condition over one axis's merged entries, asked as the matching it is
+-- equivalent to: every entry takes its count of distinct objects out of its own
+-- pool (`fillable`, each object held once).
 countable :: [(Set.Set ObjectId, Natural)] -> Bool
-countable entries =
-  let shared = objectsWantedTwice (fmap fst entries)
-      (lone, met) = List.partition (\(pool, _) -> Set.disjoint pool shared) entries
-      fits subset = Natural.length (Set.unions (fmap fst subset)) >= sum (fmap snd subset)
-   in all (\entry -> fits [entry]) lone && all fits (List.subsequences met)
+countable = fillable (const 1)
+
+-- Whether every entry can take its count out of the resources it reaches, no
+-- resource giving more than its capacity: a bipartite b-matching, grown one unit
+-- at a time along an augmenting path (Ford-Fulkerson), so polynomial where
+-- asking Hall's condition of every subset is exponential; see #6413. By Hall's
+-- theorem (an entry of count c is c slots sharing one neighbourhood) the two
+-- questions have one answer.
+fillable :: (Ord r) => (r -> Natural) -> [(Set.Set r, Natural)] -> Bool
+fillable capacity entries =
+  let indexed = zip [0 :: Int ..] entries
+      reachOf = Map.fromList [(index, Set.filter ((> 0) . capacity) reach) | (index, (reach, _)) <- indexed]
+      everything = Set.unions (Map.elems reachOf)
+      held holders = sum (Map.elems holders)
+      move resource from to =
+        Map.adjust (Map.filter (> 0) . Map.adjust (subtract 1) from . Map.insertWith (+) to 1) resource
+      give resource to = Map.insertWith (Map.unionWith (+)) resource (Map.singleton to 1)
+      -- An augmenting path from `index`: a resource with room, or one whose
+      -- holder can itself move to another. The resources seen are threaded
+      -- through every branch, so each is tried once per search.
+      seek assigned index = tryEach (Set.toList (Map.findWithDefault Set.empty index reachOf))
+        where
+          tryEach resources seen = case resources of
+            [] -> (seen, Nothing)
+            resource : rest
+              | Set.member resource seen -> tryEach rest seen
+              | otherwise ->
+                  let seen' = Set.insert resource seen
+                      holders = Map.findWithDefault Map.empty resource assigned
+                   in if held holders < capacity resource
+                        then (seen', Just (give resource index assigned))
+                        else case tryHolders resource (Map.keys holders) seen' of
+                          (seen'', Just grown) -> (seen'', Just grown)
+                          (seen'', Nothing) -> tryEach rest seen''
+          tryHolders resource holders seen = case holders of
+            [] -> (seen, Nothing)
+            holder : rest
+              | holder == index -> tryHolders resource rest seen
+              | otherwise -> case seek assigned holder seen of
+                  (seen', Just grown) -> (seen', Just (move resource holder index grown))
+                  (seen', Nothing) -> tryHolders resource rest seen'
+      go assigned owed = case owed of
+        [] -> True
+        (_, 0) : rest -> go assigned rest
+        (index, k) : rest -> case snd (seek assigned index Set.empty) of
+          Nothing -> False
+          Just grown -> go grown ((index, k - 1) : rest)
+   in sum (fmap snd entries) <= sum (fmap capacity (Set.toList everything))
+        && go Map.empty [(index, count) | (index, (_, count)) <- indexed]
 
 -- The exact question for one axis holding a threshold claim: pick each of its
 -- selections, a set of objects reaching the total, and ask Hall's condition of
@@ -104,9 +137,9 @@ assignable claims =
           (\(_, amount) -> negate amount)
           [(index, amount) | (index, ((amounts, _), _)) <- classes, (at, Just amount) <- zip [0 :: Int ..] amounts, at == position, amount > 0]
       countedFits remaining =
-        let sizeOf subset =
-              sum [n | (index, ((_, members), _)) <- classes, any ((`Set.member` members) . fst) subset, n <- Maybe.maybeToList (Map.lookup index remaining)]
-         in all (\subset -> sizeOf subset >= sum (fmap (snd . snd) subset)) (List.subsequences counted)
+        fillable
+          (\index -> Map.findWithDefault 0 index remaining)
+          [(Set.fromList [index | (index, ((_, members), _)) <- classes, Set.member position members], count) | (position, (_, count)) <- counted]
       go owed bound remaining = case owed of
         [] -> countedFits remaining
         (_, _, 0) : rest -> go rest Nothing remaining
@@ -203,19 +236,22 @@ contends marked = any (\claim -> any (\oid -> Set.member (Claim.axis claim, oid)
 
 -- How many times over could every one of these claims be met, given that each
 -- repetition asks for one more of each? The pools are the same objects every
--- time, so the answer is the smallest floor(pool / claimed) over the subsets
--- `countable` walks -- and 1 when nothing is claimed at all, since a claimless
--- payment is limited by something this module cannot see. A threshold claim is
--- counted at its fewest (`objectsOf`), which OVERSTATES its repeats;
--- Parun.Engine.Cost.uncountedCeiling caps them.
+-- time, so the answer is the largest n for which `countable` holds of every
+-- axis's entries taken n times over -- and 1 when nothing is claimed at all,
+-- since a claimless payment is limited by something this module cannot see. A
+-- threshold claim is counted at its fewest (`objectsOf`), which OVERSTATES its
+-- repeats; Parun.Engine.Cost.uncountedCeiling caps them.
 repeats :: [Claim] -> Natural
 repeats claims =
-  let limit subset = case sum (fmap snd subset) of
-        0 -> Nothing
-        wanted -> Just (div (Natural.length (Set.unions (fmap fst subset))) wanted)
-   in case concatMap (Maybe.mapMaybe limit . List.subsequences . merged) (byAxis claims) of
-        [] -> 1
-        limits -> minimum limits
+  let axes = filter (any ((> 0) . snd)) (fmap merged (byAxis claims))
+      timesOver n = all (countable . fmap (fmap (n *))) axes
+      -- No entry claiming one or more can be met more times than there are
+      -- objects, so the largest n holding lies in [0, bound].
+      bound = Natural.length (Set.unions (fmap fst (concat axes)))
+      search low high
+        | low >= high = low
+        | otherwise = let middle = div (low + high + 1) 2 in if timesOver middle then search middle high else search low (middle - 1)
+   in if null axes then 1 else search 0 bound
 
 -- The same claims made `n` times over, which is what one source activated `n`
 -- times contends for. Exact rather than an approximation: `merged` adds the

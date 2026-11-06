@@ -141,9 +141,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseLibraryEnd",
-          "with": {
-            "type": "Bottom"
-          }
+          "with": "Bottom"
         }
       }
     },

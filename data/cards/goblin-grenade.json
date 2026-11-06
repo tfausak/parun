@@ -11,9 +11,7 @@
             },
             "whichPermanents": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Goblin"
-              }
+              "value": "Goblin"
             }
           }
         }
@@ -23,9 +21,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -69,9 +65,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

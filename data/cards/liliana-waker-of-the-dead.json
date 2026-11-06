@@ -26,9 +26,7 @@
                             "discarded": "discarded",
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -46,9 +44,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "Opponent"
-                            }
+                            "value": "Opponent"
                           },
                           "quantity": {
                             "type": "Plus",
@@ -71,9 +67,7 @@
                                         },
                                         "filter": {
                                           "type": "HeldByRecipient",
-                                          "value": {
-                                            "type": "Owner"
-                                          }
+                                          "value": "Owner"
                                         },
                                         "scope": {
                                           "type": "OverBound",
@@ -140,13 +134,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "You"
-                                          }
+                                          "value": "You"
                                         },
-                                        "zone": {
-                                          "type": "Graveyard"
-                                        }
+                                        "zone": "Graveyard"
                                       }
                                     }
                                   }
@@ -169,13 +159,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "You"
-                                          }
+                                          "value": "You"
                                         },
-                                        "zone": {
-                                          "type": "Graveyard"
-                                        }
+                                        "zone": "Graveyard"
                                       }
                                     }
                                   }
@@ -236,17 +222,13 @@
                                       "value": {
                                         "phase": {
                                           "type": "Combat",
-                                          "value": {
-                                            "type": "BeginningOfCombat"
-                                          }
+                                          "value": "BeginningOfCombat"
                                         },
                                         "scope": {
                                           "type": "PlayersTurn",
                                           "value": {
                                             "type": "Relative",
-                                            "value": {
-                                              "type": "You"
-                                            }
+                                            "value": "You"
                                           }
                                         }
                                       }
@@ -265,9 +247,7 @@
                                                       "value": "target"
                                                     },
                                                     "slot": "returned",
-                                                    "zone": {
-                                                      "type": "Battlefield"
-                                                    }
+                                                    "zone": "Battlefield"
                                                   }
                                                 },
                                                 {
@@ -295,9 +275,7 @@
                                             "target": {
                                               "filter": {
                                                 "type": "HasCardType",
-                                                "value": {
-                                                  "type": "Creature"
-                                                }
+                                                "value": "Creature"
                                               },
                                               "pool": {
                                                 "type": "CardsInGraveyard",
@@ -341,18 +319,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -360,19 +334,13 @@
       "oracleText": "[+1]: Each player discards a card. Each opponent who can't loses 3 life.\n[−3]: Target creature gets -X/-X until end of turn, where X is the number of cards in your graveyard.\n[−7]: You get an emblem with \"At the beginning of combat on your turn, put target creature card from a graveyard onto the battlefield under your control. It gains haste.\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Liliana"
-          }
+          "Liliana"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

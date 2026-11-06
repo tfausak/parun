@@ -108,9 +108,7 @@
       "player": "bob",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             "$bob-island-1",
             "$bob-island-2",

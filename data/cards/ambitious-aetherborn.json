@@ -16,9 +16,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -34,17 +32,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aetherborn"
-          },
-          {
-            "type": "Artificer"
-          }
+          "Aetherborn",
+          "Artificer"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

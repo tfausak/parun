@@ -47,9 +47,7 @@
       "player": "alice",
       "source": "$pokey",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     },
     {
@@ -58,9 +56,7 @@
       "player": "alice",
       "source": "$pokey",
       "do": {
-        "ChooseOptional": {
-          "type": "Declines"
-        }
+        "ChooseOptional": "Declines"
       }
     },
     {
@@ -70,9 +66,7 @@
       "do": {
         "Answer": {
           "prompt": "CallCoin",
-          "with": {
-            "type": "Tails"
-          }
+          "with": "Tails"
         }
       }
     },
@@ -83,9 +77,7 @@
       "do": {
         "Answer": {
           "prompt": "FlipCoin",
-          "with": {
-            "type": "Tails"
-          }
+          "with": "Tails"
         }
       }
     },

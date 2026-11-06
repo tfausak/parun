@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -27,50 +25,36 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "BattlefieldTapped"
-                      },
+                      "destination": "BattlefieldTapped",
                       "filter": {
                         "type": "And",
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           },
                           {
                             "type": "Or",
                             "value": [
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Forest"
-                                }
+                                "value": "Forest"
                               },
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Island"
-                                }
+                                "value": "Island"
                               },
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Mountain"
-                                }
+                                "value": "Mountain"
                               },
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Plains"
-                                }
+                                "value": "Plains"
                               },
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Swamp"
-                                }
+                                "value": "Swamp"
                               }
                             ]
                           }
@@ -78,9 +62,7 @@
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -88,9 +70,7 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "upTo": true
                     }
@@ -110,28 +90,20 @@
                             "value": {
                               "aggregation": {
                                 "type": "Distinct",
-                                "value": {
-                                  "type": "BasicLandTypes"
-                                }
+                                "value": "BasicLandTypes"
                               },
                               "filter": {
                                 "type": "And",
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Land"
-                                    }
+                                    "value": "Land"
                                   },
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Controller",
+                                      "relation": "You"
                                     }
                                   }
                                 ]
@@ -141,22 +113,16 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   },
-                                  "zone": {
-                                    "type": "Battlefield"
-                                  }
+                                  "zone": "Battlefield"
                                 }
                               }
                             }
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       },
@@ -172,9 +138,7 @@
                     "value": {
                       "placement": {
                         "type": "Stated",
-                        "value": {
-                          "type": "Top"
-                        }
+                        "value": "Top"
                       },
                       "ref": {
                         "type": "ChosenCardFromAmong",
@@ -193,9 +157,7 @@
                           "slot": "looked"
                         }
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -207,17 +169,13 @@
                     "value": {
                       "placement": {
                         "type": "RandomOrder",
-                        "value": {
-                          "type": "Bottom"
-                        }
+                        "value": "Bottom"
                       },
                       "ref": {
                         "type": "InSlot",
                         "value": "looked"
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -228,9 +186,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

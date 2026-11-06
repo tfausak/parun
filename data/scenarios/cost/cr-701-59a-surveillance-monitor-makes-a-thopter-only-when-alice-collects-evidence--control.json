@@ -82,9 +82,7 @@
       "source": "Surveillance Monitor",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Declines"
-          }
+          "decision": "Declines"
         }
       }
     },

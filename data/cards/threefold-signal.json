@@ -21,56 +21,38 @@
                   "value": [
                     {
                       "type": "WasCastFrom",
-                      "value": {
-                        "type": "Library"
-                      }
+                      "value": "Library"
                     },
                     {
                       "type": "WasCastFrom",
-                      "value": {
-                        "type": "Hand"
-                      }
+                      "value": "Hand"
                     },
                     {
                       "type": "WasCastFrom",
-                      "value": {
-                        "type": "Graveyard"
-                      }
+                      "value": "Graveyard"
                     },
                     {
                       "type": "WasCastFrom",
-                      "value": {
-                        "type": "Exile"
-                      }
+                      "value": "Exile"
                     },
                     {
                       "type": "WasCastFrom",
-                      "value": {
-                        "type": "Command"
-                      }
+                      "value": "Command"
                     }
                   ]
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 {
                   "type": "Measures",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
-                    "measure": {
-                      "type": "ColorCount"
-                    },
+                    "comparison": "Exactly",
+                    "measure": "ColorCount",
                     "operand": {
                       "type": "Literal",
                       "value": 3
@@ -115,9 +97,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -135,9 +115,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

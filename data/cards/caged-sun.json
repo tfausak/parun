@@ -40,19 +40,13 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 {
@@ -86,14 +80,10 @@
               "mana": {
                 "type": "ChosenColor"
               },
-              "player": {
-                "type": "You"
-              },
+              "player": "You",
               "source": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Land"
-                }
+                "value": "Land"
               }
             }
           },
@@ -121,9 +111,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

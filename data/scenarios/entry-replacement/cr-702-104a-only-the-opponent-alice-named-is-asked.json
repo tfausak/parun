@@ -85,9 +85,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseTribute",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },

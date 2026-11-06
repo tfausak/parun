@@ -25,9 +25,7 @@
                             "value": "target"
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -37,9 +35,7 @@
                             {
                               "type": "AddSubtypes",
                               "value": [
-                                {
-                                  "type": "Nightmare"
-                                }
+                                "Nightmare"
                               ]
                             }
                           ],
@@ -63,19 +59,13 @@
                                 },
                                 {
                                   "type": "HasSubtype",
-                                  "value": {
-                                    "type": "Nightmare"
-                                  }
+                                  "value": "Nightmare"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 },
                                 {
@@ -88,9 +78,7 @@
                               ]
                             }
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -103,16 +91,12 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "EnteredThisTurn",
                           "value": {
-                            "to": {
-                              "type": "Graveyard"
-                            }
+                            "to": "Graveyard"
                           }
                         }
                       ]
@@ -142,18 +126,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -169,17 +149,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Demon"
-          },
-          {
-            "type": "Warlock"
-          }
+          "Demon",
+          "Warlock"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

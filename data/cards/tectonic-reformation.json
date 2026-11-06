@@ -26,9 +26,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -43,25 +41,17 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
+                  "value": "Land"
                 },
                 {
                   "type": "IsInZone",
-                  "value": {
-                    "type": "Hand"
-                  }
+                  "value": "Hand"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Owner"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Owner",
+                    "relation": "You"
                   }
                 }
               ]
@@ -79,9 +69,7 @@
                         "type": "OfType",
                         "value": {
                           "type": "Colored",
-                          "value": {
-                            "type": "Red"
-                          }
+                          "value": "Red"
                         }
                       }
                     ]
@@ -95,9 +83,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

@@ -107,9 +107,7 @@
                                 "value": {
                                   "quantity": {
                                     "type": "Measure",
-                                    "value": {
-                                      "type": "Power"
-                                    }
+                                    "value": "Power"
                                   },
                                   "slot": "dealer"
                                 }
@@ -130,12 +128,8 @@
                     "filter": {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     "pool": {
@@ -148,15 +142,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Planeswalker"
-                          }
+                          "value": "Planeswalker"
                         }
                       ]
                     },
@@ -192,14 +182,10 @@
                         "type": "FromOutsideTheGame",
                         "value": {
                           "count": 1,
-                          "destination": {
-                            "type": "Hand"
-                          },
+                          "destination": "Hand",
                           "filter": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           "reveal": true,
                           "upTo": false
@@ -229,27 +215,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -257,19 +237,13 @@
       "oracleText": "[+1]: Distribute two +1/+1 counters among up to two target creatures. They gain trample until end of turn.\n[−3]: Target creature you control deals damage equal to its power to target creature or planeswalker.\n[−5]: You may reveal a creature card you own from outside the game and put it into your hand.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Vivien"
-          }
+          "Vivien"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

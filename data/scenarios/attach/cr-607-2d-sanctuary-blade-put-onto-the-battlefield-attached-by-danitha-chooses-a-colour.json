@@ -117,9 +117,7 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     },
     {
@@ -155,9 +153,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseColor",
-          "with": {
-            "type": "Red"
-          }
+          "with": "Red"
         }
       }
     },

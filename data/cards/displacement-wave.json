@@ -9,18 +9,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -44,20 +40,14 @@
                               "type": "Not",
                               "value": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Land"
-                                }
+                                "value": "Land"
                               }
                             },
                             {
                               "type": "Measures",
                               "value": {
-                                "comparison": {
-                                  "type": "AtMost"
-                                },
-                                "measure": {
-                                  "type": "ManaValue"
-                                },
+                                "comparison": "AtMost",
+                                "measure": "ManaValue",
                                 "operand": {
                                   "type": "AmountInSlot",
                                   "value": "X"
@@ -67,9 +57,7 @@
                           ]
                         }
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ]
@@ -80,9 +68,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

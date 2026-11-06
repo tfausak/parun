@@ -95,9 +95,7 @@
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "White"
-                }
+                "value": "White"
               }
             }
           ],

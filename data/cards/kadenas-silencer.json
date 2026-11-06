@@ -15,16 +15,12 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Blue"
-                    }
+                    "value": "Blue"
                   }
                 }
               ]
             },
-            "variant": {
-              "type": "Mega"
-            }
+            "variant": "Mega"
           }
         }
       ],
@@ -37,9 +33,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -75,12 +69,8 @@
                             "value": {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "Opponent"
-                                }
+                                "holder": "Controller",
+                                "relation": "Opponent"
                               }
                             }
                           }
@@ -96,17 +86,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Snake"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Snake",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

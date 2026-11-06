@@ -10,27 +10,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -55,9 +49,7 @@
                         }
                       },
                       "slot": "exiled",
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   },
                   {
@@ -66,9 +58,7 @@
                       "condition": {
                         "type": "Compares",
                         "value": {
-                          "comparison": {
-                            "type": "AtLeast"
-                          },
+                          "comparison": "AtLeast",
                           "measured": {
                             "type": "Count",
                             "value": {
@@ -84,9 +74,7 @@
                                   },
                                   {
                                     "type": "IsInZone",
-                                    "value": {
-                                      "type": "Exile"
-                                    }
+                                    "value": "Exile"
                                   },
                                   {
                                     "type": "Or",
@@ -95,9 +83,7 @@
                                         "type": "Not",
                                         "value": {
                                           "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Aura"
-                                          }
+                                          "value": "Aura"
                                         }
                                       },
                                       {
@@ -112,13 +98,9 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
-                                    }
+                                    "value": "AnyPlayer"
                                   },
-                                  "zone": {
-                                    "type": "Exile"
-                                  }
+                                  "zone": "Exile"
                                 }
                               }
                             }
@@ -147,17 +129,13 @@
                                       },
                                       "filter": {
                                         "type": "IsInZone",
-                                        "value": {
-                                          "type": "Exile"
-                                        }
+                                        "value": "Exile"
                                       },
                                       "slot": "exiled"
                                     }
                                   },
                                   "riders": {
-                                    "tapped": {
-                                      "type": "Tapped"
-                                    },
+                                    "tapped": "Tapped",
                                     "under": {
                                       "type": "Instructed",
                                       "value": {
@@ -166,9 +144,7 @@
                                       }
                                     }
                                   },
-                                  "zone": {
-                                    "type": "Battlefield"
-                                  }
+                                  "zone": "Battlefield"
                                 }
                               }
                             ],
@@ -178,18 +154,14 @@
                               "value": {
                                 "players": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "AnyPlayer"
-                                  }
+                                  "value": "AnyPlayer"
                                 }
                               }
                             },
                             "slot": "chooser",
                             "startingWith": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             }
                           }
                         }
@@ -204,9 +176,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

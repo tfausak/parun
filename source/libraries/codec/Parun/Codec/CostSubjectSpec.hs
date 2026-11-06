@@ -32,5 +32,5 @@ spec s = Spec.describe s "Parun.Codec.CostSubject" $ do
       s
       CostSubject.codec
       (CostSubject.Type.Activations (ActivationCriteria.MkActivationCriteria (Just (KeywordDesignator.OfFamily KeywordFamily.Equip)) (Just AbilityKind.NonManaAbility) (Just LoyaltyKind.LoyaltyAbility) (Just (AbilityName.MkAbilityName (Text.pack "tap")))))
-      " {\"type\":\"Activations\",\"value\":{\"grantedBy\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Equip\"}},\"whichAbility\":\"tap\",\"whichKind\":{\"type\":\"NonManaAbility\"},\"whichLoyalty\":{\"type\":\"LoyaltyAbility\"}}} "
+      " {\"type\":\"Activations\",\"value\":{\"grantedBy\":{\"type\":\"OfFamily\",\"value\":\"Equip\"},\"whichAbility\":\"tap\",\"whichKind\":\"NonManaAbility\",\"whichLoyalty\":\"LoyaltyAbility\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CostSubject.codec

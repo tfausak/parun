@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -24,42 +22,30 @@
             "type": "MatchingOffBattlefield",
             "value": {
               "type": "IsInZone",
-              "value": {
-                "type": "Graveyard"
-              }
+              "value": "Graveyard"
             }
           },
-          "kind": {
-            "type": "Spell"
-          }
+          "kind": "Spell"
         },
         {
           "affected": {
             "type": "MatchingOffBattlefield",
             "value": {
               "type": "IsInZone",
-              "value": {
-                "type": "Graveyard"
-              }
+              "value": "Graveyard"
             }
           },
-          "kind": {
-            "type": "ActivatedAbility"
-          }
+          "kind": "ActivatedAbility"
         },
         {
           "affected": {
             "type": "MatchingOffBattlefield",
             "value": {
               "type": "IsInZone",
-              "value": {
-                "type": "Graveyard"
-              }
+              "value": "Graveyard"
             }
           },
-          "kind": {
-            "type": "TriggeredAbility"
-          }
+          "kind": "TriggeredAbility"
         }
       ],
       "triggeredAbilities": [
@@ -79,9 +65,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -99,9 +83,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

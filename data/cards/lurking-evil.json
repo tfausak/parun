@@ -7,9 +7,7 @@
             "components": [
               {
                 "type": "PayHalfLife",
-                "value": {
-                  "type": "Up"
-                }
+                "value": "Up"
               }
             ],
             "mana": []
@@ -29,12 +27,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Creature"
-                              },
-                              "mode": {
-                                "type": "Replace"
-                              }
+                              "cardType": "Creature",
+                              "mode": "Replace"
                             }
                           },
                           "ref": {
@@ -52,12 +46,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "Replace"
-                              },
-                              "subtype": {
-                                "type": "Phyrexian"
-                              }
+                              "mode": "Replace",
+                              "subtype": "Phyrexian"
                             }
                           },
                           "ref": {
@@ -75,12 +65,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "InAddition"
-                              },
-                              "subtype": {
-                                "type": "Horror"
-                              }
+                              "mode": "InAddition",
+                              "subtype": "Horror"
                             }
                           },
                           "ref": {
@@ -145,27 +131,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -173,9 +153,7 @@
       "oracleText": "Pay half your life, rounded up: This enchantment becomes a 4/4 Phyrexian Horror creature with flying.",
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

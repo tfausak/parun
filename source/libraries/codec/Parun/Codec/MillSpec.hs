@@ -22,7 +22,7 @@ spec s = Spec.describe s "Parun.Codec.Mill" $ do
       s
       Mill.codec
       (Mill.MkMill (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 3) Nothing Nothing)
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"quantity\":{\"type\":\"Literal\",\"value\":3}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"quantity\":{\"type\":\"Literal\",\"value\":3}} "
   Spec.it s "MkMill, CR 728.1's tally: the key is written" $
     Common.assertCodec
       s
@@ -33,7 +33,7 @@ spec s = Spec.describe s "Parun.Codec.Mill" $ do
           (Just (MillTally.MkMillTally (SlotName.MkSlotName (Text.pack "milled")) (Filter.Not (Filter.HasCardType CardType.Land))))
           Nothing
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"quantity\":{\"type\":\"Literal\",\"value\":2},\"tally\":{\"slot\":\"milled\",\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"quantity\":{\"type\":\"Literal\",\"value\":2},\"tally\":{\"slot\":\"milled\",\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}}} "
   -- CR 701.17c's slot, which Midnight Tilling writes and the tally-carrying
   -- printing does not: the two keys are independent.
   Spec.it s "MkMill, CR 701.17c's slot: the key is written" $
@@ -46,5 +46,5 @@ spec s = Spec.describe s "Parun.Codec.Mill" $ do
           Nothing
           (Just (SlotName.MkSlotName (Text.pack "milled")))
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"quantity\":{\"type\":\"Literal\",\"value\":4},\"slot\":\"milled\"} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"quantity\":{\"type\":\"Literal\",\"value\":4},\"slot\":\"milled\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Mill.codec

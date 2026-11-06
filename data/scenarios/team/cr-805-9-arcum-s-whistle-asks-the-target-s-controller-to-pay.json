@@ -38,7 +38,7 @@
   },
   "timeline": [
     { "turn": 1, "step": "Upkeep", "player": "carol", "do": { "Activate": { "object": "$whistle", "ability": 0, "targets": ["$piker"], "mana": ["$i1", "$i2", "$i3"] } } },
-    { "turn": 1, "step": "Upkeep", "player": "bob", "source": "$whistle", "do": { "ChooseToPay": { "decision": { "type": "Declines" } } } },
+    { "turn": 1, "step": "Upkeep", "player": "bob", "source": "$whistle", "do": { "ChooseToPay": { "decision": "Declines" } } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": [] } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$piker"] } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$piker", "do": { "ChooseAttackTarget": "$dave" } },

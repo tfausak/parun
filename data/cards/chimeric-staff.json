@@ -25,12 +25,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Artifact"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Artifact",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -48,12 +44,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Creature"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Creature",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -71,12 +63,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "Replace"
-                              },
-                              "subtype": {
-                                "type": "Construct"
-                              }
+                              "mode": "Replace",
+                              "subtype": "Construct"
                             }
                           },
                           "ref": {
@@ -128,9 +116,7 @@
       "oracleText": "{X}: This artifact becomes an X/X Construct artifact creature until end of turn.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

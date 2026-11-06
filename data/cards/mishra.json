@@ -14,26 +14,18 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     },
                     {
                       "type": "IsInZone",
-                      "value": {
-                        "type": "Battlefield"
-                      }
+                      "value": "Battlefield"
                     }
                   ]
                 }
@@ -51,9 +43,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Vanguard"
-          }
+          "Vanguard"
         ]
       },
       "vanguard": {

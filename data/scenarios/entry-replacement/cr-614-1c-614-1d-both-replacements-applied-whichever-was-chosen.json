@@ -99,9 +99,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseColor",
-          "with": {
-            "type": "Blue"
-          }
+          "with": "Blue"
         }
       }
     },

@@ -111,9 +111,7 @@
           "of": "Designations",
           "object": "$piker",
           "is": [
-            {
-              "type": "Suspected"
-            }
+            "Suspected"
           ]
         }
       }

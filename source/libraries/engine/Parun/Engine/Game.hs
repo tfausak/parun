@@ -694,12 +694,16 @@ topOf :: Zone.Zone -> PlayerId -> GameState -> Maybe ObjectId
 topOf zone pid gs = Maybe.listToMaybe (topDown zone pid gs)
 
 -- The cards a Parun.Types.Scope's InPosition names in one player's zone, the source
--- being the object asking.
+-- being the object asking. A library's top card is the shown one (shownTop), per
+-- the docs/decisions.md entry "Whether a library's held-back top card is its top
+-- card".
 atPosition :: ZonePosition.ZonePosition -> Maybe ObjectId -> Zone.Zone -> PlayerId -> GameState -> [ObjectId]
 atPosition position source zone pid gs =
   let pile = topDown zone pid gs
    in case position of
-        ZonePosition.Top -> take 1 pile
+        ZonePosition.Top -> case zone of
+          Zone.Library -> Maybe.maybeToList (shownTop pid gs)
+          _ -> take 1 pile
         ZonePosition.AboveSource -> case source of
           Just oid | oid `elem` pile -> takeWhile (/= oid) pile
           _ -> []

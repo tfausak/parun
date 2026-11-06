@@ -16,5 +16,5 @@ spec s = Spec.describe s "Parun.Codec.ManaR" $ do
       s
       ManaR.codec
       (ManaR.MkManaR (Filter.HasCardType CardType.Land) ManaType.Colorless)
-      " {\"matching\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"produces\":{\"type\":\"Colorless\"}} "
+      " {\"matching\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"produces\":{\"type\":\"Colorless\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ManaR.codec

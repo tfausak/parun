@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -32,9 +30,7 @@
           "effect": {
             "type": "DieRollR",
             "value": {
-              "rewrite": {
-                "type": "ExtraIgnoringLowest"
-              },
+              "rewrite": "ExtraIgnoringLowest",
               "whose": {
                 "type": "You"
               }
@@ -48,14 +44,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Faerie"
-          }
+          "Faerie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

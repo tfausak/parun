@@ -17,18 +17,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -43,9 +39,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -79,16 +73,12 @@
                     "type": "Unwritten",
                     "value": {
                       "type": "HasColor",
-                      "value": {
-                        "type": "White"
-                      }
+                      "value": "White"
                     }
                   },
                   "spares": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Aura"
-                    }
+                    "value": "Aura"
                   }
                 }
               }
@@ -102,16 +92,12 @@
                     "type": "Unwritten",
                     "value": {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Blue"
-                      }
+                      "value": "Blue"
                     }
                   },
                   "spares": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Aura"
-                    }
+                    "value": "Aura"
                   }
                 }
               }
@@ -125,16 +111,12 @@
                     "type": "Unwritten",
                     "value": {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Black"
-                      }
+                      "value": "Black"
                     }
                   },
                   "spares": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Aura"
-                    }
+                    "value": "Aura"
                   }
                 }
               }
@@ -148,16 +130,12 @@
                     "type": "Unwritten",
                     "value": {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Red"
-                      }
+                      "value": "Red"
                     }
                   },
                   "spares": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Aura"
-                    }
+                    "value": "Aura"
                   }
                 }
               }
@@ -171,16 +149,12 @@
                     "type": "Unwritten",
                     "value": {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Green"
-                      }
+                      "value": "Green"
                     }
                   },
                   "spares": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Aura"
-                    }
+                    "value": "Aura"
                   }
                 }
               }
@@ -190,14 +164,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

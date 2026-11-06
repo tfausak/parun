@@ -38,7 +38,7 @@ spec s = Spec.describe s "Parun.Codec.ManaAddition" $ do
             ManaAddition.whenSpent = Nothing
           }
       )
-      " {\"production\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}}} "
+      " {\"production\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Green\"}}} "
   -- Shizuko, Caller of Autumn's "that player adds", over the slot CR 603.2b's
   -- step event bound; Stadium Vendors writes the same key over the slot its own
   -- ChoosePlayer bound.
@@ -56,7 +56,7 @@ spec s = Spec.describe s "Parun.Codec.ManaAddition" $ do
             ManaAddition.whenSpent = Nothing
           }
       )
-      " {\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"production\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}}} "
+      " {\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"production\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Green\"}}} "
   -- The pair the defaulted key needs: an absent @retention@ IS Ordinary (both
   -- cases above), and Shizuko's third sentence is the one printing that writes
   -- it. Nothing forces this case -- a record codec's field list is not checked
@@ -76,7 +76,7 @@ spec s = Spec.describe s "Parun.Codec.ManaAddition" $ do
             ManaAddition.whenSpent = Nothing
           }
       )
-      " {\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"production\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}},\"retention\":{\"type\":\"UntilEndOfTurn\"}} "
+      " {\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"production\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Green\"}},\"retention\":\"UntilEndOfTurn\"} "
   -- The same pair for CR 106.6's spending restriction, and it needs its own case
   -- for the reason the retention one gives: nothing forces the field.
   -- Geosurge writes it on a spell and Mishra's Workshop on a mana ability.
@@ -94,7 +94,7 @@ spec s = Spec.describe s "Parun.Codec.ManaAddition" $ do
             ManaAddition.whenSpent = Nothing
           }
       )
-      " {\"production\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}}},\"restriction\":{\"casts\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}]}}} "
+      " {\"production\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Red\"}},\"restriction\":{\"casts\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Artifact\"},{\"type\":\"HasCardType\",\"value\":\"Creature\"}]}}} "
   -- CR 106.6's other subject, and the pair that keeps the two halves of
   -- Parun.Types.ManaRestriction from collapsing on the wire: Omen Hawker's "spend
   -- this mana only to activate abilities" writes the OTHER key, with the trivial

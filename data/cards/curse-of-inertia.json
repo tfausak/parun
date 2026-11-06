@@ -17,9 +17,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -35,9 +33,7 @@
                 "attacked": {
                   "type": "Enchanted"
                 },
-                "attacker": {
-                  "type": "AnyPlayer"
-                }
+                "attacker": "AnyPlayer"
               }
             }
           },
@@ -120,17 +116,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          },
-          {
-            "type": "Curse"
-          }
+          "Aura",
+          "Curse"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

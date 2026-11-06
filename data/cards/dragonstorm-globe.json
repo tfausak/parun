@@ -51,19 +51,13 @@
                 "value": [
                   {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Dragon"
-                    }
+                    "value": "Dragon"
                   },
                   {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Controller",
+                      "relation": "You"
                     }
                   }
                 ]
@@ -88,9 +82,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

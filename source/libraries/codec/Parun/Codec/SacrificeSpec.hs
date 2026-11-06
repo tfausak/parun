@@ -30,7 +30,7 @@ spec s = Spec.describe s "Parun.Codec.Sacrifice" $ do
             Sacrifice.whichPermanents = Filter.HasSubtype Subtype.Mountain
           }
       )
-      " {\"count\":{\"type\":\"Fixed\",\"value\":2},\"whichPermanents\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Mountain\"}}} "
+      " {\"count\":{\"type\":\"Fixed\",\"value\":2},\"whichPermanents\":{\"type\":\"HasSubtype\",\"value\":\"Mountain\"}} "
   -- CR 701.21a: Soulblast's "sacrifice all creatures you control".
   Spec.it s "Every" $
     Common.assertCodec
@@ -41,5 +41,5 @@ spec s = Spec.describe s "Parun.Codec.Sacrifice" $ do
             Sacrifice.whichPermanents = Filter.HasCardType CardType.Creature
           }
       )
-      " {\"count\":{\"type\":\"Every\"},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"count\":{\"type\":\"Every\"},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

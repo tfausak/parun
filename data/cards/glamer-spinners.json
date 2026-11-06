@@ -19,15 +19,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         }
@@ -70,12 +66,8 @@
                               {
                                 "type": "ControllerRelatesToBound",
                                 "value": {
-                                  "hop": {
-                                    "type": "Itself"
-                                  },
-                                  "relation": {
-                                    "type": "You"
-                                  },
+                                  "hop": "Itself",
+                                  "relation": "You",
                                   "slot": "target"
                                 }
                               },
@@ -91,9 +83,7 @@
                               "value": [
                                 {
                                   "type": "HasSubtype",
-                                  "value": {
-                                    "type": "Aura"
-                                  }
+                                  "value": "Aura"
                                 },
                                 {
                                   "type": "AttachedTo",
@@ -124,17 +114,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Faerie"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Faerie",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -41,12 +41,8 @@
                     "filter": {
                       "type": "Measures",
                       "value": {
-                        "comparison": {
-                          "type": "AtMost"
-                        },
-                        "measure": {
-                          "type": "Power"
-                        },
+                        "comparison": "AtMost",
+                        "measure": "Power",
                         "operand": {
                           "type": "Literal",
                           "value": 2
@@ -72,9 +68,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -90,17 +84,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Goblin",
+          "Rogue"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -34,25 +32,17 @@
                   "value": [
                     {
                       "type": "IsInZone",
-                      "value": {
-                        "type": "Battlefield"
-                      }
+                      "value": "Battlefield"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Controller",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -62,25 +52,17 @@
                   "value": [
                     {
                       "type": "IsInZone",
-                      "value": {
-                        "type": "Library"
-                      }
+                      "value": "Library"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     },
                     {
                       "type": "HeldBy",
                       "value": {
-                        "holder": {
-                          "type": "Owner"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                        "holder": "Owner",
+                        "relation": "You"
                       }
                     }
                   ]
@@ -91,9 +73,7 @@
           "modifications": [
             {
               "type": "AddSupertype",
-              "value": {
-                "type": "Basic"
-              }
+              "value": "Basic"
             }
           ]
         }
@@ -104,17 +84,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Druid"
-          },
-          {
-            "type": "Elf"
-          }
+          "Druid",
+          "Elf"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

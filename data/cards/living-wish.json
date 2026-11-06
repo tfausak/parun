@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -28,23 +26,17 @@
                     "type": "FromOutsideTheGame",
                     "value": {
                       "count": 1,
-                      "destination": {
-                        "type": "Hand"
-                      },
+                      "destination": "Hand",
                       "filter": {
                         "type": "Or",
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
-                            }
+                            "value": "Land"
                           }
                         ]
                       },
@@ -70,9 +62,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

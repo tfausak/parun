@@ -8,17 +8,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "EndOfCombat"
-                }
+                "value": "EndOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -36,9 +32,7 @@
                             "type": "InSlot",
                             "value": "thatAttacker"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       },
                       {
@@ -48,9 +42,7 @@
                             "type": "InSlot",
                             "value": "thatBlocker"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -70,18 +62,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -110,25 +98,19 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "Not",
                           "value": {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Wall"
-                            }
+                            "value": "Wall"
                           }
                         }
                       ]
                     }
                   },
-                  "role": {
-                    "type": "Blocker"
-                  }
+                  "role": "Blocker"
                 }
               },
               {
@@ -141,25 +123,19 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "Not",
                           "value": {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Wall"
-                            }
+                            "value": "Wall"
                           }
                         }
                       ]
                     }
                   },
-                  "role": {
-                    "type": "Attacker"
-                  }
+                  "role": "Attacker"
                 }
               }
             ]
@@ -186,14 +162,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Basilisk"
-          }
+          "Basilisk"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

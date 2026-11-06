@@ -24,5 +24,5 @@ spec s = Spec.describe s "Parun.Codec.Prohibit" $ do
             Prohibit.affected = RestrictedCreatures.Named (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")))
           }
       )
-      " {\"what\":{\"type\":\"Block\"},\"duration\":{\"type\":\"UntilEndOfTurn\"},\"affected\":{\"type\":\"Named\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}}} "
+      " {\"what\":\"Block\",\"duration\":{\"type\":\"UntilEndOfTurn\"},\"affected\":{\"type\":\"Named\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Prohibit.codec

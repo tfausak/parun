@@ -17,5 +17,5 @@ spec s = Spec.describe s "Parun.Codec.CounteringTrigger" $ do
       s
       CounteringTrigger.codec
       (CounteringTrigger.MkCounteringTrigger CounteredKind.Ability PlayerRelation.You)
-      " {\"countered\":{\"type\":\"Ability\"},\"counterer\":{\"type\":\"You\"}} "
+      " {\"countered\":\"Ability\",\"counterer\":\"You\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CounteringTrigger.codec

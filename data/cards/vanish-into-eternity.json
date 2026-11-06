@@ -9,18 +9,14 @@
               "value": 3
             }
           ],
-          "direction": {
-            "type": "More"
-          },
+          "direction": "More",
           "perEach": {
             "type": "Literal",
             "value": 1
           },
           "whichTargets": {
             "type": "HasCardType",
-            "value": {
-              "type": "Creature"
-            }
+            "value": "Creature"
           }
         }
       ],
@@ -33,9 +29,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -54,9 +48,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   }
                 ]
@@ -68,9 +60,7 @@
                   "type": "Not",
                   "value": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Land"
-                    }
+                    "value": "Land"
                   }
                 },
                 "pool": {
@@ -83,9 +73,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

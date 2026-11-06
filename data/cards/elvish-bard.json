@@ -20,18 +20,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -47,20 +43,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Bard"
-          },
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Bard",
+          "Elf",
+          "Shaman"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

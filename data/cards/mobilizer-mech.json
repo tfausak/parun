@@ -19,9 +19,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -41,9 +39,7 @@
             "type": "Crews",
             "value": {
               "type": "Vehicle",
-              "value": {
-                "type": "EveryTime"
-              }
+              "value": "EveryTime"
             }
           },
           "modal": {
@@ -61,12 +57,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Artifact"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Artifact",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -84,12 +76,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Creature"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Creature",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -121,19 +109,13 @@
                         },
                         {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Vehicle"
-                          }
+                          "value": "Vehicle"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -150,14 +132,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Vehicle"
-          }
+          "Vehicle"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

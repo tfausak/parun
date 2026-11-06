@@ -34,12 +34,8 @@
                                 {
                                   "type": "Measures",
                                   "value": {
-                                    "comparison": {
-                                      "type": "Exactly"
-                                    },
-                                    "measure": {
-                                      "type": "ColorCount"
-                                    },
+                                    "comparison": "Exactly",
+                                    "measure": "ColorCount",
                                     "operand": {
                                       "type": "Literal",
                                       "value": 1
@@ -86,9 +82,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -144,14 +138,10 @@
       ],
       "typeLine": {
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

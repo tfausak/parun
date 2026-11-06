@@ -56,6 +56,10 @@ import qualified Parun.Types.Count as Count
 import qualified Parun.Types.CountedDiscard as CountedDiscard
 import qualified Parun.Types.Counter as Counter
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterName as CounterName
+import qualified Parun.Types.CounterSpread as CounterSpread
+import qualified Parun.Types.CountersFromPermanents as CountersFromPermanents
+import qualified Parun.Types.CountersOnThis as CountersOnThis
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePart as DamagePart
@@ -77,6 +81,7 @@ import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EntryR as EntryR
 import qualified Parun.Types.EntryRewrite as EntryRewrite
 import qualified Parun.Types.EntryRiders as EntryRiders
+import qualified Parun.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ForbidBeingBlocked as ForbidBeingBlocked
@@ -157,6 +162,7 @@ import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Supertype as Supertype
 import qualified Parun.Types.Tap as Tap
+import qualified Parun.Types.TapPermanents as TapPermanents
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TargetCount as TargetCount
 import qualified Parun.Types.TargetSlot as TargetSlot
@@ -171,6 +177,7 @@ import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.TypeLine as TypeLine
 import qualified Parun.Types.Uses as Uses
 import qualified Parun.Types.Ward as Ward
+import qualified Parun.Types.WhichCounters as WhichCounters
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneScope as ZoneScope
 
@@ -759,6 +766,31 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "{3}, Discard a card at random: Draw a card.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [helm]})))
     let slate = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every (Filter.And []) CardSelection.ByChoice)]) (draw (PlayerRef.Relative PlayerRelation.You) 1)
     Spec.assertEq s (Just (Text.pack "Discard your hand: Draw a card.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [slate]})))
+
+  -- CR 118.1 / CR 107.14: costs that move the source, spend counters or energy,
+  -- or tap other permanents.
+  Spec.it s "render prints the costs of returning, exiling, tapping and removing counters" $ do
+    let costed components = Oracle.render (withFace (\f -> f {Face.activatedAbilities = [activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) components) (draw (PlayerRef.Relative PlayerRelation.You) 1)]}))
+        yours = Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You]
+        removing n spread f = CostComponent.RemoveCounters (CountersFromPermanents.MkCountersFromPermanents n (WhichCounters.OfKind CounterKind.PlusOnePlusOne) f spread)
+    Spec.assertEq s (Just (Text.pack "Return Spark to its owner's hand: Draw a card.")) (costed [CostComponent.ReturnThis])
+    Spec.assertEq s (Just (Text.pack "{T}, Exile Spark: Draw a card.")) (costed [CostComponent.TapThis, CostComponent.ExileThis])
+    Spec.assertEq s (Just (Text.pack "Exile Spark from your graveyard: Draw a card.")) (costed [CostComponent.ExileThisFromGraveyard])
+    Spec.assertEq s (Just (Text.pack "Pay {E}{E}: Draw a card.")) (costed [CostComponent.PayEnergy (CostAmount.Fixed 2)])
+    Spec.assertEq s (Just (Text.pack "Pay X {E}: Draw a card.")) (costed [CostComponent.PayEnergy (CostAmount.Announced (SlotName.MkSlotName (Text.pack "X")))])
+    Spec.assertEq s (Just (Text.pack "Remove two wish counters from Spark: Draw a card.")) (costed [CostComponent.RemoveCountersFromThis (CountersOnThis.MkCountersOnThis (CounterKind.Named (CounterName.UnsafeMkCounterName (Text.pack "wish"))) 2)])
+    Spec.assertEq s (Just (Text.pack "Remove a -1/-1 counter from Spark: Draw a card.")) (costed [CostComponent.RemoveCountersFromThis (CountersOnThis.MkCountersOnThis CounterKind.MinusOneMinusOne 1)])
+    Spec.assertEq s (Just (Text.pack "Remove a +1/+1 counter from a creature you control: Draw a card.")) (costed [removing (CostAmount.Fixed 1) CounterSpread.FromOne yours])
+    Spec.assertEq s (Just (Text.pack "Remove two +1/+1 counters from among creatures you control: Draw a card.")) (costed [removing (CostAmount.Fixed 2) CounterSpread.FromAmong yours])
+    Spec.assertEq s (Just (Text.pack "Remove one or more +1/+1 counters from among creatures you control: Draw a card.")) (costed [removing (CostAmount.Fixed 1) CounterSpread.FromAmongAtLeast yours])
+    Spec.assertEq s (Just (Text.pack "Remove any number of +1/+1 counters from Spark: Draw a card.")) (costed [removing (CostAmount.Fixed 0) CounterSpread.FromAmongAtLeast Filter.IsSource])
+    Spec.assertEq s (Just (Text.pack "Remove X +1/+1 counters from Spark: Draw a card.")) (costed [removing (CostAmount.Announced (SlotName.MkSlotName (Text.pack "X"))) CounterSpread.FromAmong Filter.IsSource])
+    Spec.assertEq s (Just (Text.pack "Remove three counters from among creatures you control: Draw a card.")) (costed [CostComponent.RemoveCounters (CountersFromPermanents.MkCountersFromPermanents (CostAmount.Fixed 3) WhichCounters.OfAnyKind yours CounterSpread.FromAmong)])
+    let untapped = Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not Filter.IsTapped]
+    Spec.assertEq s (Just (Text.pack "Tap an untapped creature you control: Draw a card.")) (costed [CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed 1) untapped False)])
+    Spec.assertEq s (Just (Text.pack "Tap two untapped creatures you control that share a creature type: Draw a card.")) (costed [CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed 2) untapped True)])
+    Spec.assertEq s (Just (Text.pack "Exile seven other cards from your graveyard: Draw a card.")) (costed [CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard 7 (Filter.Not Filter.IsSource))])
+    Spec.assertEq s (Just (Text.pack "Exile an instant or sorcery card from your graveyard: Draw a card.")) (costed [CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard 1 (Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery]))])
 
   -- CR 608.2c / 608.2d: a clause hanging off the one before it reads with
   -- it: "If you do" after a "may" (Tweeze), "unless you" before one

@@ -124,9 +124,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     }

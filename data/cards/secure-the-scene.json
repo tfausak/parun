@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -31,9 +29,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   },
                   {
@@ -43,9 +39,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "White"
-                              }
+                              "White"
                             ],
                             "name": "Soldier Token",
                             "power": {
@@ -58,14 +52,10 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Soldier"
-                                }
+                                "Soldier"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -74,12 +64,8 @@
                       "creator": {
                         "type": "HolderOfBound",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "hop": {
-                            "type": "Itself"
-                          },
+                          "holder": "Controller",
+                          "hop": "Itself",
                           "slot": "target"
                         }
                       },
@@ -98,9 +84,7 @@
                   "type": "Not",
                   "value": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Land"
-                    }
+                    "value": "Land"
                   }
                 },
                 "pool": {
@@ -113,9 +97,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

@@ -7,15 +7,11 @@
           "value": {
             "left": {
               "type": "Colored",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             },
             "right": {
               "type": "Colored",
-              "value": {
-                "type": "Blue"
-              }
+              "value": "Blue"
             }
           }
         }
@@ -70,12 +66,8 @@
                     {
                       "type": "ControllerRelatesToBound",
                       "value": {
-                        "hop": {
-                          "type": "Itself"
-                        },
-                        "relation": {
-                          "type": "You"
-                        },
+                        "hop": "Itself",
+                        "relation": "You",
                         "slot": "from"
                       }
                     }
@@ -91,9 +83,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

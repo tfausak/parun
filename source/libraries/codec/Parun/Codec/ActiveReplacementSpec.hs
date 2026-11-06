@@ -57,7 +57,7 @@ effect =
     )
 
 effectJson :: String
-effectJson = "{\"type\":\"ZoneChangeR\",\"value\":{\"matching\":{\"whenDestination\":{\"type\":\"Graveyard\"}},\"destination\":{\"type\":\"Exile\"}}}"
+effectJson = "{\"type\":\"ZoneChangeR\",\"value\":{\"matching\":{\"whenDestination\":\"Graveyard\"},\"destination\":\"Exile\"}}"
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.ActiveReplacement" $ do
@@ -84,7 +84,7 @@ spec s = Spec.describe s "Parun.Codec.ActiveReplacement" $ do
       ( " {\"effect\":"
           <> effectJson
           <> ",\"source\":1,\"controller\":2,\"timestamp\":3,\"expiry\":{\"type\":\"AtCleanup\"}"
-          <> ",\"uses\":{\"type\":\"Unlimited\"},\"origin\":{\"type\":\"Other\"}"
+          <> ",\"uses\":\"Unlimited\",\"origin\":\"Other\""
           <> ",\"condition\":null,\"rider\":null,\"slots\":{},\"choices\":{}} "
       )
   -- Every optional axis at once, each away from the case above: CR 614.1's
@@ -122,10 +122,10 @@ spec s = Spec.describe s "Parun.Codec.ActiveReplacement" $ do
       ( " {\"effect\":"
           <> effectJson
           <> ",\"source\":4,\"controller\":5,\"timestamp\":6,\"expiry\":{\"type\":\"Never\"}"
-          <> ",\"uses\":{\"type\":\"Once\"},\"origin\":{\"type\":\"SelfReplacement\"}"
-          <> ",\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":7}}}"
+          <> ",\"uses\":\"Once\",\"origin\":\"SelfReplacement\""
+          <> ",\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":\"Power\"},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":7}}}"
           <> ",\"rider\":{\"effects\":[{\"type\":\"Proliferate\"}],\"targets\":{},\"controller\":5,\"source\":4}"
-          <> ",\"slots\":{\"that spell\":[8,9]},\"choices\":{\"colors\":[{\"type\":\"White\"}]}} "
+          <> ",\"slots\":{\"that spell\":[8,9]},\"choices\":{\"colors\":[\"White\"]}} "
       )
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActiveReplacement.codec

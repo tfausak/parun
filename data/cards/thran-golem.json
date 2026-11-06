@@ -27,9 +27,7 @@
                   "type": "HasAttached",
                   "value": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Aura"
-                    }
+                    "value": "Aura"
                   }
                 }
               ]
@@ -76,17 +74,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Golem"
-          }
+          "Golem"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

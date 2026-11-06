@@ -38,7 +38,7 @@ spec s = Spec.describe s "Parun.Codec.DamageEvent" $ do
           DamageEvent.dealtByCardTypes = Set.singleton CardType.Artifact,
           DamageEvent.kind = DamageKind.Combat
         }
-      " {\"source\":1,\"target\":{\"type\":\"ToPlayer\",\"value\":2},\"amount\":3,\"dealtByDeathtouch\":true,\"dealtByWither\":true,\"dealtByToxic\":2,\"dealtByController\":4,\"dealtByCreatureTypes\":[{\"type\":\"Rogue\"}],\"dealtByCommander\":true,\"dealtByCardTypes\":[{\"type\":\"Artifact\"}],\"kind\":{\"type\":\"Combat\"}} "
+      " {\"source\":1,\"target\":{\"type\":\"ToPlayer\",\"value\":2},\"amount\":3,\"dealtByDeathtouch\":true,\"dealtByWither\":true,\"dealtByToxic\":2,\"dealtByController\":4,\"dealtByCreatureTypes\":[\"Rogue\"],\"dealtByCommander\":true,\"dealtByCardTypes\":[\"Artifact\"],\"kind\":\"Combat\"} "
   -- CR 120.3c's recipient tag and CR 608's noncombat damage are each the other
   -- arm of their type. CR 702.15b's lifelink payee is a concrete PlayerId.
   Spec.it s "MkDamageEvent, dealt to a planeswalker, with lifelink" $
@@ -60,7 +60,7 @@ spec s = Spec.describe s "Parun.Codec.DamageEvent" $ do
           DamageEvent.dealtByCardTypes = Set.empty,
           DamageEvent.kind = DamageKind.Noncombat
         }
-      " {\"source\":1,\"target\":{\"type\":\"ToPlaneswalker\",\"value\":5},\"amount\":4,\"dealtByInfect\":true,\"dealtByLifelink\":2,\"kind\":{\"type\":\"Noncombat\"}} "
+      " {\"source\":1,\"target\":{\"type\":\"ToPlaneswalker\",\"value\":5},\"amount\":4,\"dealtByInfect\":true,\"dealtByLifelink\":2,\"kind\":\"Noncombat\"} "
   -- Every dealtBy* rider at its default, which is what an event carrying none
   -- of them means.
   Spec.it s "an all-default value omits every optional key" $
@@ -82,4 +82,4 @@ spec s = Spec.describe s "Parun.Codec.DamageEvent" $ do
           DamageEvent.dealtByCardTypes = Set.empty,
           DamageEvent.kind = DamageKind.Combat
         }
-      " {\"source\":1,\"target\":{\"type\":\"ToPlayer\",\"value\":2},\"amount\":3,\"kind\":{\"type\":\"Combat\"}} "
+      " {\"source\":1,\"target\":{\"type\":\"ToPlayer\",\"value\":2},\"amount\":3,\"kind\":\"Combat\"} "

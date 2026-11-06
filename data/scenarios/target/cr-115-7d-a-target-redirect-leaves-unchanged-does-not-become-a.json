@@ -41,7 +41,7 @@
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$growth", "targets": ["$guard"], "mana": ["$forest1", null] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseToPay": { "decision": { "type": "Pays" }, "mana": ["$forest2", "$forest3"] } }, "source": "$guard" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseToPay": { "decision": "Pays", "mana": ["$forest2", "$forest3"] } }, "source": "$guard" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$forest1", "tapped": true } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$forest2", "tapped": true } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$forest3", "tapped": true } } },

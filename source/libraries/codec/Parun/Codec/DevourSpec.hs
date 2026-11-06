@@ -32,5 +32,5 @@ spec s = Spec.describe s "Parun.Codec.Devour" $ do
       s
       codec
       (Devour.MkDevour {Devour.quality = Just (Filter.HasCardType CardType.Artifact), Devour.count = DevourCount.Fixed 1})
-      " {\"count\":{\"type\":\"Fixed\",\"value\":1},\"quality\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}} "
+      " {\"count\":{\"type\":\"Fixed\",\"value\":1},\"quality\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

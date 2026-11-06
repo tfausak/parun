@@ -74,9 +74,7 @@
       "player": "alice",
       "source": "$invocation",
       "do": {
-        "ChooseOptional": {
-          "type": "Declines"
-        }
+        "ChooseOptional": "Declines"
       }
     },
     {

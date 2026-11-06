@@ -18,18 +18,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -51,14 +47,10 @@
             "type": "Not",
             "value": {
               "type": "HasColor",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             }
           },
-          "kind": {
-            "type": "Spell"
-          }
+          "kind": "Spell"
         },
         {
           "affected": {
@@ -71,14 +63,10 @@
             "type": "Not",
             "value": {
               "type": "HasColor",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             }
           },
-          "kind": {
-            "type": "ActivatedAbility"
-          }
+          "kind": "ActivatedAbility"
         },
         {
           "affected": {
@@ -91,14 +79,10 @@
             "type": "Not",
             "value": {
               "type": "HasColor",
-              "value": {
-                "type": "Green"
-              }
+              "value": "Green"
             }
           },
-          "kind": {
-            "type": "TriggeredAbility"
-          }
+          "kind": "TriggeredAbility"
         }
       ],
       "toughness": {
@@ -107,14 +91,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          }
+          "Elemental"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

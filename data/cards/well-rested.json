@@ -17,9 +17,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -34,9 +32,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -59,14 +55,10 @@
                       "actor": {
                         "type": "Self"
                       },
-                      "status": {
-                        "type": "Untapped"
-                      }
+                      "status": "Untapped"
                     }
                   },
-                  "limit": {
-                    "type": "OncePerTurn"
-                  },
+                  "limit": "OncePerTurn",
                   "modal": {
                     "modes": [
                       {
@@ -94,9 +86,7 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   },
                                   "quantity": {
                                     "type": "Literal",
@@ -109,9 +99,7 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   },
                                   "quantity": {
                                     "type": "Literal",
@@ -133,14 +121,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

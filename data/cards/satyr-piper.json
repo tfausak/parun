@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -29,9 +27,7 @@
                       {
                         "type": "RequireBlock",
                         "value": {
-                          "arity": {
-                            "type": "AnySubject"
-                          },
+                          "arity": "AnySubject",
                           "attacker": {
                             "type": "Named",
                             "value": {
@@ -43,9 +39,7 @@
                             "type": "Matching",
                             "value": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             }
                           },
                           "duration": {
@@ -77,9 +71,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -95,17 +87,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Rogue"
-          },
-          {
-            "type": "Satyr"
-          }
+          "Rogue",
+          "Satyr"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

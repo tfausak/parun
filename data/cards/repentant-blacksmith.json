@@ -7,9 +7,7 @@
           "value": {
             "quality": {
               "type": "HasColor",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             },
             "spares": null
           }
@@ -24,9 +22,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -42,14 +38,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          }
+          "Human"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

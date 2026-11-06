@@ -9,9 +9,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -63,19 +61,13 @@
               "value": [
                 {
                   "type": "HasColor",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 },
                 {
                   "type": "Measures",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
-                    "measure": {
-                      "type": "Power"
-                    },
+                    "comparison": "AtLeast",
+                    "measure": "Power",
                     "operand": {
                       "type": "Literal",
                       "value": 2
@@ -96,9 +88,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -114,14 +104,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Orc"
-          }
+          "Orc"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

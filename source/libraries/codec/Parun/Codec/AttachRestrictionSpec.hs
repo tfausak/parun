@@ -27,5 +27,5 @@ spec s = Spec.describe s "Parun.Codec.AttachRestriction" $ do
                 ]
           }
       )
-      " {\"affected\":{\"type\":\"Attached\"},\"attachers\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}},{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}]}} "
+      " {\"affected\":{\"type\":\"Attached\"},\"attachers\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSubtype\",\"value\":\"Aura\"},{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AttachRestriction.codec

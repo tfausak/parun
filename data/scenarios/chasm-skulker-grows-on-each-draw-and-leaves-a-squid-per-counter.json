@@ -15,6 +15,6 @@
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Squid Token", "Squid Token#2", "Squid Token#3", "Squid Token#4"]}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Squid Token", "count": 4}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Squid Token", "power": 1, "toughness": 1}}},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "Squid Token", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Island"}}}, "count": 1}}}
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "Squid Token", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": "Island"}}, "count": 1}}}
   ]
 }

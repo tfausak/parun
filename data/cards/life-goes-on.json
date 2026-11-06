@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -22,9 +20,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -33,21 +29,15 @@
                         },
                         "filter": {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         "scope": {
                           "type": "InHistory",
                           "value": {
                             "type": "MovedBetween",
                             "value": {
-                              "from": {
-                                "type": "Battlefield"
-                              },
-                              "to": {
-                                "type": "Graveyard"
-                              }
+                              "from": "Battlefield",
+                              "to": "Graveyard"
                             }
                           }
                         }
@@ -65,9 +55,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -81,9 +69,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
+                    "comparison": "AtLeast",
                     "measured": {
                       "type": "Count",
                       "value": {
@@ -92,21 +78,15 @@
                         },
                         "filter": {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         "scope": {
                           "type": "InHistory",
                           "value": {
                             "type": "MovedBetween",
                             "value": {
-                              "from": {
-                                "type": "Battlefield"
-                              },
-                              "to": {
-                                "type": "Graveyard"
-                              }
+                              "from": "Battlefield",
+                              "to": "Graveyard"
                             }
                           }
                         }
@@ -124,9 +104,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -142,9 +120,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

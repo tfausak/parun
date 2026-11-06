@@ -143,11 +143,11 @@ testCharacteristics =
 
 testCharacteristicsJson :: String
 testCharacteristicsJson =
-  "{\"names\":[\"Test Creature\"],\"supertypes\":[{\"type\":\"Legendary\"}],\"keywords\":[{\"key\":{\"type\":\"Flying\"},\"value\":1}],"
-    <> "\"colors\":[{\"type\":\"Blue\"}],"
-    <> "\"manaCost\":[{\"type\":\"Generic\",\"value\":2},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Blue\"}}}],"
+  "{\"names\":[\"Test Creature\"],\"supertypes\":[\"Legendary\"],\"keywords\":[{\"key\":{\"type\":\"Flying\"},\"value\":1}],"
+    <> "\"colors\":[\"Blue\"],"
+    <> "\"manaCost\":[{\"type\":\"Generic\",\"value\":2},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Blue\"}}],"
     <> "\"manaValue\":3,\"power\":1,\"toughness\":2,"
-    <> "\"cardTypes\":[{\"type\":\"Creature\"}],\"subtypes\":[{\"type\":\"Human\"}],"
+    <> "\"cardTypes\":[\"Creature\"],\"subtypes\":[\"Human\"],"
     <> "\"staticAbilities\":[{\"affected\":{\"type\":\"Attached\"},\"modifications\":[{\"type\":\"GainKeyword\",\"value\":{\"type\":\"Flying\"}}]}],"
     <> "\"playerAbilities\":[{\"scope\":{\"type\":\"AnyPlayer\"},\"effect\":{\"type\":\"CantCastMoreThan\",\"value\":1}}],"
     <> "\"grantedPlayerAbilities\":[{\"key\":3,\"value\":{\"scope\":{\"type\":\"You\"},\"effect\":{\"type\":\"NoMaximumHandSize\"}}}],"
@@ -168,8 +168,8 @@ testCharacteristicsJson =
     <> "\"hasFullText\":true,"
     <> "\"wordChanges\":[{\"from\":{\"type\":\"Spirit\"},\"to\":{\"type\":\"Elf\"}}],"
     <> "\"textChangedKeywords\":[{\"key\":{\"type\":\"Trample\"},\"value\":1}],"
-    <> "\"combatDamageAmount\":{\"type\":\"EqualToToughness\"},"
-    <> "\"combatDamageOptions\":[{\"type\":\"ToDefendingCreature\"}],"
+    <> "\"combatDamageAmount\":\"EqualToToughness\","
+    <> "\"combatDamageOptions\":[\"ToDefendingCreature\"],"
     <> "\"grantsStationToughness\":true,"
     <> "\"additionalCosts\":[{\"type\":\"TapThis\"}],"
     <> "\"additionalCostChoices\":[[{\"components\":[{\"type\":\"TapThis\"}],\"mana\":[]},{\"mana\":[{\"type\":\"Generic\",\"value\":1}]}]],"
@@ -178,14 +178,14 @@ testCharacteristicsJson =
     <> "\"grantedCostReductions\":[{\"amount\":[{\"type\":\"Generic\",\"value\":1}],\"perEach\":{\"type\":\"Literal\",\"value\":1}}],"
     <> "\"grantedAlternativeCosts\":[{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}}],"
     <> "\"grantedSpendManaAsThough\":[{\"which\":{\"type\":\"Any\"},\"asThough\":[{\"type\":\"Colorless\"}],\"only\":true}],"
-    <> "\"halves\":{\"faces\":[{\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[{\"type\":\"Basic\"}],\"types\":[{\"type\":\"Land\"}],\"subtypes\":[{\"type\":\"Mountain\"}]}}]},"
+    <> "\"halves\":{\"faces\":[{\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[\"Basic\"],\"types\":[\"Land\"],\"subtypes\":[\"Mountain\"]}}]},"
     <> "\"exceptions\":[{\"type\":\"NoManaCost\"}],"
-    <> "\"mergedDonors\":[{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}],"
-    <> "\"prepare\":{\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[{\"type\":\"Basic\"}],\"types\":[{\"type\":\"Land\"}],\"subtypes\":[{\"type\":\"Mountain\"}]}},"
-    <> "\"alternativeSpell\":{\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[{\"type\":\"Basic\"}],\"types\":[{\"type\":\"Land\"}],\"subtypes\":[{\"type\":\"Mountain\"}]}},"
+    <> "\"mergedDonors\":[{\"names\":[\"Mountain\"],\"cardTypes\":[\"Land\"]}],"
+    <> "\"prepare\":{\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[\"Basic\"],\"types\":[\"Land\"],\"subtypes\":[\"Mountain\"]}},"
+    <> "\"alternativeSpell\":{\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[\"Basic\"],\"types\":[\"Land\"],\"subtypes\":[\"Mountain\"]}},"
     <> "\"prototyped\":true,"
     <> "\"spell\":{\"modes\":[{},{}]},"
-    <> "\"flipped\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}}"
+    <> "\"flipped\":{\"names\":[\"Mountain\"],\"cardTypes\":[\"Land\"]}}"
 
 -- | Every field but the two required ones at its default.
 minimalCharacteristics :: PC.ProjectedCharacteristics
@@ -251,4 +251,4 @@ spec s = Spec.describe s "Parun.Codec.ProjectedCharacteristics" $ do
       s
       PC.codec
       minimalCharacteristics
-      " {\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]} "
+      " {\"names\":[\"Mountain\"],\"cardTypes\":[\"Land\"]} "

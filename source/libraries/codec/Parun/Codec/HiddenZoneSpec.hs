@@ -12,10 +12,10 @@ spec s = Spec.describe s "Parun.Codec.HiddenZone" $ do
       s
       HiddenZone.codec
       HiddenZone.Hand
-      " {\"type\":\"Hand\"} "
+      " \"Hand\" "
   Spec.it s "Library" $
     Common.assertCodec
       s
       HiddenZone.codec
       HiddenZone.Library
-      " {\"type\":\"Library\"} "
+      " \"Library\" "

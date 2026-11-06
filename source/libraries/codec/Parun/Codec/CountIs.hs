@@ -13,7 +13,7 @@ import qualified Parun.Types.CountIs as CountIs
 codec :: Codec.Codec CountIs.CountIs
 codec = Fields.object $ do
   player <- Fields.required "player" Label.codec CountIs.player
-  zone <- Fields.required "zone" Arm.keyedEnum CountIs.zone
+  zone <- Fields.required "zone" Arm.enum CountIs.zone
   card <- Fields.required "card" CardName.codec CountIs.card
   count <- Fields.required "count" Common.natural CountIs.count
   pure

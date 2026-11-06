@@ -65,9 +65,7 @@
               {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "AtLeast"
-                  },
+                  "comparison": "AtLeast",
                   "measured": {
                     "type": "ObjectCounters",
                     "value": {
@@ -83,9 +81,7 @@
               {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "AtMost"
-                  },
+                  "comparison": "AtMost",
                   "measured": {
                     "type": "ObjectCounters",
                     "value": {
@@ -127,9 +123,7 @@
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "White"
-                                      }
+                                      "value": "White"
                                     }
                                   }
                                 }
@@ -149,9 +143,7 @@
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "Black"
-                                      }
+                                      "value": "Black"
                                     }
                                   }
                                 }
@@ -171,9 +163,7 @@
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "Green"
-                                      }
+                                      "value": "Green"
                                     }
                                   }
                                 }
@@ -218,9 +208,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "ObjectCounters",
                 "value": {
@@ -260,9 +248,7 @@
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "White"
-                                      }
+                                      "value": "White"
                                     }
                                   }
                                 }
@@ -272,9 +258,7 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   },
                                   "quantity": {
                                     "type": "Literal",
@@ -297,9 +281,7 @@
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "Black"
-                                      }
+                                      "value": "Black"
                                     }
                                   }
                                 }
@@ -309,9 +291,7 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   },
                                   "quantity": {
                                     "type": "Literal",
@@ -334,9 +314,7 @@
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "Green"
-                                      }
+                                      "value": "Green"
                                     }
                                   }
                                 }
@@ -346,9 +324,7 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   },
                                   "quantity": {
                                     "type": "Literal",
@@ -380,9 +356,7 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   },
                                   "quantity": {
                                     "type": "Literal",
@@ -404,9 +378,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

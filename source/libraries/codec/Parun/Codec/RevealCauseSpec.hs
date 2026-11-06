@@ -29,7 +29,7 @@ spec s = Spec.describe s "Parun.Codec.RevealCause" $ do
       s
       RevealCause.codec
       (RevealCause.AsDrawnUnder (DrawnUnder.MkDrawnUnder (ObjectId.MkObjectId 7) RevealTiming.AsDrawn))
-      " {\"type\":\"AsDrawnUnder\",\"value\":{\"under\":7,\"timing\":{\"type\":\"AsDrawn\"}}} "
+      " {\"type\":\"AsDrawnUnder\",\"value\":{\"under\":7,\"timing\":\"AsDrawn\"}} "
   Spec.it s "LeavingFaceDown" $
     Common.assertCodec
       s

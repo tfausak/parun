@@ -9,9 +9,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -44,12 +42,8 @@
                 "filter": {
                   "type": "Measures",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
-                    "measure": {
-                      "type": "ManaValue"
-                    },
+                    "comparison": "Exactly",
+                    "measure": "ManaValue",
                     "operand": {
                       "type": "EnclosingAmount"
                     }
@@ -65,9 +59,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

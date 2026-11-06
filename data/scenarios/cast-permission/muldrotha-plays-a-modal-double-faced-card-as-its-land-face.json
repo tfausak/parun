@@ -197,9 +197,7 @@
       "do": {
         "Answer": {
           "prompt": "ChoosePayLifeOnEntry",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       },
       "player": "alice",

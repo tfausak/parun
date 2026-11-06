@@ -23,9 +23,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -68,9 +66,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -86,9 +82,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "AtLeast"
-                            },
+                            "comparison": "AtLeast",
                             "measured": {
                               "type": "Count",
                               "value": {
@@ -104,9 +98,7 @@
                                     },
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Land"
-                                      }
+                                      "value": "Land"
                                     }
                                   ]
                                 },
@@ -115,13 +107,9 @@
                                   "value": {
                                     "player": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "You"
-                                      }
+                                      "value": "You"
                                     },
-                                    "zone": {
-                                      "type": "Library"
-                                    }
+                                    "zone": "Library"
                                   }
                                 }
                               }
@@ -138,9 +126,7 @@
                             {
                               "type": "Compares",
                               "value": {
-                                "comparison": {
-                                  "type": "AtLeast"
-                                },
+                                "comparison": "AtLeast",
                                 "measured": {
                                   "type": "Count",
                                   "value": {
@@ -156,9 +142,7 @@
                                         },
                                         {
                                           "type": "HasCardType",
-                                          "value": {
-                                            "type": "Creature"
-                                          }
+                                          "value": "Creature"
                                         }
                                       ]
                                     },
@@ -167,13 +151,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "You"
-                                          }
+                                          "value": "You"
                                         },
-                                        "zone": {
-                                          "type": "Library"
-                                        }
+                                        "zone": "Library"
                                       }
                                     }
                                   }
@@ -187,17 +167,13 @@
                             {
                               "type": "Compares",
                               "value": {
-                                "comparison": {
-                                  "type": "AtMost"
-                                },
+                                "comparison": "AtMost",
                                 "measured": {
                                   "type": "AgainstSlot",
                                   "value": {
                                     "quantity": {
                                       "type": "Measure",
-                                      "value": {
-                                        "type": "ManaValue"
-                                      }
+                                      "value": "ManaValue"
                                     },
                                     "slot": "looked"
                                   }
@@ -222,9 +198,7 @@
                             "type": "InSlot",
                             "value": "looked"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ],
@@ -272,12 +246,8 @@
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Creature"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Creature",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -295,12 +265,8 @@
                           "modification": {
                             "type": "CreatureSubtype",
                             "value": {
-                              "mode": {
-                                "type": "InAddition"
-                              },
-                              "subtype": {
-                                "type": "Elemental"
-                              }
+                              "mode": "InAddition",
+                              "subtype": "Elemental"
                             }
                           },
                           "ref": {
@@ -387,19 +353,13 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Land"
-                          }
+                          "value": "Land"
                         },
                         {
                           "type": "HeldBy",
                           "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
+                            "holder": "Controller",
+                            "relation": "You"
                           }
                         }
                       ]
@@ -425,18 +385,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -444,19 +400,13 @@
       "oracleText": "[+2]: Scry 2.\n[0]: Look at the top card of your library. If it's a land card or a creature card with mana value less than or equal to the number of loyalty counters on Nissa, you may put that card onto the battlefield.\n[−6]: Untap up to two target lands you control. They become 5/5 Elemental creatures with flying and haste until end of turn. They're still lands.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Nissa"
-          }
+          "Nissa"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

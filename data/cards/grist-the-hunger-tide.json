@@ -24,9 +24,7 @@
                           "condition": {
                             "type": "Compares",
                             "value": {
-                              "comparison": {
-                                "type": "AtLeast"
-                              },
+                              "comparison": "AtLeast",
                               "measured": {
                                 "type": "InSlot",
                                 "value": "milled"
@@ -63,12 +61,8 @@
                                   "faces": [
                                     {
                                       "colorIndicator": [
-                                        {
-                                          "type": "Black"
-                                        },
-                                        {
-                                          "type": "Green"
-                                        }
+                                        "Black",
+                                        "Green"
                                       ],
                                       "name": "Insect Token",
                                       "power": {
@@ -81,14 +75,10 @@
                                       },
                                       "typeLine": {
                                         "subtypes": [
-                                          {
-                                            "type": "Insect"
-                                          }
+                                          "Insect"
                                         ],
                                         "types": [
-                                          {
-                                            "type": "Creature"
-                                          }
+                                          "Creature"
                                         ]
                                       }
                                     }
@@ -105,9 +95,7 @@
                               "value": {
                                 "player": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 },
                                 "quantity": {
                                   "type": "Literal",
@@ -116,9 +104,7 @@
                                 "tally": {
                                   "filter": {
                                     "type": "HasSubtype",
-                                    "value": {
-                                      "type": "Insect"
-                                    }
+                                    "value": "Insect"
                                   },
                                   "slot": "milled"
                                 }
@@ -161,9 +147,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "components": [
                           {
@@ -175,9 +159,7 @@
                               },
                               "whichPermanents": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               }
                             }
                           }
@@ -219,9 +201,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "Opponent"
-                            }
+                            "value": "Opponent"
                           },
                           "quantity": {
                             "type": "Count",
@@ -231,22 +211,16 @@
                               },
                               "filter": {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               "scope": {
                                 "type": "InZone",
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   },
-                                  "zone": {
-                                    "type": "Graveyard"
-                                  }
+                                  "zone": "Graveyard"
                                 }
                               }
                             }
@@ -279,9 +253,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -294,15 +266,11 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Planeswalker"
-                          }
+                          "value": "Planeswalker"
                         }
                       ]
                     },
@@ -329,18 +297,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -355,24 +319,12 @@
             }
           },
           "functionsFrom": [
-            {
-              "type": "Library"
-            },
-            {
-              "type": "Hand"
-            },
-            {
-              "type": "Graveyard"
-            },
-            {
-              "type": "Stack"
-            },
-            {
-              "type": "Exile"
-            },
-            {
-              "type": "Command"
-            }
+            "Library",
+            "Hand",
+            "Graveyard",
+            "Stack",
+            "Exile",
+            "Command"
           ],
           "modifications": [
             {
@@ -391,23 +343,15 @@
             {
               "type": "CreatureSubtype",
               "value": {
-                "mode": {
-                  "type": "InAddition"
-                },
-                "subtype": {
-                  "type": "Insect"
-                }
+                "mode": "InAddition",
+                "subtype": "Insect"
               }
             },
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Creature"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Creature",
+                "mode": "InAddition"
               }
             }
           ]
@@ -415,19 +359,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Grist"
-          }
+          "Grist"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

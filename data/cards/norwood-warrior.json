@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -31,9 +29,7 @@
           "condition": {
             "type": "Blocks",
             "value": {
-              "role": {
-                "type": "Attacker"
-              }
+              "role": "Attacker"
             }
           },
           "modal": {
@@ -77,17 +73,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Elf",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

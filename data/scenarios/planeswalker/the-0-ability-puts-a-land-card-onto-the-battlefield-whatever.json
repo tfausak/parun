@@ -33,7 +33,7 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$nissa", "x": 1, "mana": ["$forest-1", "$forest-2", "$island-1", null] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Nissa, Steward of Elements", "ability": 1 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": "Exercises" } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "Nissa, Steward of Elements", "kind": { "type": "Loyalty" }, "count": 1 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Forest", "count": 7 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Library", "card": "Forest", "count": 0 } } },

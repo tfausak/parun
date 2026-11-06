@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -39,15 +37,11 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Instant"
-                    }
+                    "value": "Instant"
                   },
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Sorcery"
-                    }
+                    "value": "Sorcery"
                   }
                 ]
               },
@@ -74,9 +68,7 @@
           "condition": {
             "type": "Countered",
             "value": {
-              "counterer": {
-                "type": "You"
-              }
+              "counterer": "You"
             }
           },
           "modal": {
@@ -90,9 +82,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -114,9 +104,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -141,22 +129,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Human",
+          "Wizard"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

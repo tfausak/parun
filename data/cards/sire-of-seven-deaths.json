@@ -56,14 +56,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Eldrazi"
-          }
+          "Eldrazi"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

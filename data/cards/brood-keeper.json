@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -31,17 +29,11 @@
           "condition": {
             "type": "AttachmentChanges",
             "value": {
-              "direction": {
-                "type": "Attaches"
-              },
-              "end": {
-                "type": "Host"
-              },
+              "direction": "Attaches",
+              "end": "Host",
               "other": {
                 "type": "HasSubtype",
-                "value": {
-                  "type": "Aura"
-                }
+                "value": "Aura"
               }
             }
           },
@@ -65,9 +57,7 @@
                                           "type": "OfType",
                                           "value": {
                                             "type": "Colored",
-                                            "value": {
-                                              "type": "Red"
-                                            }
+                                            "value": "Red"
                                           }
                                         }
                                       ]
@@ -112,9 +102,7 @@
                                   }
                                 ],
                                 "colorIndicator": [
-                                  {
-                                    "type": "Red"
-                                  }
+                                  "Red"
                                 ],
                                 "keywords": [
                                   {
@@ -132,14 +120,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Dragon"
-                                    }
+                                    "Dragon"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -161,17 +145,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Human",
+          "Shaman"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

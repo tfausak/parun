@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -56,9 +54,7 @@
                                               "value": {
                                                 "player": {
                                                   "type": "Relative",
-                                                  "value": {
-                                                    "type": "You"
-                                                  }
+                                                  "value": "You"
                                                 },
                                                 "quantity": {
                                                   "type": "Literal",
@@ -77,14 +73,10 @@
                             "name": "Clue Token",
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Clue"
-                                }
+                                "Clue"
                               ],
                               "types": [
-                                {
-                                  "type": "Artifact"
-                                }
+                                "Artifact"
                               ]
                             }
                           }
@@ -122,19 +114,13 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "HeldBy",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "Opponent"
-                                }
+                                "holder": "Controller",
+                                "relation": "Opponent"
                               }
                             }
                           ]
@@ -151,19 +137,13 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           {
                             "type": "HeldBy",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "relation": {
-                                "type": "Opponent"
-                              }
+                              "holder": "Controller",
+                              "relation": "Opponent"
                             }
                           }
                         ]
@@ -178,9 +158,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

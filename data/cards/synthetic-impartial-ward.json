@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -33,9 +31,7 @@
                         "type": "Literal",
                         "value": 10
                       },
-                      "whoRecipient": {
-                        "type": "AnyPlayer"
-                      }
+                      "whoRecipient": "AnyPlayer"
                     }
                   }
                 ]
@@ -46,9 +42,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

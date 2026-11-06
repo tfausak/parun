@@ -55,7 +55,7 @@ spec s = Spec.describe s "Parun.Codec.ArmDelayedTrigger" $ do
             ArmDelayedTrigger.ability = Nothing
           }
       )
-      " {\"name\":\"return it\",\"onset\":{\"type\":\"FromNextTurnOf\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
+      " {\"name\":\"return it\",\"onset\":{\"type\":\"FromNextTurnOf\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}}} "
   -- CR 603.7a: the declaration carried by the arm itself, Splinter Twin's quoted
   -- "Exile that token at the beginning of the next end step".
   Spec.it s "MkArmDelayedTrigger, carried ability" $

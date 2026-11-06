@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -28,9 +26,7 @@
                     "value": {
                       "chosenSource": {
                         "type": "HasSubtype",
-                        "value": {
-                          "type": "Human"
-                        }
+                        "value": "Human"
                       },
                       "duration": {
                         "type": "UntilEndOfTurn"
@@ -53,12 +49,8 @@
                 "filter": {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 "pool": {
@@ -71,9 +63,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

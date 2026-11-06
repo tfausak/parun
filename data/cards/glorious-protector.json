@@ -22,9 +22,7 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "White"
-                    }
+                    "value": "White"
                   }
                 }
               ]
@@ -41,18 +39,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -81,9 +75,7 @@
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "duration": {
-                            "type": "UntilSourceLeavesTheBattlefield"
-                          },
+                          "duration": "UntilSourceLeavesTheBattlefield",
                           "ref": {
                             "type": "ChosenPermanents",
                             "value": {
@@ -95,37 +87,27 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "HeldBy",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
-                                      }
+                                      "holder": "Controller",
+                                      "relation": "You"
                                     }
                                   },
                                   {
                                     "type": "Not",
                                     "value": {
                                       "type": "HasSubtype",
-                                      "value": {
-                                        "type": "Angel"
-                                      }
+                                      "value": "Angel"
                                     }
                                   }
                                 ]
                               }
                             }
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ],
@@ -141,17 +123,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Angel"
-          },
-          {
-            "type": "Cleric"
-          }
+          "Angel",
+          "Cleric"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

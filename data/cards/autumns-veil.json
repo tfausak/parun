@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -49,15 +47,11 @@
                                 "value": [
                                   {
                                     "type": "HasColor",
-                                    "value": {
-                                      "type": "Blue"
-                                    }
+                                    "value": "Blue"
                                   },
                                   {
                                     "type": "HasColor",
-                                    "value": {
-                                      "type": "Black"
-                                    }
+                                    "value": "Black"
                                   }
                                 ]
                               }
@@ -87,15 +81,11 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "IsInZone",
-                                "value": {
-                                  "type": "Battlefield"
-                                }
+                                "value": "Battlefield"
                               }
                             ]
                           },
@@ -104,21 +94,15 @@
                             "value": [
                               {
                                 "type": "HasColor",
-                                "value": {
-                                  "type": "Blue"
-                                }
+                                "value": "Blue"
                               },
                               {
                                 "type": "HasColor",
-                                "value": {
-                                  "type": "Black"
-                                }
+                                "value": "Black"
                               }
                             ]
                           },
-                          "kind": {
-                            "type": "Spell"
-                          }
+                          "kind": "Spell"
                         }
                       },
                       "players": {
@@ -137,9 +121,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -28,5 +28,5 @@ spec s = Spec.describe s "Parun.Codec.AgainstLastCardExiledWith" $ do
             AgainstLastCardExiledWith.quantity = Quantity.Measure Measure.Power
           }
       )
-      " {\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}} "
+      " {\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"quantity\":{\"type\":\"Measure\",\"value\":\"Power\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

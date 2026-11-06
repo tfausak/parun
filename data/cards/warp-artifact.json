@@ -5,9 +5,7 @@
         {
           "filter": {
             "type": "HasCardType",
-            "value": {
-              "type": "Artifact"
-            }
+            "value": "Artifact"
           },
           "pool": {
             "type": "Permanents"
@@ -19,18 +17,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -43,21 +37,15 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "HolderOfBound",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "hop": {
-                      "type": "Host"
-                    },
+                    "holder": "Controller",
+                    "hop": "Host",
                     "slot": "self"
                   }
                 }
@@ -97,14 +85,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

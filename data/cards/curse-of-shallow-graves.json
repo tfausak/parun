@@ -17,9 +17,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -35,9 +33,7 @@
                 "attacked": {
                   "type": "Enchanted"
                 },
-                "attacker": {
-                  "type": "AnyPlayer"
-                }
+                "attacker": "AnyPlayer"
               }
             }
           },
@@ -54,9 +50,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Black"
-                                  }
+                                  "Black"
                                 ],
                                 "name": "Zombie Token",
                                 "power": {
@@ -69,14 +63,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Zombie"
-                                    }
+                                    "Zombie"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -91,9 +81,7 @@
                             "value": 1
                           },
                           "riders": {
-                            "tapped": {
-                              "type": "Tapped"
-                            }
+                            "tapped": "Tapped"
                           }
                         }
                       }
@@ -114,17 +102,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          },
-          {
-            "type": "Curse"
-          }
+          "Aura",
+          "Curse"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

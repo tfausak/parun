@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -34,9 +32,7 @@
               },
               "matching": {
                 "type": "HasColor",
-                "value": {
-                  "type": "White"
-                }
+                "value": "White"
               },
               "subject": {
                 "type": "Spells"
@@ -65,15 +61,11 @@
                 "value": [
                   {
                     "type": "HasColor",
-                    "value": {
-                      "type": "White"
-                    }
+                    "value": "White"
                   },
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Enchantment"
-                    }
+                    "value": "Enchantment"
                   }
                 ]
               },
@@ -90,9 +82,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

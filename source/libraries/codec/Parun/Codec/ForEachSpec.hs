@@ -71,7 +71,7 @@ spec s = Spec.describe s "Parun.Codec.ForEach" $ do
             ForEach.startingWith = Nothing
           }
       )
-      " {\"ref\":{\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"slot\":\"victim\",\"body\":[]} "
+      " {\"ref\":{\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}},\"slot\":\"victim\",\"body\":[]} "
   -- Rule 702.116a's "for each opponent ..., you may": the one non-default
   -- membership, so the key is on the wire.
   Spec.it s "MkForEach over any number of its members" $
@@ -88,7 +88,7 @@ spec s = Spec.describe s "Parun.Codec.ForEach" $ do
             ForEach.startingWith = Nothing
           }
       )
-      " {\"ref\":{\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}},\"members\":{\"type\":\"AnyNumber\"},\"slot\":\"opponent\",\"body\":[\"mint\"]} "
+      " {\"ref\":{\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"Relative\",\"value\":\"Opponent\"}}},\"members\":\"AnyNumber\",\"slot\":\"opponent\",\"body\":[\"mint\"]} "
   -- Cleansing's "for each land, destroy that land unless any player pays 1
   -- life": CR 118.12a's gate offered per member.
   Spec.it s "MkForEach with a pay gate" $
@@ -116,7 +116,7 @@ spec s = Spec.describe s "Parun.Codec.ForEach" $ do
             ForEach.startingWith = Nothing
           }
       )
-      " {\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}},\"slot\":\"land\",\"body\":[\"destroy\"],\"payGate\":{\"payer\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"cost\":{\"mana\":[],\"components\":[{\"type\":\"PayLife\",\"value\":{\"type\":\"Fixed\",\"value\":1}}]},\"branch\":{\"type\":\"IfNonePaid\"}}} "
+      " {\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}},\"slot\":\"land\",\"body\":[\"destroy\"],\"payGate\":{\"payer\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"},\"cost\":{\"mana\":[],\"components\":[{\"type\":\"PayLife\",\"value\":{\"type\":\"Fixed\",\"value\":1}}]},\"branch\":\"IfNonePaid\"}} "
   -- Thieves' Auction's "starting with you".
   Spec.it s "MkForEach starting with a player" $
     Common.assertCodec
@@ -132,5 +132,5 @@ spec s = Spec.describe s "Parun.Codec.ForEach" $ do
             ForEach.startingWith = Just (PlayerRef.Relative PlayerRelation.You)
           }
       )
-      " {\"ref\":{\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"slot\":\"chooser\",\"body\":[\"choose\"],\"startingWith\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      " {\"ref\":{\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"Relative\",\"value\":\"AnyPlayer\"}}},\"slot\":\"chooser\",\"body\":[\"choose\"],\"startingWith\":{\"type\":\"Relative\",\"value\":\"You\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

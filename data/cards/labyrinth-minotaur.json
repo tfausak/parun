@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -38,9 +36,7 @@
                   "value": []
                 }
               },
-              "role": {
-                "type": "Blocker"
-              }
+              "role": "Blocker"
             }
           },
           "modal": {
@@ -68,14 +64,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Minotaur"
-          }
+          "Minotaur"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

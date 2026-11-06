@@ -32,6 +32,6 @@ spec s = Spec.describe s "Parun.Codec.ComponentCard" $ do
           ComponentCard.identity = Just (CardIdentity.MkCardIdentity 3 (PlayerId.MkPlayerId 2)),
           ComponentCard.duplicate = Just ProjectedCharacteristicsSpec.minimalCharacteristics
         }
-      " {\"duplicate\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]},\"identity\":{\"serial\":3,\"startingOwner\":2},\"printing\":17} "
+      " {\"duplicate\":{\"names\":[\"Mountain\"],\"cardTypes\":[\"Land\"]},\"identity\":{\"serial\":3,\"startingOwner\":2},\"printing\":17} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ComponentCard.codec

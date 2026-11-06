@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -35,17 +33,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Rat"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Rat",
+          "Shaman"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

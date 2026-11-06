@@ -16,11 +16,11 @@ spec s = Spec.describe s "Parun.Codec.RevealedThisWay" $ do
       s
       RevealedThisWay.codec
       (RevealedThisWay.MkRevealedThisWay (Filter.HasCardType CardType.Land) Nothing)
-      " {\"card\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}} "
+      " {\"card\":{\"type\":\"HasCardType\",\"value\":\"Land\"}} "
   Spec.it s "MkRevealedThisWay, both keys" $
     Common.assertCodec
       s
       RevealedThisWay.codec
       (RevealedThisWay.MkRevealedThisWay {RevealedThisWay.card = Filter.HasCardType CardType.Land, RevealedThisWay.timing = Just RevealTiming.AsDrawn})
-      " {\"card\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"timing\":{\"type\":\"AsDrawn\"}} "
+      " {\"card\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"timing\":\"AsDrawn\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s RevealedThisWay.codec

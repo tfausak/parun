@@ -10,7 +10,7 @@
           { "card": "Mountain", "label": "m3", "ready": true },
           { "card": "Mountain", "label": "m4", "ready": true },
           { "card": "Mountain", "label": "m5", "ready": true },
-          { "card": "Prey Upon", "label": "prey", "faceDown": { "type": "Manifested" } } ],
+          { "card": "Prey Upon", "label": "prey", "faceDown": "Manifested" } ],
         "hand": [ { "card": "Showstopping Surprise", "label": "surprise" } ] },
       { "name": "bob" }
     ],

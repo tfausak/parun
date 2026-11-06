@@ -25,21 +25,15 @@
                             "value": {
                               "step": {
                                 "type": "Beginning",
-                                "value": {
-                                  "type": "Upkeep"
-                                }
+                                "value": "Upkeep"
                               }
                             }
                           },
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Artifact"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Artifact",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -56,21 +50,15 @@
                             "value": {
                               "step": {
                                 "type": "Beginning",
-                                "value": {
-                                  "type": "Upkeep"
-                                }
+                                "value": "Upkeep"
                               }
                             }
                           },
                           "modification": {
                             "type": "CardType",
                             "value": {
-                              "cardType": {
-                                "type": "Creature"
-                              },
-                              "mode": {
-                                "type": "InAddition"
-                              }
+                              "cardType": "Creature",
+                              "mode": "InAddition"
                             }
                           },
                           "ref": {
@@ -87,9 +75,7 @@
                             "value": {
                               "step": {
                                 "type": "Beginning",
-                                "value": {
-                                  "type": "Upkeep"
-                                }
+                                "value": "Upkeep"
                               }
                             }
                           },
@@ -101,9 +87,7 @@
                                 "value": {
                                   "quantity": {
                                     "type": "Measure",
-                                    "value": {
-                                      "type": "ManaValue"
-                                    }
+                                    "value": "ManaValue"
                                   },
                                   "slot": "target"
                                 }
@@ -113,9 +97,7 @@
                                 "value": {
                                   "quantity": {
                                     "type": "Measure",
-                                    "value": {
-                                      "type": "ManaValue"
-                                    }
+                                    "value": "ManaValue"
                                   },
                                   "slot": "target"
                                 }
@@ -138,17 +120,13 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Artifact"
-                          }
+                          "value": "Artifact"
                         },
                         {
                           "type": "Not",
                           "value": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           }
                         }
                       ]
@@ -172,18 +150,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -199,14 +173,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Spirit"
-          }
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

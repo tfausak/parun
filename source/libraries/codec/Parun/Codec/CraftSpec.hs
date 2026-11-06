@@ -33,5 +33,5 @@ spec s = Spec.describe s "Parun.Codec.Craft" $ do
             Craft.materials = ExileMaterials.MkExileMaterials {ExileMaterials.count = 1, ExileMaterials.orMore = False, ExileMaterials.whichObjects = Filter.HasCardType CardType.Creature}
           }
       )
-      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":4},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Black\"}}}]},\"materials\":{\"count\":1,\"whichObjects\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":4},{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Black\"}}]},\"materials\":{\"count\":1,\"whichObjects\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.PermanentAction" $ do
       s
       PermanentAction.codec
       PermanentAction.Evolve
-      " {\"type\":\"Evolve\"} "
+      " \"Evolve\" "
   -- Parun.Codec.DamageKindSpec's reason: Arm.enum derives the arm list from the
   -- type, so this is what would catch a constructor the derivation missed or two
   -- that encode alike.

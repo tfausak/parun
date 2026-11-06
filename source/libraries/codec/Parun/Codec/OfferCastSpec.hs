@@ -95,7 +95,7 @@ spec s = Spec.describe s "Parun.Codec.OfferCast" $ do
             OfferCast.slot = Nothing
           }
       )
-      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"revealed\"},\"caster\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"optionality\":{\"type\":\"Mandatory\"},\"offer\":{\"withoutPayingManaCost\":true}} "
+      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"revealed\"},\"caster\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"optionality\":\"Mandatory\",\"offer\":{\"withoutPayingManaCost\":true}} "
   -- The key a repeated offer writes: Fevered Suspicion's "any number", the one
   -- posture the three cases above all default away from.
   Spec.it s "MkOfferCast, repetition written" $

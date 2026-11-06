@@ -162,7 +162,7 @@ event context creature c = case c of
       [Filter.Type.Or gs] -> do
         ps <- traverse (\g -> Filter.phrase g (Target.keyword context)) gs
         let described' q = not (null (Filter.adjectives q) && null (Filter.qualifiers q))
-        if not (any (null . Filter.nouns) ps) && any described' ps then Filter.disjunction (fmap (`Filter.merge` spell) ps) else fmap (`Filter.merge` spell) (Filter.phrase (Filter.Type.Or gs) (Target.keyword context))
+        if not (any (null . Filter.nouns) ps) && any described' ps then Filter.disjunction Filter.Plain (fmap (`Filter.merge` spell) ps) else fmap (`Filter.merge` spell) (Filter.phrase (Filter.Type.Or gs) (Target.keyword context))
       _ -> fmap (`Filter.merge` spell) (Filter.phrase (Filter.Type.And rest) (Target.keyword context))
     plain <- Filter.describe Filter.Singular Target.permanent p
     -- Free for a disjunction of colours: "a spell that's white, blue, black,

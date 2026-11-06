@@ -14,7 +14,7 @@ spec s = Spec.describe s "Parun.Codec.TurnUpProcedure" $ do
       s
       TurnUpProcedure.codec
       TurnUpProcedure.Morph
-      " {\"type\":\"Morph\"} "
+      " \"Morph\" "
   -- Exhaustive where the literal above is representative: Arm.enum derives the
   -- arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

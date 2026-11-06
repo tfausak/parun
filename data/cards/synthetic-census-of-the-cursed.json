@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -28,9 +26,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Count",
@@ -42,18 +38,14 @@
                             "type": "HasAttached",
                             "value": {
                               "type": "HasSubtype",
-                              "value": {
-                                "type": "Aura"
-                              }
+                              "value": "Aura"
                             }
                           },
                           "scope": {
                             "type": "OverPlayers",
                             "value": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             }
                           }
                         }
@@ -68,9 +60,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

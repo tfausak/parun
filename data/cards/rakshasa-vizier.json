@@ -10,27 +10,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -49,9 +43,7 @@
           "condition": {
             "type": "LeavesZone",
             "value": {
-              "batching": {
-                "type": "OneOrMore"
-              },
+              "batching": "OneOrMore",
               "card": {
                 "type": "Matching",
                 "value": {
@@ -61,15 +53,9 @@
                   }
                 }
               },
-              "from": {
-                "type": "Graveyard"
-              },
-              "to": {
-                "type": "Exile"
-              },
-              "whose": {
-                "type": "You"
-              }
+              "from": "Graveyard",
+              "to": "Exile",
+              "whose": "You"
             }
           },
           "modal": {
@@ -104,14 +90,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Demon"
-          }
+          "Demon"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

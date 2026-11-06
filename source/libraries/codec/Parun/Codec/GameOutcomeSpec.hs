@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.GameOutcome" $ do
       s
       GameOutcome.codec
       GameOutcome.Win
-      " {\"type\":\"Win\"} "
+      " \"Win\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s GameOutcome.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s GameOutcome.codec

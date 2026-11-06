@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -40,9 +36,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Red"
-                              }
+                              "Red"
                             ],
                             "name": "Elemental Token",
                             "power": {
@@ -55,14 +49,10 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Elemental"
-                                }
+                                "Elemental"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -86,9 +76,7 @@
                 "condition": {
                   "type": "Compares",
                   "value": {
-                    "comparison": {
-                      "type": "Exactly"
-                    },
+                    "comparison": "Exactly",
                     "measured": {
                       "type": "InSlot",
                       "value": "flip"
@@ -109,9 +97,7 @@
                           "type": "IsSource"
                         }
                       },
-                      "zone": {
-                        "type": "Hand"
-                      }
+                      "zone": "Hand"
                     }
                   }
                 ]
@@ -122,9 +108,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

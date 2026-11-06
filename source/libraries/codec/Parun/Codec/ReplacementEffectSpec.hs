@@ -102,7 +102,7 @@ spec s =
                     False
                 )
             )
-            " {\"type\":\"ZoneChangeR\",\"value\":{\"matching\":{\"whenDestination\":{\"type\":\"Graveyard\"}},\"destination\":{\"type\":\"Exile\"}}} "
+            " {\"type\":\"ZoneChangeR\",\"value\":{\"matching\":{\"whenDestination\":\"Graveyard\"},\"destination\":\"Exile\"}} "
         -- The relation that distinguishes this from the shape above has to survive
         -- the wire too.
         Spec.it s "ZoneChangeR (Leyline of the Void, Opponents)" $
@@ -126,7 +126,7 @@ spec s =
                     False
                 )
             )
-            " {\"type\":\"ZoneChangeR\",\"value\":{\"matching\":{\"whenDestination\":{\"type\":\"Graveyard\"},\"whoseObject\":{\"type\":\"Opponent\"}},\"destination\":{\"type\":\"Exile\"}}} "
+            " {\"type\":\"ZoneChangeR\",\"value\":{\"matching\":{\"whenDestination\":\"Graveyard\",\"whoseObject\":{\"type\":\"Opponent\"}},\"destination\":\"Exile\"}} "
         -- CR 614.1c: EntryR's pattern is a bare Filter, and "as this permanent
         -- enters" is Filter.IsSource. AsCopy pins the exception-free rewrite beside it.
         Spec.it s "EntryR (Clone, IsSource + AsCopy)" $
@@ -134,7 +134,7 @@ spec s =
             s
             codec
             (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty (CopyDomain.InZone Zone.Battlefield) Nothing CopyRecipient.ThisObject True))))
-            " {\"type\":\"EntryR\",\"value\":{\"matching\":{\"type\":\"IsSource\"},\"rewrite\":{\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}}}} "
+            " {\"type\":\"EntryR\",\"value\":{\"matching\":{\"type\":\"IsSource\"},\"rewrite\":{\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}}}} "
         -- CR 208.2b: Primal Plasma's ChoiceOf, carrying P/T and keywords.
         Spec.it s "EntryR (Primal Plasma, ChoiceOf)" $
           Common.assertCodec
@@ -158,14 +158,14 @@ spec s =
             s
             codec
             (ReplacementEffect.EntryR (EntryR.MkEntryR (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.Opponent]) (EntryRewrite.UnderControlOf PlayerRelation.You)))
-            " {\"type\":\"EntryR\",\"value\":{\"matching\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}}]},\"rewrite\":{\"type\":\"UnderControlOf\",\"value\":{\"type\":\"You\"}}}} "
+            " {\"type\":\"EntryR\",\"value\":{\"matching\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Creature\"},{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"Opponent\"}}]},\"rewrite\":{\"type\":\"UnderControlOf\",\"value\":\"You\"}}} "
         -- Pattern and rewrite are both DATA, so both have to survive the trip.
         Spec.it s "DamageR (combat damage, prevented)" $
           Common.assertCodec
             s
             codec
             (ReplacementEffect.DamageR (DamageR.MkDamageR DamagePattern.MkDamagePattern {DamagePattern.whichKind = Just DamageKind.Combat, DamagePattern.whatSource = Filter.And [], DamagePattern.whatRecipient = Nothing, DamagePattern.whoRecipient = Nothing, DamagePattern.whichRecipient = Nothing, DamagePattern.whichSource = Nothing, DamagePattern.boundRecipient = Nothing} DamageRewrite.PreventAll Seq.empty))
-            " {\"type\":\"DamageR\",\"value\":{\"matching\":{\"whichKind\":{\"type\":\"Combat\"}},\"rewrite\":{\"type\":\"PreventAll\"}}} "
+            " {\"type\":\"DamageR\",\"value\":{\"matching\":{\"whichKind\":\"Combat\"},\"rewrite\":{\"type\":\"PreventAll\"}}} "
         -- CR 614.15 / 614.1a: source-scoped, any kind, and a flat instead-amount
         -- rather than a prevention.
         Spec.it s "DamageR (this source's damage, set to a flat amount)" $
@@ -186,7 +186,7 @@ spec s =
             s
             codec
             (ReplacementEffect.DestructionR (DestructionR.MkDestructionR Nothing DestructionRewrite.Regenerate))
-            " {\"type\":\"DestructionR\",\"value\":{\"rewrite\":{\"type\":\"Regenerate\"}}} "
+            " {\"type\":\"DestructionR\",\"value\":{\"rewrite\":\"Regenerate\"}} "
         -- CR 122.1d -- engine-minted, so this is the only place its wire form is
         -- pinned whole. Bewitching Leechcraft's printed row is in
         -- Parun.Codec.UntapRSpec.
@@ -213,7 +213,7 @@ spec s =
                     (LifeLossRewrite.LeaveAtLeast 1)
                 )
             )
-            " {\"type\":\"LifeLossR\",\"value\":{\"matching\":{\"whose\":{\"type\":\"You\"},\"whichCause\":{\"type\":\"ByDamage\"}},\"rewrite\":{\"type\":\"LeaveAtLeast\",\"value\":1}}} "
+            " {\"type\":\"LifeLossR\",\"value\":{\"matching\":{\"whose\":{\"type\":\"You\"},\"whichCause\":\"ByDamage\"},\"rewrite\":{\"type\":\"LeaveAtLeast\",\"value\":1}}} "
         -- CR 614.1a / 119.10: Boon Reflection, the LifeGainR producer.
         Spec.it s "LifeGainR (Boon Reflection)" $
           Common.assertCodec
@@ -239,35 +239,35 @@ spec s =
             s
             codec
             (ReplacementEffect.DrawCountR (DrawCountR.MkDrawCountR (ControllerRelation.Related PlayerRelation.Opponent) 2 DrawCountRewrite.EachDrawOne))
-            " {\"type\":\"DrawCountR\",\"value\":{\"whose\":{\"type\":\"Opponent\"},\"atLeast\":2,\"rewrite\":{\"type\":\"EachDrawOne\"}}} "
+            " {\"type\":\"DrawCountR\",\"value\":{\"whose\":{\"type\":\"Opponent\"},\"atLeast\":2,\"rewrite\":\"EachDrawOne\"}} "
         -- CR 701.17a: Bruvac the Grandiloquent.
         Spec.it s "InstructionR (Bruvac the Grandiloquent)" $
           Common.assertCodec
             s
             codec
             (ReplacementEffect.InstructionR (InstructionR.MkInstructionR PlayerInstruction.MillCards (ControllerRelation.Related PlayerRelation.Opponent) (InstructionRewrite.Scaled (Scaling.Multiply 2))))
-            " {\"type\":\"InstructionR\",\"value\":{\"instruction\":{\"type\":\"MillCards\"},\"whose\":{\"type\":\"Opponent\"},\"rewrite\":{\"type\":\"Scaled\",\"value\":{\"type\":\"Multiply\",\"value\":2}}}} "
+            " {\"type\":\"InstructionR\",\"value\":{\"instruction\":\"MillCards\",\"whose\":{\"type\":\"Opponent\"},\"rewrite\":{\"type\":\"Scaled\",\"value\":{\"type\":\"Multiply\",\"value\":2}}}} "
         -- CR 706.6: Pixie Guide.
         Spec.it s "DieRollR (Pixie Guide)" $
           Common.assertCodec
             s
             codec
             (ReplacementEffect.DieRollR (DieRollR.MkDieRollR (ControllerRelation.Related PlayerRelation.You) DieRollRewrite.ExtraIgnoringLowest))
-            " {\"type\":\"DieRollR\",\"value\":{\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"ExtraIgnoringLowest\"}}} "
+            " {\"type\":\"DieRollR\",\"value\":{\"whose\":{\"type\":\"You\"},\"rewrite\":\"ExtraIgnoringLowest\"}} "
         -- The Unstable FAQ: Steamflogger Boss.
         Spec.it s "AssembleR (Steamflogger Boss)" $
           Common.assertCodec
             s
             codec
             (ReplacementEffect.AssembleR (Filter.HasSubtype Subtype.Rigger))
-            " {\"type\":\"AssembleR\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Rigger\"}}} "
+            " {\"type\":\"AssembleR\",\"value\":{\"type\":\"HasSubtype\",\"value\":\"Rigger\"}} "
         -- CR 106.12b: Naked Singularity's Plains.
         Spec.it s "ManaR (Naked Singularity)" $
           Common.assertCodec
             s
             codec
             (ReplacementEffect.ManaR (ManaR.MkManaR (Filter.HasSubtype Subtype.Plains) (ManaType.Colored Color.Red)))
-            " {\"type\":\"ManaR\",\"value\":{\"matching\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Plains\"}},\"produces\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}}}} "
+            " {\"type\":\"ManaR\",\"value\":{\"matching\":{\"type\":\"HasSubtype\",\"value\":\"Plains\"},\"produces\":{\"type\":\"Colored\",\"value\":\"Red\"}}} "
         -- CR 701.31 / 614.1a: Susan Foreman.
         Spec.it s "PlaneswalkR (Susan Foreman)" $
           Common.assertCodec
@@ -281,7 +281,7 @@ spec s =
             s
             codec
             (ReplacementEffect.InstructionR (InstructionR.MkInstructionR PlayerInstruction.Scry (ControllerRelation.Related PlayerRelation.You) InstructionRewrite.DrawInstead))
-            " {\"type\":\"InstructionR\",\"value\":{\"instruction\":{\"type\":\"Scry\"},\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"DrawInstead\"}}} "
+            " {\"type\":\"InstructionR\",\"value\":{\"instruction\":\"Scry\",\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"DrawInstead\"}}} "
         -- A fixed kind, a real filter, and CR 614.16's AddMore.
         Spec.it s "CounterR (Hardened Scales)" $
           Common.assertCodec
@@ -299,7 +299,7 @@ spec s =
                     (Scaling.AddMore 1)
                 )
             )
-            " {\"type\":\"CounterR\",\"value\":{\"matching\":{\"whichKind\":{\"type\":\"PlusOnePlusOne\"},\"subject\":{\"type\":\"ByAnything\"},\"whose\":{\"type\":\"You\"},\"onWhat\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"scaling\":{\"type\":\"AddMore\",\"value\":1}}} "
+            " {\"type\":\"CounterR\",\"value\":{\"matching\":{\"whichKind\":{\"type\":\"PlusOnePlusOne\"},\"subject\":{\"type\":\"ByAnything\"},\"whose\":{\"type\":\"You\"},\"onWhat\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"scaling\":{\"type\":\"AddMore\",\"value\":1}}} "
         -- whichKind = Nothing means any kind, never "no kind", and the trivial filter
         -- matches every permanent. An absent whichKind key is what that Nothing
         -- means.
@@ -334,7 +334,7 @@ spec s =
             s
             codec
             (ReplacementEffect.PhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep), PhasePattern.whosePhase = ControllerRelation.Related PlayerRelation.AnyPlayer})
-            " {\"type\":\"PhaseR\",\"value\":{\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}}}}} "
+            " {\"type\":\"PhaseR\",\"value\":{\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":\"Upkeep\"}}}} "
         -- The baked player-scoped whosePhase = Among, which only Resolve's
         -- SkipPhase arm produces and no card authors (#437). The codec has to
         -- carry it either way.
@@ -343,7 +343,7 @@ spec s =
             s
             codec
             (ReplacementEffect.PhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = PhaseSelector.Step (Phase.Beginning BeginningStep.DrawStep), PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (PlayerId.MkPlayerId 1))})
-            " {\"type\":\"PhaseR\",\"value\":{\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":{\"type\":\"DrawStep\"}}},\"whosePhase\":{\"type\":\"Among\",\"value\":[1]}}} "
+            " {\"type\":\"PhaseR\",\"value\":{\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":\"DrawStep\"}},\"whosePhase\":{\"type\":\"Among\",\"value\":[1]}}} "
         -- The whole-phase selector, once Resolve has baked the player its resolution
         -- named -- the shape a bare Phase cannot spell (CR 500.1).
         Spec.it s "PhaseR (Stonehorn Dignitary, whole-phase skip)" $
@@ -360,12 +360,12 @@ spec s =
             s
             codec
             (ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR Filter.IsSource (Just TurnUpProcedure.Morph) Nothing (TurnUpRewrite.WithCounters (WithCounters.one CounterKind.PlusOnePlusOne (Quantity.Literal 1)))))
-            " {\"type\":\"TurnUpR\",\"value\":{\"matching\":{\"type\":\"IsSource\"},\"requiring\":{\"type\":\"Morph\"},\"rewrite\":{\"type\":\"WithCounters\",\"value\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"count\":{\"type\":\"Literal\",\"value\":1}}]}}} "
+            " {\"type\":\"TurnUpR\",\"value\":{\"matching\":{\"type\":\"IsSource\"},\"requiring\":\"Morph\",\"rewrite\":{\"type\":\"WithCounters\",\"value\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"count\":{\"type\":\"Literal\",\"value\":1}}]}}} "
         -- CR 701.3a: Dinosaur Headdress's "as this Equipment becomes attached".
         Spec.it s "AttachR (Dinosaur Headdress)" $
           Common.assertCodec
             s
             codec
             (ReplacementEffect.AttachR (AttachR.MkAttachR Filter.IsSource (AttachRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty (CopyDomain.InPile ExiledPile.CraftMaterials) Nothing CopyRecipient.ItsHost False))))
-            " {\"type\":\"AttachR\",\"value\":{\"matching\":{\"type\":\"IsSource\"},\"rewrite\":{\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"among\":{\"type\":\"InPile\",\"value\":{\"type\":\"CraftMaterials\"}},\"recipient\":{\"type\":\"ItsHost\"},\"optional\":false}}}} "
+            " {\"type\":\"AttachR\",\"value\":{\"matching\":{\"type\":\"IsSource\"},\"rewrite\":{\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"among\":{\"type\":\"InPile\",\"value\":{\"type\":\"CraftMaterials\"}},\"recipient\":\"ItsHost\",\"optional\":false}}}} "
         Spec.it s "has a schema" $ Common.assertHasSchema s codec

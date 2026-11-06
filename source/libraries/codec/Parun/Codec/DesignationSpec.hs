@@ -12,61 +12,61 @@ spec s = Spec.describe s "Parun.Codec.Designation" $ do
       s
       Designation.codec
       Designation.Renowned
-      " {\"type\":\"Renowned\"} "
+      " \"Renowned\" "
   Spec.it s "Monstrous" $
     Common.assertCodec
       s
       Designation.codec
       Designation.Monstrous
-      " {\"type\":\"Monstrous\"} "
+      " \"Monstrous\" "
   Spec.it s "Suspected" $
     Common.assertCodec
       s
       Designation.codec
       Designation.Suspected
-      " {\"type\":\"Suspected\"} "
+      " \"Suspected\" "
   Spec.it s "Solved" $
     Common.assertCodec
       s
       Designation.codec
       Designation.Solved
-      " {\"type\":\"Solved\"} "
+      " \"Solved\" "
   Spec.it s "Saddled" $
     Common.assertCodec
       s
       Designation.codec
       Designation.Saddled
-      " {\"type\":\"Saddled\"} "
+      " \"Saddled\" "
   Spec.it s "Prepared" $
     Common.assertCodec
       s
       Designation.codec
       Designation.Prepared
-      " {\"type\":\"Prepared\"} "
+      " \"Prepared\" "
   Spec.it s "Harnessed" $
     Common.assertCodec
       s
       Designation.codec
       Designation.Harnessed
-      " {\"type\":\"Harnessed\"} "
+      " \"Harnessed\" "
   Spec.it s "Embalmed" $
     Common.assertCodec
       s
       Designation.codec
       Designation.Embalmed
-      " {\"type\":\"Embalmed\"} "
+      " \"Embalmed\" "
   Spec.it s "Sprocket1" $
     Common.assertCodec
       s
       Designation.codec
       Designation.Sprocket1
-      " {\"type\":\"Sprocket1\"} "
+      " \"Sprocket1\" "
   Spec.it s "AlphaSector" $
     Common.assertCodec
       s
       Designation.codec
       Designation.AlphaSector
-      " {\"type\":\"AlphaSector\"} "
+      " \"AlphaSector\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

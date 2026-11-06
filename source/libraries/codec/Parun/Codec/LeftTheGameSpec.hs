@@ -19,5 +19,5 @@ spec s = Spec.describe s "Parun.Codec.LeftTheGame" $ do
             LeftTheGame.from = Zone.Graveyard
           }
       )
-      " {\"object\":7,\"from\":{\"type\":\"Graveyard\"}} "
+      " {\"object\":7,\"from\":\"Graveyard\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s LeftTheGame.codec

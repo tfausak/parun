@@ -131,14 +131,10 @@
               {
                 "manaType": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 },
                 "restriction": null,
-                "retention": {
-                  "type": "Ordinary"
-                },
+                "retention": "Ordinary",
                 "rider": null,
                 "sourceChoices": null,
                 "tags": []
@@ -155,9 +151,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -168,9 +162,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },
@@ -181,9 +173,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -194,9 +184,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

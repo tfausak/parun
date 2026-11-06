@@ -218,9 +218,7 @@
       "step": "PrecombatMain",
       "player": "bob",
       "do": {
-        "ChooseOptional": {
-          "type": "Declines"
-        }
+        "ChooseOptional": "Declines"
       }
     }
   ]

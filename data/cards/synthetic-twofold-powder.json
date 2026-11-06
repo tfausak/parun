@@ -24,9 +24,7 @@
                   "type": "InSlot",
                   "value": "self"
                 },
-                "zone": {
-                  "type": "Battlefield"
-                }
+                "zone": "Battlefield"
               }
             }
           ]
@@ -35,9 +33,7 @@
       "name": "Synthetic Twofold Powder",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

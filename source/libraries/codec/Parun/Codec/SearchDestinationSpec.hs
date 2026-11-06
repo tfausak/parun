@@ -12,67 +12,67 @@ spec s = Spec.describe s "Parun.Codec.SearchDestination" $ do
       s
       SearchDestination.codec
       SearchDestination.Battlefield
-      " {\"type\":\"Battlefield\"} "
+      " \"Battlefield\" "
   Spec.it s "BattlefieldTapped" $
     Common.assertCodec
       s
       SearchDestination.codec
       SearchDestination.BattlefieldTapped
-      " {\"type\":\"BattlefieldTapped\"} "
+      " \"BattlefieldTapped\" "
   Spec.it s "RevealThenHand" $
     Common.assertCodec
       s
       SearchDestination.codec
       SearchDestination.RevealThenHand
-      " {\"type\":\"RevealThenHand\"} "
+      " \"RevealThenHand\" "
   Spec.it s "Exile" $
     Common.assertCodec
       s
       SearchDestination.codec
       SearchDestination.Exile
-      " {\"type\":\"Exile\"} "
+      " \"Exile\" "
   Spec.it s "BattlefieldAttachedOrHand" $
     Common.assertCodec
       s
       SearchDestination.codec
       SearchDestination.BattlefieldAttachedOrHand
-      " {\"type\":\"BattlefieldAttachedOrHand\"} "
+      " \"BattlefieldAttachedOrHand\" "
   Spec.it s "BattlefieldAttached" $
     Common.assertCodec
       s
       SearchDestination.codec
       SearchDestination.BattlefieldAttached
-      " {\"type\":\"BattlefieldAttached\"} "
+      " \"BattlefieldAttached\" "
   Spec.it s "Reveal" $
     Common.assertCodec
       s
       SearchDestination.codec
       SearchDestination.Reveal
-      " {\"type\":\"Reveal\"} "
+      " \"Reveal\" "
   Spec.it s "Stay" $
     Common.assertCodec
       s
       SearchDestination.codec
       SearchDestination.Stay
-      " {\"type\":\"Stay\"} "
+      " \"Stay\" "
   Spec.it s "RevealThenTop" $
     Common.assertCodec
       s
       SearchDestination.codec
       SearchDestination.RevealThenTop
-      " {\"type\":\"RevealThenTop\"} "
+      " \"RevealThenTop\" "
   Spec.it s "Top" $
     Common.assertCodec
       s
       SearchDestination.codec
       SearchDestination.Top
-      " {\"type\":\"Top\"} "
+      " \"Top\" "
   Spec.it s "Hand" $
     Common.assertCodec
       s
       SearchDestination.codec
       SearchDestination.Hand
-      " {\"type\":\"Hand\"} "
+      " \"Hand\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

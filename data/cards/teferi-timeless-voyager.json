@@ -23,9 +23,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -64,17 +62,13 @@
                         "value": {
                           "placement": {
                             "type": "Stated",
-                            "value": {
-                              "type": "Top"
-                            }
+                            "value": "Top"
                           },
                           "ref": {
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -122,16 +116,12 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "HeldByBound",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
+                                      "holder": "Controller",
                                       "slot": "target"
                                     }
                                   }
@@ -142,9 +132,7 @@
                           "duration": {
                             "type": "UntilEndOfYourNextTurn"
                           },
-                          "what": {
-                            "type": "PhaseIn"
-                          }
+                          "what": "PhaseIn"
                         }
                       },
                       {
@@ -156,16 +144,12 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "HeldByBound",
                                 "value": {
-                                  "holder": {
-                                    "type": "Controller"
-                                  },
+                                  "holder": "Controller",
                                   "slot": "target"
                                 }
                               }
@@ -180,9 +164,7 @@
                   "target": {
                     "filter": {
                       "type": "IsPlayer",
-                      "value": {
-                        "type": "Opponent"
-                      }
+                      "value": "Opponent"
                     },
                     "pool": {
                       "type": "Players"
@@ -207,18 +189,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -226,19 +204,13 @@
       "oracleText": "[+1]: Draw a card.\n[−3]: Put target creature on top of its owner's library.\n[−8]: Each creature target opponent controls phases out. Until the end of your next turn, they can't phase in. (Treat them and anything attached to them as though they don't exist.)",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Teferi"
-          }
+          "Teferi"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

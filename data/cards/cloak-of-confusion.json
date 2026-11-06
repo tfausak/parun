@@ -6,12 +6,8 @@
           "filter": {
             "type": "HeldBy",
             "value": {
-              "holder": {
-                "type": "Controller"
-              },
-              "relation": {
-                "type": "You"
-              }
+              "holder": "Controller",
+              "relation": "You"
             }
           },
           "pool": {
@@ -28,9 +24,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -64,9 +58,7 @@
                           },
                           "modification": {
                             "type": "AssignCombatDamage",
-                            "value": {
-                              "type": "NoCombatDamage"
-                            }
+                            "value": "NoCombatDamage"
                           },
                           "ref": {
                             "type": "InSlot",
@@ -93,9 +85,7 @@
                                   "type": "InSlot",
                                   "value": "thatPlayer"
                                 },
-                                "zone": {
-                                  "type": "Hand"
-                                }
+                                "zone": "Hand"
                               }
                             }
                           }
@@ -117,14 +107,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

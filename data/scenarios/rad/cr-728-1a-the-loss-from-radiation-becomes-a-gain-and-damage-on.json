@@ -5,7 +5,7 @@
     "seats": [
       {
         "name": "alice",
-        "counters": [{ "key": { "type": "Rad" }, "value": 2 }],
+        "counters": [{ "key": "Rad", "value": 2 }],
         "battlefield": [{ "card": "Strong, the Brutish Thespian" }],
         "library": [
           { "card": "Lightning Bolt" },

@@ -22,9 +22,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
+                            "comparison": "Exactly",
                             "measured": {
                               "type": "Count",
                               "value": {
@@ -36,19 +34,13 @@
                                   "value": [
                                     {
                                       "type": "HasSubtype",
-                                      "value": {
-                                        "type": "PowerPlant"
-                                      }
+                                      "value": "PowerPlant"
                                     },
                                     {
                                       "type": "HeldBy",
                                       "value": {
-                                        "holder": {
-                                          "type": "Controller"
-                                        },
-                                        "relation": {
-                                          "type": "You"
-                                        }
+                                        "holder": "Controller",
+                                        "relation": "You"
                                       }
                                     }
                                   ]
@@ -58,13 +50,9 @@
                                   "value": {
                                     "player": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "AnyPlayer"
-                                      }
+                                      "value": "AnyPlayer"
                                     },
-                                    "zone": {
-                                      "type": "Battlefield"
-                                    }
+                                    "zone": "Battlefield"
                                   }
                                 }
                               }
@@ -78,9 +66,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "Exactly"
-                            },
+                            "comparison": "Exactly",
                             "measured": {
                               "type": "Count",
                               "value": {
@@ -92,19 +78,13 @@
                                   "value": [
                                     {
                                       "type": "HasSubtype",
-                                      "value": {
-                                        "type": "Tower"
-                                      }
+                                      "value": "Tower"
                                     },
                                     {
                                       "type": "HeldBy",
                                       "value": {
-                                        "holder": {
-                                          "type": "Controller"
-                                        },
-                                        "relation": {
-                                          "type": "You"
-                                        }
+                                        "holder": "Controller",
+                                        "relation": "You"
                                       }
                                     }
                                   ]
@@ -114,13 +94,9 @@
                                   "value": {
                                     "player": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "AnyPlayer"
-                                      }
+                                      "value": "AnyPlayer"
                                     },
-                                    "zone": {
-                                      "type": "Battlefield"
-                                    }
+                                    "zone": "Battlefield"
                                   }
                                 }
                               }
@@ -154,9 +130,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "AtLeast"
-                            },
+                            "comparison": "AtLeast",
                             "measured": {
                               "type": "Count",
                               "value": {
@@ -168,19 +142,13 @@
                                   "value": [
                                     {
                                       "type": "HasSubtype",
-                                      "value": {
-                                        "type": "PowerPlant"
-                                      }
+                                      "value": "PowerPlant"
                                     },
                                     {
                                       "type": "HeldBy",
                                       "value": {
-                                        "holder": {
-                                          "type": "Controller"
-                                        },
-                                        "relation": {
-                                          "type": "You"
-                                        }
+                                        "holder": "Controller",
+                                        "relation": "You"
                                       }
                                     }
                                   ]
@@ -190,13 +158,9 @@
                                   "value": {
                                     "player": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "AnyPlayer"
-                                      }
+                                      "value": "AnyPlayer"
                                     },
-                                    "zone": {
-                                      "type": "Battlefield"
-                                    }
+                                    "zone": "Battlefield"
                                   }
                                 }
                               }
@@ -210,9 +174,7 @@
                         {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "AtLeast"
-                            },
+                            "comparison": "AtLeast",
                             "measured": {
                               "type": "Count",
                               "value": {
@@ -224,19 +186,13 @@
                                   "value": [
                                     {
                                       "type": "HasSubtype",
-                                      "value": {
-                                        "type": "Tower"
-                                      }
+                                      "value": "Tower"
                                     },
                                     {
                                       "type": "HeldBy",
                                       "value": {
-                                        "holder": {
-                                          "type": "Controller"
-                                        },
-                                        "relation": {
-                                          "type": "You"
-                                        }
+                                        "holder": "Controller",
+                                        "relation": "You"
                                       }
                                     }
                                   ]
@@ -246,13 +202,9 @@
                                   "value": {
                                     "player": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "AnyPlayer"
-                                      }
+                                      "value": "AnyPlayer"
                                     },
-                                    "zone": {
-                                      "type": "Battlefield"
-                                    }
+                                    "zone": "Battlefield"
                                   }
                                 }
                               }
@@ -300,17 +252,11 @@
       "oracleText": "{T}: Add {C}. If you control an Urza's Power-Plant and an Urza's Tower, add {C}{C} instead.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Mine"
-          },
-          {
-            "type": "Urzas"
-          }
+          "Mine",
+          "Urzas"
         ],
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

@@ -24,9 +24,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           },
                           "rider": {
@@ -35,21 +33,15 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HasSubtype",
-                                  "value": {
-                                    "type": "Dragon"
-                                  }
+                                  "value": "Dragon"
                                 }
                               ]
                             },
-                            "effect": {
-                              "type": "GainsHasteUntilEndOfTurn"
-                            }
+                            "effect": "GainsHasteUntilEndOfTurn"
                           }
                         }
                       }
@@ -70,9 +62,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -80,9 +70,7 @@
       "oracleText": "{T}: Add {R}. If that mana is spent on a Dragon creature spell, it gains haste until end of turn.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

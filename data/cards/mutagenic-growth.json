@@ -4,9 +4,7 @@
       "manaCost": [
         {
           "type": "Phyrexian",
-          "value": {
-            "type": "Green"
-          }
+          "value": "Green"
         }
       ],
       "name": "Mutagenic Growth",
@@ -57,9 +55,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

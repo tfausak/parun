@@ -26,7 +26,7 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardInHand" $ do
             ChosenCardInHand.count = HowMany.one
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- Aquatic Subtlety's "two cards from your hand".
   Spec.it s "MkChosenCardInHand, a count of two" $
     Common.assertCodec
@@ -38,7 +38,7 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardInHand" $ do
             ChosenCardInHand.count = HowMany.Exactly (Quantity.Literal 2)
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"And\",\"value\":[]},\"count\":{\"type\":\"Exactly\",\"value\":{\"type\":\"Literal\",\"value\":2}}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"filter\":{\"type\":\"And\",\"value\":[]},\"count\":{\"type\":\"Exactly\",\"value\":{\"type\":\"Literal\",\"value\":2}}} "
   -- The Great Aurora's "any number of land cards".
   Spec.it s "MkChosenCardInHand, any number" $
     Common.assertCodec
@@ -50,5 +50,5 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardInHand" $ do
             ChosenCardInHand.count = HowMany.UpTo Nothing
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"count\":{\"type\":\"UpTo\"}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"count\":{\"type\":\"UpTo\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ChosenCardInHand.codec

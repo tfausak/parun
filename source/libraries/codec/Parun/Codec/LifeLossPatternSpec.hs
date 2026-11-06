@@ -19,7 +19,7 @@ spec s = Spec.describe s "Parun.Codec.LifeLossPattern" $ do
         { LifeLossPattern.whose = ControllerRelation.Related PlayerRelation.You,
           LifeLossPattern.whichCause = Just LifeLossCause.ByDamage
         }
-      " {\"whose\":{\"type\":\"You\"},\"whichCause\":{\"type\":\"ByDamage\"}} "
+      " {\"whose\":{\"type\":\"You\"},\"whichCause\":\"ByDamage\"} "
   -- CR 109.5: Related AnyPlayer is what a pattern that says nothing about the controller
   -- means, and Nothing what one that says nothing about the cause does, so both
   -- keys are omitted.

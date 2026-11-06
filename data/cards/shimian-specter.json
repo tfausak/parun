@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -48,15 +44,11 @@
               "actor": {
                 "type": "Self"
               },
-              "kind": {
-                "type": "Combat"
-              },
+              "kind": "Combat",
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -93,9 +85,7 @@
                             {
                               "type": "Search",
                               "value": {
-                                "destination": {
-                                  "type": "Exile"
-                                },
+                                "destination": "Exile",
                                 "filter": {
                                   "type": "Shares",
                                   "value": {
@@ -132,9 +122,7 @@
                                               "type": "InSlot",
                                               "value": "thatPlayer"
                                             },
-                                            "zone": {
-                                              "type": "Graveyard"
-                                            }
+                                            "zone": "Graveyard"
                                           }
                                         }
                                       }
@@ -159,9 +147,7 @@
                                                   "type": "InSlot",
                                                   "value": "thatPlayer"
                                                 },
-                                                "zone": {
-                                                  "type": "Hand"
-                                                }
+                                                "zone": "Hand"
                                               }
                                             }
                                           }
@@ -183,9 +169,7 @@
                                                   "type": "InSlot",
                                                   "value": "thatPlayer"
                                                 },
-                                                "zone": {
-                                                  "type": "Library"
-                                                }
+                                                "zone": "Library"
                                               }
                                             }
                                           }
@@ -196,20 +180,12 @@
                                 },
                                 "searcher": {
                                   "type": "Relative",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 },
                                 "zones": [
-                                  {
-                                    "type": "Library"
-                                  },
-                                  {
-                                    "type": "Hand"
-                                  },
-                                  {
-                                    "type": "Graveyard"
-                                  }
+                                  "Library",
+                                  "Hand",
+                                  "Graveyard"
                                 ]
                               }
                             }
@@ -221,9 +197,7 @@
                                 "type": "Not",
                                 "value": {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Land"
-                                  }
+                                  "value": "Land"
                                 }
                               },
                               "slot": "revealed"
@@ -242,14 +216,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Specter"
-          }
+          "Specter"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

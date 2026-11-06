@@ -62,7 +62,7 @@ spec s = Spec.describe s "Parun.Codec.ConjureDestination" $ do
       s
       ConjureDestination.codec
       (ConjureDestination.Battlefield ConjureEntry.defaultValue {ConjureEntry.tapped = TapState.Tapped})
-      " {\"type\":\"Battlefield\",\"value\":{\"tapped\":{\"type\":\"Tapped\"}}} "
+      " {\"type\":\"Battlefield\",\"value\":{\"tapped\":\"Tapped\"}} "
   -- Kari Zev, Crew of Two's "onto the battlefield tapped and attacking" (CR
   -- 508.4).
   Spec.it s "Battlefield tapped and attacking" $
@@ -70,7 +70,7 @@ spec s = Spec.describe s "Parun.Codec.ConjureDestination" $ do
       s
       ConjureDestination.codec
       (ConjureDestination.Battlefield (ConjureEntry.MkConjureEntry TapState.Tapped True))
-      " {\"type\":\"Battlefield\",\"value\":{\"tapped\":{\"type\":\"Tapped\"},\"attacking\":true}} "
+      " {\"type\":\"Battlefield\",\"value\":{\"tapped\":\"Tapped\",\"attacking\":true}} "
   -- Decode-only, because it is the other spelling of the value above rather
   -- than a value of its own: Parun.JsonCodec.Arm.optionalPayload accepts a
   -- stated default and the encoder writes the bare tag back, which is what keeps
@@ -79,7 +79,7 @@ spec s = Spec.describe s "Parun.Codec.ConjureDestination" $ do
     Common.assertFromJson
       s
       (Codec.decode ConjureDestination.codec)
-      " {\"type\":\"Battlefield\",\"value\":{\"tapped\":{\"type\":\"Untapped\"}}} "
+      " {\"type\":\"Battlefield\",\"value\":{\"tapped\":\"Untapped\"}} "
       (ConjureDestination.Battlefield ConjureEntry.defaultValue)
   Spec.it s "has a schema" $
     Common.assertHasSchema s ConjureDestination.codec

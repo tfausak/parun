@@ -40,9 +40,7 @@
           {
             "card": "Gift of Doom",
             "label": "gift",
-            "faceDown": {
-              "type": "Morphed"
-            },
+            "faceDown": "Morphed",
             "ready": true,
             "tapped": true
           }
@@ -112,9 +110,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseTurnUpAttachment",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       }
     },

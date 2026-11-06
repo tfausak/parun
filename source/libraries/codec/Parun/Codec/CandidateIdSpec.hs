@@ -26,7 +26,7 @@ spec s = Spec.describe s "Parun.Codec.CandidateId" $ do
               PermanentCandidate.ordinal = InstanceOrdinal.MkInstanceOrdinal 0
             }
       )
-      " {\"type\":\"OfPermanent\",\"value\":{\"source\":4,\"provenance\":{\"type\":\"Printed\"},\"effect\":{\"type\":\"ZoneChangeR\",\"value\":{\"matching\":{\"whenDestination\":{\"type\":\"Graveyard\"}},\"destination\":{\"type\":\"Exile\"}}},\"ordinal\":0}} "
+      " {\"type\":\"OfPermanent\",\"value\":{\"source\":4,\"provenance\":\"Printed\",\"effect\":{\"type\":\"ZoneChangeR\",\"value\":{\"matching\":{\"whenDestination\":\"Graveyard\"},\"destination\":\"Exile\"}},\"ordinal\":0}} "
   Spec.it s "OfFloating" $
     Common.assertCodec
       s

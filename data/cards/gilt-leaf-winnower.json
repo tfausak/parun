@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -59,9 +55,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ],
@@ -79,9 +73,7 @@
                           "type": "Not",
                           "value": {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Elf"
-                            }
+                            "value": "Elf"
                           }
                         },
                         {
@@ -89,17 +81,11 @@
                           "value": {
                             "type": "Measures",
                             "value": {
-                              "comparison": {
-                                "type": "Exactly"
-                              },
-                              "measure": {
-                                "type": "Power"
-                              },
+                              "comparison": "Exactly",
+                              "measure": "Power",
                               "operand": {
                                 "type": "Own",
-                                "value": {
-                                  "type": "Toughness"
-                                }
+                                "value": "Toughness"
                               }
                             }
                           }
@@ -118,17 +104,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Elf",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

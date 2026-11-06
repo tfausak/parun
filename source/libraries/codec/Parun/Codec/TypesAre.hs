@@ -13,5 +13,5 @@ import qualified Parun.Types.TypesAre as TypesAre
 codec :: Codec.Codec TypesAre.TypesAre
 codec = Fields.object $ do
   object <- Fields.required "object" Reference.codec TypesAre.object
-  types <- Fields.required "types" (Common.set Arm.keyedEnum) TypesAre.types
+  types <- Fields.required "types" (Common.set Arm.enum) TypesAre.types
   pure TypesAre.MkTypesAre {TypesAre.object = object, TypesAre.types = types}

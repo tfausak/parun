@@ -31,5 +31,5 @@ spec s = Spec.describe s "Parun.Codec.BlockCount" $ do
       s
       BlockCount.codec
       (BlockCount.AtLeast 1 (Filter.HasColor Color.Black))
-      " {\"type\":\"AtLeast\",\"value\":{\"floor\":1,\"others\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}}}} "
+      " {\"type\":\"AtLeast\",\"value\":{\"floor\":1,\"others\":{\"type\":\"HasColor\",\"value\":\"Black\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s BlockCount.codec

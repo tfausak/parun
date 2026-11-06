@@ -17,7 +17,7 @@ spec s = Spec.describe s "Parun.Codec.TappedForMana" $ do
       s
       TappedForMana.codec
       (TappedForMana.MkTappedForMana {TappedForMana.permanent = ObjectId.MkObjectId 9, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = PlayerId.MkPlayerId 1})
-      " {\"mana\":[{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}],\"permanent\":9,\"player\":1} "
+      " {\"mana\":[{\"type\":\"Colored\",\"value\":\"Green\"}],\"permanent\":9,\"player\":1} "
   -- Two types off one activation, which is what a permanent adding "{B}{G}"
   -- writes and what CR 106.12a's narrowing then reads either of.
   Spec.it s "MkTappedForMana, two types" $
@@ -25,5 +25,5 @@ spec s = Spec.describe s "Parun.Codec.TappedForMana" $ do
       s
       TappedForMana.codec
       (TappedForMana.MkTappedForMana {TappedForMana.permanent = ObjectId.MkObjectId 4, TappedForMana.mana = Set.fromList [ManaType.Colored Color.Black, ManaType.Colorless], TappedForMana.player = PlayerId.MkPlayerId 2})
-      " {\"mana\":[{\"type\":\"Colored\",\"value\":{\"type\":\"Black\"}},{\"type\":\"Colorless\"}],\"permanent\":4,\"player\":2} "
+      " {\"mana\":[{\"type\":\"Colored\",\"value\":\"Black\"},{\"type\":\"Colorless\"}],\"permanent\":4,\"player\":2} "
   Spec.it s "has a schema" $ Common.assertHasSchema s TappedForMana.codec

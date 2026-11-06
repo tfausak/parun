@@ -25,9 +25,7 @@
                           "value": {
                             "player": {
                               "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                              "value": "AnyPlayer"
                             },
                             "quantity": {
                               "type": "Literal",
@@ -67,9 +65,7 @@
                         "value": {
                           "filter": {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           "players": {
                             "type": "EachInSlot",
@@ -124,9 +120,7 @@
                             "filter": {
                               "type": "HeldByBound",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
+                                "holder": "Controller",
                                 "slot": "target"
                               }
                             }
@@ -145,9 +139,7 @@
                             "type": "InSlot",
                             "value": "chosenPile"
                           },
-                          "sacrificer": {
-                            "type": "PermanentController"
-                          }
+                          "sacrificer": "PermanentController"
                         }
                       }
                     ]
@@ -178,18 +170,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -197,19 +185,13 @@
       "oracleText": "[+1]: Each player discards a card.\n[−2]: Target player sacrifices a creature.\n[−6]: Separate all permanents target player controls into two piles. That player sacrifices all permanents in the pile of their choice.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Liliana"
-          }
+          "Liliana"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

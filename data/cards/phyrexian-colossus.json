@@ -46,9 +46,7 @@
                 "type": "IsSource"
               }
             },
-            "comparison": {
-              "type": "AtLeast"
-            },
+            "comparison": "AtLeast",
             "limit": 3
           }
         }
@@ -71,20 +69,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Golem"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Golem",
+          "Phyrexian"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       },
       "untapRestrictions": [

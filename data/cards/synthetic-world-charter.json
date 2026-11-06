@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -31,9 +29,7 @@
                       },
                       "modification": {
                         "type": "AddSupertype",
-                        "value": {
-                          "type": "World"
-                        }
+                        "value": "World"
                       },
                       "ref": {
                         "type": "InSlot",
@@ -56,9 +52,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

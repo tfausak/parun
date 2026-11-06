@@ -30,7 +30,7 @@ spec s = Spec.describe s "Parun.Codec.ExileFromGraveyard" $ do
             ExileFromGraveyard.each = Quantity.Literal 1
           }
       )
-      " {\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}}} "
+      " {\"filter\":{\"type\":\"HasCardType\",\"value\":\"Instant\"}} "
   -- Sutured Ghoul's "any number" and Dermotaxi's "a graveyard".
   Spec.it s "MkExileFromGraveyard, any number out of any graveyard" $
     Common.assertCodec
@@ -45,7 +45,7 @@ spec s = Spec.describe s "Parun.Codec.ExileFromGraveyard" $ do
             ExileFromGraveyard.each = Quantity.Literal 1
           }
       )
-      " {\"count\":{\"type\":\"UpTo\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"players\":{\"type\":\"AnyPlayer\"}} "
+      " {\"count\":{\"type\":\"UpTo\"},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"players\":{\"type\":\"AnyPlayer\"}} "
   -- Frankenstein's Monster: exactly X, a graveyard fallback, and a choice of
   -- three counter kinds per card.
   Spec.it s "MkExileFromGraveyard, exactly X with a fallback and a counter per card" $
@@ -61,5 +61,5 @@ spec s = Spec.describe s "Parun.Codec.ExileFromGraveyard" $ do
             ExileFromGraveyard.each = Quantity.Literal 1
           }
       )
-      " {\"count\":{\"type\":\"Exactly\",\"value\":{\"type\":\"InSlot\",\"value\":\"X\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"kinds\":[{\"type\":\"PowerToughness\",\"value\":[2,0]},{\"type\":\"PlusOnePlusOne\"},{\"type\":\"PowerToughness\",\"value\":[0,2]}],\"orGraveyard\":true} "
+      " {\"count\":{\"type\":\"Exactly\",\"value\":{\"type\":\"InSlot\",\"value\":\"X\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"kinds\":[{\"type\":\"PowerToughness\",\"value\":[2,0]},{\"type\":\"PlusOnePlusOne\"},{\"type\":\"PowerToughness\",\"value\":[0,2]}],\"orGraveyard\":true} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ExileFromGraveyard.codec

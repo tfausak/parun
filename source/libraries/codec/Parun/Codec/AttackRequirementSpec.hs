@@ -32,7 +32,7 @@ spec s = Spec.describe s "Parun.Codec.AttackRequirement" $ do
       s
       AttackRequirement.codec
       (AttackRequirement.MkAttackRequirement (Affected.AttachedPlayerControls (Filter.HasCardType CardType.Creature)) Nothing Nothing RequirementArity.EachSubject)
-      " {\"subject\":{\"type\":\"AttachedPlayerControls\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"subject\":{\"type\":\"AttachedPlayerControls\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- Otarian Juggernaut's shape: CR 508.1d's second reading, "or that it attacks
   -- if some condition is met", written as an "as long as" clause (CR 611.3a)
   -- over the cards in the controller's graveyard.
@@ -60,7 +60,7 @@ spec s = Spec.describe s "Parun.Codec.AttackRequirement" $ do
           )
           RequirementArity.EachSubject
       )
-      " {\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"while\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Count\",\"value\":{\"aggregation\":{\"type\":\"Members\"},\"filter\":{\"type\":\"And\",\"value\":[]},\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}}}},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":7}}}} "
+      " {\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"while\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Count\",\"value\":{\"aggregation\":{\"type\":\"Members\"},\"filter\":{\"type\":\"And\",\"value\":[]},\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":\"Graveyard\",\"player\":{\"type\":\"Relative\",\"value\":\"You\"}}}}},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":7}}}} "
   -- Public Enemy's shape: CR 508.1d's OBJECT axis, which
   -- Parun.Types.ActiveAttackRequirement used to be the only carrier of.
   Spec.it s "a requirement naming whom to attack" $
@@ -73,7 +73,7 @@ spec s = Spec.describe s "Parun.Codec.AttackRequirement" $ do
           Nothing
           RequirementArity.EachSubject
       )
-      " {\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"object\":{\"type\":\"ControllerOfAttached\"}} "
+      " {\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"object\":\"ControllerOfAttached\"} "
   -- Seeker of Slaanesh's shape: CR 508.1d read as ONE requirement over every
   -- creature an opponent controls, obeyed by attacking with any one of them.
   Spec.it s "a group requirement" $
@@ -86,5 +86,5 @@ spec s = Spec.describe s "Parun.Codec.AttackRequirement" $ do
           Nothing
           RequirementArity.AnySubject
       )
-      " {\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}}]}},\"arity\":{\"type\":\"AnySubject\"}} "
+      " {\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Creature\"},{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"Opponent\"}}]}},\"arity\":\"AnySubject\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AttackRequirement.codec

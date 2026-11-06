@@ -13,9 +13,7 @@
             },
             "blockers": {
               "type": "HasColor",
-              "value": {
-                "type": "White"
-              }
+              "value": "White"
             }
           }
         }
@@ -29,18 +27,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -92,19 +86,13 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "Opponent"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "Opponent"
                                   }
                                 }
                               ]
@@ -122,17 +110,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horse"
-          },
-          {
-            "type": "Nightmare"
-          }
+          "Horse",
+          "Nightmare"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

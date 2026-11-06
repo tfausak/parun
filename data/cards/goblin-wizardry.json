@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -31,9 +29,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Red"
-                              }
+                              "Red"
                             ],
                             "keywords": [
                               {
@@ -51,17 +47,11 @@
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Goblin"
-                                },
-                                {
-                                  "type": "Wizard"
-                                }
+                                "Goblin",
+                                "Wizard"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -81,9 +71,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

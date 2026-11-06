@@ -26,30 +26,22 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "Or",
                                 "value": [
                                   {
                                     "type": "HasDesignation",
-                                    "value": {
-                                      "type": "AlphaSector"
-                                    }
+                                    "value": "AlphaSector"
                                   },
                                   {
                                     "type": "HasDesignation",
-                                    "value": {
-                                      "type": "BetaSector"
-                                    }
+                                    "value": "BetaSector"
                                   },
                                   {
                                     "type": "HasDesignation",
-                                    "value": {
-                                      "type": "GammaSector"
-                                    }
+                                    "value": "GammaSector"
                                   }
                                 ]
                               }
@@ -126,9 +118,7 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "IsBound",
@@ -184,9 +174,7 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "IsBound",
@@ -195,9 +183,7 @@
                               ]
                             }
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -226,18 +212,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -245,19 +227,13 @@
       "oracleText": "Space sculptor (Space Beleren divides the battlefield into alpha, beta, and gamma sectors. If a creature isn't assigned to a sector, its controller assigns it to one. Opponents assign first.)\n[+1]: Creatures in each sector can be blocked this turn only by creatures in the same sector.\n[−1]: Put a +1/+1 counter on each creature in the sector of your choice.\n[−5]: Destroy all creatures in the sector of your choice.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Jace"
-          }
+          "Jace"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

@@ -136,9 +136,7 @@
                             "type": "Literal",
                             "value": 5
                           },
-                          "reading": {
-                            "type": "Heads"
-                          },
+                          "reading": "Heads",
                           "slot": "heads"
                         }
                       },
@@ -151,9 +149,7 @@
                           },
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "skips": []
                         }
@@ -179,18 +175,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -198,19 +190,13 @@
       "oracleText": "[+1]: Tap target permanent, then untap another target permanent.\n[−2]: Ral Zarek deals 3 damage to any target.\n[−7]: Flip five coins. Take an extra turn after this one for each coin that comes up heads.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ral"
-          }
+          "Ral"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

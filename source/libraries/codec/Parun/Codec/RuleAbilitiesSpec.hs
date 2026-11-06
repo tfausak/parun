@@ -68,8 +68,8 @@ testRuleAbilities =
 testRuleAbilitiesJson :: String
 testRuleAbilitiesJson =
   "{\"activationProhibitions\":[{\"affected\":{\"type\":\"Attached\"}}],"
-    <> "\"attachRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"attachers\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}}],"
-    <> "\"attackCosts\":[{\"subject\":{\"type\":\"Attached\"},\"perAttacker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"scope\":{\"type\":\"Controller\"}}],"
+    <> "\"attachRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"attachers\":{\"type\":\"HasSubtype\",\"value\":\"Aura\"}}],"
+    <> "\"attackCosts\":[{\"subject\":{\"type\":\"Attached\"},\"perAttacker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"scope\":\"Controller\"}],"
     <> "\"attackPermissions\":[{\"affected\":{\"type\":\"Attached\"}}],"
     <> "\"attackRequirements\":[{\"subject\":{\"type\":\"Attached\"}}],"
     <> "\"blockCosts\":[{\"subject\":{\"type\":\"Attached\"},\"perBlocker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]}}}],"
@@ -78,9 +78,9 @@ testRuleAbilitiesJson =
     <> "\"combatRestrictions\":[{\"type\":\"CantAttack\",\"value\":{\"affected\":{\"type\":\"Attached\"}}}],"
     <> "\"counterRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"MinusOneMinusOne\"}}],"
     <> "\"crewRestrictions\":[{\"affected\":{\"type\":\"Attached\"}}],"
-    <> "\"entryRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"origins\":[{\"type\":\"Graveyard\"}]}],"
+    <> "\"entryRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"origins\":[\"Graveyard\"]}],"
     <> "\"sacrificeRestrictions\":[{\"affected\":{\"type\":\"Attached\"}}],"
-    <> "\"targetRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"Spell\"}}],"
+    <> "\"targetRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":\"Spell\"}],"
     <> "\"untapRestrictions\":[{\"affected\":{\"type\":\"Attached\"}}]}"
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()

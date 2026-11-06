@@ -9,15 +9,11 @@
             "value": {
               "left": {
                 "type": "Colored",
-                "value": {
-                  "type": "Black"
-                }
+                "value": "Black"
               },
               "right": {
                 "type": "Colored",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               }
             }
           }
@@ -35,9 +31,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -70,9 +64,7 @@
                         "value": {
                           "quantity": {
                             "type": "Measure",
-                            "value": {
-                              "type": "Loyalty"
-                            }
+                            "value": "Loyalty"
                           },
                           "slot": "target"
                         }
@@ -88,9 +80,7 @@
                         "value": {
                           "quantity": {
                             "type": "Measure",
-                            "value": {
-                              "type": "Toughness"
-                            }
+                            "value": "Toughness"
                           },
                           "slot": "target"
                         }
@@ -121,9 +111,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "AtMost",
@@ -135,9 +123,7 @@
                                 "type": "OfTypeOnX",
                                 "value": {
                                   "type": "Colored",
-                                  "value": {
-                                    "type": "Black"
-                                  }
+                                  "value": "Black"
                                 }
                               }
                             },
@@ -177,9 +163,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

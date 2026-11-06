@@ -23,26 +23,26 @@ spec s = Spec.describe s "Parun.Codec.LibraryPlacement" $ do
       s
       LibraryPlacement.codec
       (LibraryPlacement.Stated LibraryPosition.Top)
-      " {\"type\":\"Stated\",\"value\":{\"type\":\"Top\"}} "
+      " {\"type\":\"Stated\",\"value\":\"Top\"} "
   Spec.it s "Stated Bottom" $
     Common.assertCodec
       s
       LibraryPlacement.codec
       (LibraryPlacement.Stated LibraryPosition.Bottom)
-      " {\"type\":\"Stated\",\"value\":{\"type\":\"Bottom\"}} "
+      " {\"type\":\"Stated\",\"value\":\"Bottom\"} "
   -- Agonizing Memories' "on top of that player's library in any order".
   Spec.it s "ArrangedBy Top" $
     Common.assertCodec
       s
       LibraryPlacement.codec
       (LibraryPlacement.ArrangedBy (ArrangedArrival.MkArrangedArrival LibraryPosition.Top (PlayerRef.Relative PlayerRelation.You)))
-      " {\"type\":\"ArrangedBy\",\"value\":{\"position\":{\"type\":\"Top\"}}} "
+      " {\"type\":\"ArrangedBy\",\"value\":{\"position\":\"Top\"}} "
   Spec.it s "ArrangedBy Top, a named chooser" $
     Common.assertCodec
       s
       LibraryPlacement.codec
       (LibraryPlacement.ArrangedBy (ArrangedArrival.MkArrangedArrival LibraryPosition.Top (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")))))
-      " {\"type\":\"ArrangedBy\",\"value\":{\"chooser\":{\"type\":\"InSlot\",\"value\":\"target\"},\"position\":{\"type\":\"Top\"}}} "
+      " {\"type\":\"ArrangedBy\",\"value\":{\"chooser\":{\"type\":\"InSlot\",\"value\":\"target\"},\"position\":\"Top\"}} "
   Spec.it s "OwnerChooses" $
     Common.assertCodec
       s
@@ -56,7 +56,7 @@ spec s = Spec.describe s "Parun.Codec.LibraryPlacement" $ do
       s
       LibraryPlacement.codec
       (LibraryPlacement.RandomOrder LibraryPosition.Bottom)
-      " {\"type\":\"RandomOrder\",\"value\":{\"type\":\"Bottom\"}} "
+      " {\"type\":\"RandomOrder\",\"value\":\"Bottom\"} "
   Spec.it s "Beneath" $
     Common.assertCodec
       s
@@ -75,6 +75,6 @@ spec s = Spec.describe s "Parun.Codec.LibraryPlacement" $ do
   Spec.it s "rejects a bare position" $
     Spec.assertBool
       s
-      (Either.isLeft (Common.parse (Text.pack " {\"type\":\"Top\"} ") >>= Codec.decode LibraryPlacement.codec))
+      (Either.isLeft (Common.parse (Text.pack " \"Top\" ") >>= Codec.decode LibraryPlacement.codec))
       "expected a decode failure"
   Spec.it s "has a schema" $ Common.assertHasSchema s LibraryPlacement.codec

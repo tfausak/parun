@@ -12,6 +12,6 @@ spec s = Spec.describe s "Parun.Codec.FlipOutcome" $ do
       s
       FlipOutcome.codec
       FlipOutcome.Lost
-      " {\"type\":\"Lost\"} "
+      " \"Lost\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s FlipOutcome.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s FlipOutcome.codec

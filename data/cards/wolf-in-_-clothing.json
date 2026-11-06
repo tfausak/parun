@@ -68,9 +68,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -101,15 +99,11 @@
                         "value": {
                           "bound": "placed",
                           "kinds": [
-                            {
-                              "type": "Name"
-                            }
+                            "Name"
                           ],
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "ref": {
                             "type": "InSlot",
@@ -136,17 +130,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Guest"
-          },
-          {
-            "type": "Wolf"
-          }
+          "Guest",
+          "Wolf"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

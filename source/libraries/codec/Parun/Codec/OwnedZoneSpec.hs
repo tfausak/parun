@@ -15,12 +15,12 @@ spec s = Spec.describe s "Parun.Codec.OwnedZone" $ do
       s
       OwnedZone.codec
       (OwnedZone.MkOwnedZone {OwnedZone.zone = Zone.Exile, OwnedZone.owner = PlayerRelation.AnyPlayer})
-      " {\"zone\":{\"type\":\"Exile\"}} "
+      " {\"zone\":\"Exile\"} "
   -- Enigma Sphinx's "your graveyard".
   Spec.it s "MkOwnedZone, yours" $
     Common.assertCodec
       s
       OwnedZone.codec
       (OwnedZone.MkOwnedZone {OwnedZone.zone = Zone.Graveyard, OwnedZone.owner = PlayerRelation.You})
-      " {\"owner\":{\"type\":\"You\"},\"zone\":{\"type\":\"Graveyard\"}} "
+      " {\"owner\":\"You\",\"zone\":\"Graveyard\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s OwnedZone.codec

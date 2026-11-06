@@ -29,7 +29,7 @@ spec s = Spec.describe s "Parun.Codec.ChangeText" $ do
             ChangeText.duration = Duration.Indefinite
           }
       )
-      " {\"families\":[{\"type\":\"BasicLandType\"}],\"forbidden\":[],\"slot\":\"target\"} "
+      " {\"families\":[\"BasicLandType\"],\"forbidden\":[],\"slot\":\"target\"} "
   -- The set is ascending and deduplicated on the wire, which Common.set's
   -- decoder additionally rejects a repeat for.
   Spec.it s "MkChangeText, forbidden subtypes are written in order" $
@@ -43,7 +43,7 @@ spec s = Spec.describe s "Parun.Codec.ChangeText" $ do
             ChangeText.duration = Duration.Indefinite
           }
       )
-      " {\"families\":[{\"type\":\"BasicLandType\"}],\"forbidden\":[{\"type\":\"Forest\"},{\"type\":\"Island\"}],\"slot\":\"target\"} "
+      " {\"families\":[\"BasicLandType\"],\"forbidden\":[{\"type\":\"Forest\"},{\"type\":\"Island\"}],\"slot\":\"target\"} "
   -- Whim of Volrath's two families and stated duration.
   Spec.it s "MkChangeText, two families until end of turn" $
     Common.assertCodec
@@ -56,5 +56,5 @@ spec s = Spec.describe s "Parun.Codec.ChangeText" $ do
             ChangeText.duration = Duration.UntilEndOfTurn
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"families\":[{\"type\":\"BasicLandType\"},{\"type\":\"Color\"}],\"forbidden\":[],\"slot\":\"target\"} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"families\":[\"BasicLandType\",\"Color\"],\"forbidden\":[],\"slot\":\"target\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ChangeText.codec

@@ -17,19 +17,13 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       },
                       {
@@ -62,21 +56,15 @@
                               "type": "CardTypes",
                               "value": {
                                 "cardTypes": [
-                                  {
-                                    "type": "Artifact"
-                                  }
+                                  "Artifact"
                                 ],
-                                "mode": {
-                                  "type": "InAddition"
-                                }
+                                "mode": "InAddition"
                               }
                             },
                             {
                               "type": "AddSubtypes",
                               "value": [
-                                {
-                                  "type": "Vehicle"
-                                }
+                                "Vehicle"
                               ]
                             }
                           ],
@@ -132,9 +120,7 @@
                 "value": {
                   "filter": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   "players": {
                     "type": "AnyPlayer"
@@ -151,14 +137,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Vehicle"
-          }
+          "Vehicle"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

@@ -23,5 +23,5 @@ spec s = Spec.describe s "Parun.Codec.DiscardSubject" $ do
       s
       DiscardSubject.codec
       (DiscardSubject.Discarder (PlayerActsOn.MkPlayerActsOn PlayerRelation.Opponent (Filter.HasCardType CardType.Creature)))
-      " {\"type\":\"Discarder\",\"value\":{\"player\":{\"type\":\"Opponent\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"Discarder\",\"value\":{\"player\":\"Opponent\",\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DiscardSubject.codec

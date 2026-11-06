@@ -30,9 +30,7 @@
                           "duration": {
                             "type": "UntilEndOfTurn"
                           },
-                          "what": {
-                            "type": "Regenerate"
-                          }
+                          "what": "Regenerate"
                         }
                       }
                     ]
@@ -55,9 +53,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -73,14 +69,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Jackal"
-          }
+          "Jackal"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

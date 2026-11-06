@@ -14,9 +14,7 @@
           "effect": {
             "type": "RevealsDraw",
             "value": {
-              "obligation": {
-                "type": "Mandatory"
-              }
+              "obligation": "Mandatory"
             }
           },
           "scope": {
@@ -34,9 +32,7 @@
               },
               "rewrite": {
                 "type": "ChoosePlayer",
-                "value": {
-                  "type": "Opponent"
-                }
+                "value": "Opponent"
               }
             }
           }
@@ -57,15 +53,11 @@
                     "value": [
                       {
                         "type": "HasSupertype",
-                        "value": {
-                          "type": "Basic"
-                        }
+                        "value": "Basic"
                       },
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Land"
-                        }
+                        "value": "Land"
                       }
                     ]
                   }
@@ -82,13 +74,9 @@
             "value": {
               "card": {
                 "type": "HasChosenName",
-                "value": {
-                  "type": "AnyChooser"
-                }
+                "value": "AnyChooser"
               },
-              "timing": {
-                "type": "AsDrawn"
-              }
+              "timing": "AsDrawn"
             }
           },
           "modal": {
@@ -126,9 +114,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "components": [
                           {
@@ -137,9 +123,7 @@
                         ],
                         "mana": []
                       },
-                      "obligation": {
-                        "type": "Mandatory"
-                      },
+                      "obligation": "Mandatory",
                       "payer": {
                         "type": "InSlot",
                         "value": "you"
@@ -154,9 +138,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

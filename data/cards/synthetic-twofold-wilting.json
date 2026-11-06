@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -37,9 +35,7 @@
                         "type": "EachMatching",
                         "value": {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Goblin"
-                          }
+                          "value": "Goblin"
                         }
                       }
                     }
@@ -62,9 +58,7 @@
                         "type": "EachMatching",
                         "value": {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Zombie"
-                          }
+                          "value": "Zombie"
                         }
                       }
                     }
@@ -77,9 +71,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

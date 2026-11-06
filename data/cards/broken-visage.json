@@ -8,17 +8,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -55,9 +51,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -76,9 +70,7 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "regenerability": {
-                        "type": "CantBeRegenerated"
-                      }
+                      "regenerability": "CantBeRegenerated"
                     }
                   },
                   {
@@ -88,9 +80,7 @@
                         "faces": [
                           {
                             "colorIndicator": [
-                              {
-                                "type": "Black"
-                              }
+                              "Black"
                             ],
                             "name": "Spirit Token",
                             "power": {
@@ -98,9 +88,7 @@
                               "value": {
                                 "quantity": {
                                   "type": "Measure",
-                                  "value": {
-                                    "type": "Power"
-                                  }
+                                  "value": "Power"
                                 },
                                 "slot": "target"
                               }
@@ -110,23 +98,17 @@
                               "value": {
                                 "quantity": {
                                   "type": "Measure",
-                                  "value": {
-                                    "type": "Toughness"
-                                  }
+                                  "value": "Toughness"
                                 },
                                 "slot": "target"
                               }
                             },
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Spirit"
-                                }
+                                "Spirit"
                               ],
                               "types": [
-                                {
-                                  "type": "Creature"
-                                }
+                                "Creature"
                               ]
                             }
                           }
@@ -160,9 +142,7 @@
                       "type": "Not",
                       "value": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Artifact"
-                        }
+                        "value": "Artifact"
                       }
                     }
                   ]
@@ -177,9 +157,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

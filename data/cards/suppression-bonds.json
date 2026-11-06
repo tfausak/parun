@@ -50,9 +50,7 @@
             "type": "Not",
             "value": {
               "type": "HasCardType",
-              "value": {
-                "type": "Land"
-              }
+              "value": "Land"
             }
           },
           "pool": {
@@ -69,9 +67,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -79,14 +75,10 @@
       "oracleText": "Enchant nonland permanent\nEnchanted permanent can't attack or block, and its activated abilities can't be activated.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

@@ -24,5 +24,5 @@ spec s = Spec.describe s "Parun.Codec.LifeLossR" $ do
             }
           (LifeLossRewrite.LeaveAtLeast 1)
       )
-      " {\"matching\":{\"whose\":{\"type\":\"You\"},\"whichCause\":{\"type\":\"ByDamage\"}},\"rewrite\":{\"type\":\"LeaveAtLeast\",\"value\":1}} "
+      " {\"matching\":{\"whose\":{\"type\":\"You\"},\"whichCause\":\"ByDamage\"},\"rewrite\":{\"type\":\"LeaveAtLeast\",\"value\":1}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s LifeLossR.codec

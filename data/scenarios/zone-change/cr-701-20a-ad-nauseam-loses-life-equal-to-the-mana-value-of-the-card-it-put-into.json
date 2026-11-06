@@ -68,9 +68,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseRepeat",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

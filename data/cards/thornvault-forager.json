@@ -24,9 +24,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Green"
-                              }
+                              "value": "Green"
                             }
                           }
                         }
@@ -65,9 +63,7 @@
                           },
                           "production": {
                             "type": "AnyColor",
-                            "value": {
-                              "type": "AnyCombination"
-                            }
+                            "value": "AnyCombination"
                           }
                         }
                       }
@@ -94,9 +90,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -110,20 +104,14 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "RevealThenHand"
-                          },
+                          "destination": "RevealThenHand",
                           "filter": {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Squirrel"
-                            }
+                            "value": "Squirrel"
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -131,9 +119,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -154,9 +140,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -172,17 +156,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ranger"
-          },
-          {
-            "type": "Squirrel"
-          }
+          "Ranger",
+          "Squirrel"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

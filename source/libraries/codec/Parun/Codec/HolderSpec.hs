@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.Holder" $ do
       s
       Holder.codec
       Holder.Owner
-      " {\"type\":\"Owner\"} "
+      " \"Owner\" "
   -- Parun.Codec.DamageKindSpec's reason: Arm.enum derives the arm list from the
   -- type, so this is what would catch a constructor the derivation missed or two
   -- that encode alike.

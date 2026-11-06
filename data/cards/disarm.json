@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -27,9 +25,7 @@
                       "value": {
                         "filter": {
                           "type": "HasSubtype",
-                          "value": {
-                            "type": "Equipment"
-                          }
+                          "value": "Equipment"
                         },
                         "slot": "target"
                       }
@@ -50,9 +46,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

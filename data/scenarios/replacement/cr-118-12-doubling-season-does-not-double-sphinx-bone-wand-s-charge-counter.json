@@ -80,9 +80,7 @@
       "player": "alice",
       "source": "$wand",
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       }
     },
     {

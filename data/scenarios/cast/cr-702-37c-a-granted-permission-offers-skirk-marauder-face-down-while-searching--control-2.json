@@ -164,9 +164,7 @@
             {
               "type": "FaceDown",
               "value": {
-                "reason": {
-                  "type": "Morphed"
-                },
+                "reason": "Morphed",
                 "listed": {}
               }
             }

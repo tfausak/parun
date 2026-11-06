@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -38,28 +34,20 @@
             "value": {
               "type": "HeldBy",
               "value": {
-                "holder": {
-                  "type": "Controller"
-                },
-                "relation": {
-                  "type": "You"
-                }
+                "holder": "Controller",
+                "relation": "You"
               }
             }
           },
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "IsMonarch",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
@@ -110,14 +98,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elk"
-          }
+          "Elk"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

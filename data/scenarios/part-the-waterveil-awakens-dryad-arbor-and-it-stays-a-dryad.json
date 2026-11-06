@@ -19,7 +19,7 @@
     "step": "PrecombatMain"
   },
   "timeline": [
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$waterveil", "targets": ["$arbor"], "cost": [{ "type": "Generic", "value": 6 }, { "type": "OfType", "value": { "type": "Colored", "value": { "type": "Blue" } } }, { "type": "OfType", "value": { "type": "Colored", "value": { "type": "Blue" } } }, { "type": "OfType", "value": { "type": "Colored", "value": { "type": "Blue" } } }] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$waterveil", "targets": ["$arbor"], "cost": [{ "type": "Generic", "value": 6 }, { "type": "OfType", "value": { "type": "Colored", "value": "Blue" } }, { "type": "OfType", "value": { "type": "Colored", "value": "Blue" } }, { "type": "OfType", "value": { "type": "Colored", "value": "Blue" } }] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "$arbor", "subtypes": ["Forest", "Dryad", "Elemental"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Types": { "object": "$arbor", "types": ["Creature", "Land"] } } },

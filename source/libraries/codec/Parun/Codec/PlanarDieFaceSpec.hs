@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.PlanarDieFace" $ do
       s
       PlanarDieFace.codec
       PlanarDieFace.Chaos
-      " {\"type\":\"Chaos\"} "
+      " \"Chaos\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s PlanarDieFace.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s PlanarDieFace.codec

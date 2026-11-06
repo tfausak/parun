@@ -6,9 +6,7 @@
           "type": "Affinity",
           "value": {
             "type": "HasCardType",
-            "value": {
-              "type": "Artifact"
-            }
+            "value": "Artifact"
           }
         }
       ],
@@ -30,17 +28,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Frog"
-          }
+          "Frog"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

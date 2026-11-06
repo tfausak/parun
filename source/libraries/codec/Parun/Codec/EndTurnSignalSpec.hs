@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.EndTurnSignal" $ do
       s
       EndTurnSignal.codec
       EndTurnSignal.Running
-      " {\"type\":\"Running\"} "
+      " \"Running\" "
   -- CR 724.1f: raised means no player gets priority for the rest of the process,
   -- so a state written out mid-process has to say which of the two it is in.
   Spec.it s "Ended" $
@@ -20,7 +20,7 @@ spec s = Spec.describe s "Parun.Codec.EndTurnSignal" $ do
       s
       EndTurnSignal.codec
       EndTurnSignal.Ended
-      " {\"type\":\"Ended\"} "
+      " \"Ended\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

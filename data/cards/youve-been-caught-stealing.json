@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -31,9 +29,7 @@
                         "type": "Matching",
                         "value": {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         }
                       },
                       "duration": {
@@ -93,14 +89,10 @@
                             "name": "Treasure Token",
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Treasure"
-                                }
+                                "Treasure"
                               ],
                               "types": [
-                                {
-                                  "type": "Artifact"
-                                }
+                                "Artifact"
                               ]
                             }
                           }
@@ -111,9 +103,7 @@
                         "value": {
                           "recipient": {
                             "type": "Relative",
-                            "value": {
-                              "type": "Opponent"
-                            }
+                            "value": "Opponent"
                           }
                         }
                       }
@@ -127,9 +117,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

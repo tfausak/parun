@@ -60,7 +60,7 @@ spec s = Spec.describe s "Parun.Codec.PreventNextDamage" $ do
             PreventNextDamage.riders = Seq.singleton (Text.pack "a rider")
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"kind\":{\"type\":\"Combat\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"quantity\":{\"type\":\"Literal\",\"value\":3},\"riders\":[\"a rider\"]} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"kind\":\"Combat\",\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"quantity\":{\"type\":\"Literal\",\"value\":3},\"riders\":[\"a rider\"]} "
   -- CR 609.7a's "by a source of your choice", which is Healing Grace: the key is
   -- WRITTEN and its Filter is the trivial one, since the card names no property
   -- the chosen source must have. Elided and present-but-trivial are different
@@ -100,5 +100,5 @@ spec s = Spec.describe s "Parun.Codec.PreventNextDamage" $ do
             PreventNextDamage.riders = Seq.empty
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"whatRecipient\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"whoRecipient\":{\"type\":\"You\"},\"quantity\":{\"type\":\"Literal\",\"value\":3}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"whatRecipient\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}},\"whoRecipient\":\"You\",\"quantity\":{\"type\":\"Literal\",\"value\":3}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

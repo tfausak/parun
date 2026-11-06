@@ -11,7 +11,7 @@
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTriggers": ["$mariner", "$mariner"]}},
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Stack", "is": ["trigger of $mariner", "trigger of $mariner", "Cone of Flame"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$b6"]}}, "source": "$mariner"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"ChooseToPay": {"decision": "Pays", "mana": ["$b6"]}}, "source": "$mariner"},
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 20}}},
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
@@ -24,7 +24,7 @@
     {"turn": 4, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$fealty", "targetsBySlot": {"target": ["$bears"], "creature": ["$bears"]}, "mana": ["$b1", "$b2", "$b3", null]}}},
     {"turn": 4, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Stack", "is": ["trigger of $mariner", "Twisted Fealty"]}}},
     {"turn": 4, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
-    {"turn": 4, "step": "PrecombatMain", "player": "bob", "do": {"ChooseToPay": {"decision": {"type": "Declines"}}}, "source": "$mariner"},
+    {"turn": 4, "step": "PrecombatMain", "player": "bob", "do": {"ChooseToPay": {"decision": "Declines"}}, "source": "$mariner"},
     {"turn": 4, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Stack", "is": []}}},
     {"turn": 4, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Controller", "object": "$bears", "is": "alice"}}}
   ]

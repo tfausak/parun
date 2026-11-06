@@ -21,5 +21,5 @@ spec s = Spec.describe s "Parun.Codec.LandPlayed" $ do
             LandPlayed.from = Zone.Exile
           }
       )
-      " {\"player\":1,\"land\":7,\"from\":{\"type\":\"Exile\"}} "
+      " {\"player\":1,\"land\":7,\"from\":\"Exile\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s LandPlayed.codec

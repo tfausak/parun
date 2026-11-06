@@ -40,18 +40,14 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ],
@@ -78,20 +74,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Phyrexian"
-          },
-          {
-            "type": "Wurm"
-          }
+          "Phyrexian",
+          "Wurm"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

@@ -81,9 +81,7 @@
         "Answer": {
           "prompt": "ChooseSearchZones",
           "with": [
-            {
-              "type": "Library"
-            }
+            "Library"
           ]
         }
       }

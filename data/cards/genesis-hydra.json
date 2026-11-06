@@ -9,18 +9,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -69,9 +65,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               },
               "spell": {
@@ -97,9 +91,7 @@
                               },
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "You"
-                                }
+                                "value": "You"
                               }
                             }
                           },
@@ -124,45 +116,31 @@
                                     "value": [
                                       {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Artifact"
-                                        }
+                                        "value": "Artifact"
                                       },
                                       {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Battle"
-                                        }
+                                        "value": "Battle"
                                       },
                                       {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Creature"
-                                        }
+                                        "value": "Creature"
                                       },
                                       {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Enchantment"
-                                        }
+                                        "value": "Enchantment"
                                       },
                                       {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Planeswalker"
-                                        }
+                                        "value": "Planeswalker"
                                       }
                                     ]
                                   },
                                   {
                                     "type": "Measures",
                                     "value": {
-                                      "comparison": {
-                                        "type": "AtMost"
-                                      },
-                                      "measure": {
-                                        "type": "ManaValue"
-                                      },
+                                      "comparison": "AtMost",
+                                      "measure": "ManaValue",
                                       "operand": {
                                         "type": "AmountInSlot",
                                         "value": "X"
@@ -174,9 +152,7 @@
                               "slot": "revealed"
                             }
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ],
@@ -190,9 +166,7 @@
                         "type": "Shuffle",
                         "value": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     ]
@@ -205,17 +179,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Hydra"
-          },
-          {
-            "type": "Plant"
-          }
+          "Hydra",
+          "Plant"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

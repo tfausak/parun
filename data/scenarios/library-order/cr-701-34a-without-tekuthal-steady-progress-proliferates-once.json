@@ -51,9 +51,7 @@
         "name": "bob",
         "counters": [
           {
-            "key": {
-              "type": "Poison"
-            },
+            "key": "Poison",
             "value": 2
           }
         ]
@@ -165,9 +163,7 @@
     {
       "PlayerCounters": {
         "player": "bob",
-        "kind": {
-          "type": "Poison"
-        },
+        "kind": "Poison",
         "count": 2
       }
     }

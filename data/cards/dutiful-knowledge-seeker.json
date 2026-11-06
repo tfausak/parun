@@ -24,9 +24,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -59,9 +57,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -80,9 +76,7 @@
           "condition": {
             "type": "PutIntoZone",
             "value": {
-              "batching": {
-                "type": "OneOrMore"
-              },
+              "batching": "OneOrMore",
               "card": {
                 "type": "Matching",
                 "value": {
@@ -92,9 +86,7 @@
                   }
                 }
               },
-              "to": {
-                "type": "Library"
-              }
+              "to": "Library"
             }
           },
           "modal": {
@@ -129,17 +121,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Fox"
-          },
-          {
-            "type": "Spirit"
-          }
+          "Fox",
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

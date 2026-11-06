@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -42,9 +40,7 @@
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 }
               ]
             }
@@ -72,17 +68,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Goblin",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     },
@@ -93,9 +83,7 @@
           "value": {
             "quality": {
               "type": "HasColor",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             },
             "spares": null
           }
@@ -115,13 +103,9 @@
               "matching": {
                 "whatSource": {
                   "type": "HasColor",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 },
-                "whoRecipient": {
-                  "type": "AnyPlayer"
-                }
+                "whoRecipient": "AnyPlayer"
               },
               "rewrite": {
                 "type": "Scale",
@@ -140,22 +124,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          },
-          {
-            "type": "Shaman"
-          }
+          "Goblin",
+          "Shaman"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

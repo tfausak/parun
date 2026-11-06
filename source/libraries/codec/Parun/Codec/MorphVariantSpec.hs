@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.MorphVariant" $ do
       s
       MorphVariant.codec
       MorphVariant.Plain
-      " {\"type\":\"Plain\"} "
+      " \"Plain\" "
   Spec.it s "Mega (CR 702.37b)" $
     Common.assertCodec
       s
       MorphVariant.codec
       MorphVariant.Mega
-      " {\"type\":\"Mega\"} "
+      " \"Mega\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

@@ -20,6 +20,6 @@ spec s = Spec.describe s "Parun.Codec.Status" $ do
       s
       Status.codec
       (Status.Departed Departure.Conceded)
-      " {\"type\":\"Departed\",\"value\":{\"type\":\"Conceded\"}} "
+      " {\"type\":\"Departed\",\"value\":\"Conceded\"} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s Status.codec

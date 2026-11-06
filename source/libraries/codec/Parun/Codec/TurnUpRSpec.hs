@@ -48,5 +48,5 @@ spec s = Spec.describe s "Parun.Codec.TurnUpR" $ do
                 (WithCounters.one CounterKind.PlusOnePlusOne (Quantity.Literal 1))
           }
       )
-      " {\"matching\":{\"type\":\"IsSource\"},\"requiring\":{\"type\":\"Morph\"},\"paying\":{\"mana\":[{\"type\":\"Generic\",\"value\":4}]},\"rewrite\":{\"type\":\"WithCounters\",\"value\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"count\":{\"type\":\"Literal\",\"value\":1}}]}} "
+      " {\"matching\":{\"type\":\"IsSource\"},\"requiring\":\"Morph\",\"paying\":{\"mana\":[{\"type\":\"Generic\",\"value\":4}]},\"rewrite\":{\"type\":\"WithCounters\",\"value\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"count\":{\"type\":\"Literal\",\"value\":1}}]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s (TurnUpR.codec Common.text Common.text)

@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -46,15 +42,11 @@
                 },
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Elf"
-                  }
+                  "value": "Elf"
                 },
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 }
               ]
             }
@@ -79,9 +71,7 @@
                 "type": "Landwalk",
                 "value": {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Forest"
-                  }
+                  "value": "Forest"
                 }
               }
             }
@@ -94,14 +84,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elf"
-          }
+          "Elf"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

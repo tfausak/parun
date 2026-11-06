@@ -117,9 +117,7 @@
             "value": {
               "quality": {
                 "type": "HasColor",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "spares": null
             }
@@ -232,9 +230,7 @@
             "value": {
               "quality": {
                 "type": "HasColor",
-                "value": {
-                  "type": "Red"
-                }
+                "value": "Red"
               },
               "spares": null
             }

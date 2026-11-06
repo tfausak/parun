@@ -29,7 +29,7 @@ spec s = Spec.describe s "Parun.Codec.ExileMaterials" $ do
             ExileMaterials.whichObjects = Filter.HasCardType CardType.Creature
           }
       )
-      " {\"count\":1,\"whichObjects\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"count\":1,\"whichObjects\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- CR 702.167a: Paleontologist's Pick-Axe's craft exiles one or more creatures,
   -- so the count is a minimum and the key is written.
   Spec.it s "MkExileMaterials with orMore" $
@@ -42,5 +42,5 @@ spec s = Spec.describe s "Parun.Codec.ExileMaterials" $ do
             ExileMaterials.whichObjects = Filter.HasCardType CardType.Creature
           }
       )
-      " {\"count\":1,\"orMore\":true,\"whichObjects\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"count\":1,\"orMore\":true,\"whichObjects\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

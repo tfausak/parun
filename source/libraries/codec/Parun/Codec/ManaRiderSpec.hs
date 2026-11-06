@@ -20,7 +20,7 @@ spec s = Spec.describe s "Parun.Codec.ManaRider" $ do
         { ManaRider.condition = Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery],
           ManaRider.effect = ManaRiderEffect.CantBeCountered
         }
-      " {\"condition\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Sorcery\"}}]},\"effect\":{\"type\":\"CantBeCountered\"}} "
+      " {\"condition\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Instant\"},{\"type\":\"HasCardType\",\"value\":\"Sorcery\"}]},\"effect\":\"CantBeCountered\"} "
   -- Delighted Halfling: no condition at all, which the codec reads as the
   -- trivial predicate and writes back as an absent key.
   Spec.it s "an absent condition is the trivial predicate" $
@@ -31,5 +31,5 @@ spec s = Spec.describe s "Parun.Codec.ManaRider" $ do
         { ManaRider.condition = Filter.And [],
           ManaRider.effect = ManaRiderEffect.CantBeCountered
         }
-      " {\"effect\":{\"type\":\"CantBeCountered\"}} "
+      " {\"effect\":\"CantBeCountered\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ManaRider.codec

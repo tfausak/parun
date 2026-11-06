@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -48,27 +44,19 @@
                   "value": [
                     {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Demon"
-                      }
+                      "value": "Demon"
                     },
                     {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Devil"
-                      }
+                      "value": "Devil"
                     },
                     {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Imp"
-                      }
+                      "value": "Imp"
                     },
                     {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Tiefling"
-                      }
+                      "value": "Tiefling"
                     }
                   ]
                 },
@@ -81,12 +69,8 @@
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -126,17 +110,13 @@
             "value": {
               "phase": {
                 "type": "Ending",
-                "value": {
-                  "type": "EndStep"
-                }
+                "value": "EndStep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               }
             }
@@ -144,9 +124,7 @@
           "intervening": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -164,19 +142,13 @@
                       },
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Owner"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Owner",
+                          "relation": "You"
                         }
                       }
                     ]
@@ -186,9 +158,7 @@
                     "value": {
                       "type": "CardArrivedIn",
                       "value": {
-                        "to": {
-                          "type": "Graveyard"
-                        }
+                        "to": "Graveyard"
                       }
                     }
                   }
@@ -213,9 +183,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Red"
-                                  }
+                                  "Red"
                                 ],
                                 "name": "Devil Token",
                                 "power": {
@@ -233,9 +201,7 @@
                                       "value": {
                                         "destinations": [
                                           {
-                                            "zone": {
-                                              "type": "Graveyard"
-                                            }
+                                            "zone": "Graveyard"
                                           }
                                         ]
                                       }
@@ -280,14 +246,10 @@
                                 ],
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Devil"
-                                    }
+                                    "Devil"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -309,22 +271,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Devil"
-          },
-          {
-            "type": "Noble"
-          }
+          "Devil",
+          "Noble"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

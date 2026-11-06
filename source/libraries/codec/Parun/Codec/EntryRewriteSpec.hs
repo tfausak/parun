@@ -50,14 +50,14 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty (CopyDomain.InZone Zone.Battlefield) Nothing CopyRecipient.ThisObject True))
-      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- CR 707.9b / 707.9d: Quicksilver Gargantuan's "except it's 7/7".
   Spec.it s "AsCopy with an exception (Quicksilver Gargantuan)" $
     Common.assertCodec
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [CopyClause.MkCopyClause Nothing [CopyException.SetPowerToughness (SetPowerToughness.MkSetPowerToughness 7 7)] Nothing] False Seq.empty (CopyDomain.InZone Zone.Battlefield) Nothing CopyRecipient.ThisObject True))
-      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"clauses\":[{\"exceptions\":[{\"type\":\"SetPowerToughness\",\"value\":{\"power\":7,\"toughness\":7}}]}]}} "
+      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":\"Creature\"},\"clauses\":[{\"exceptions\":[{\"type\":\"SetPowerToughness\",\"value\":{\"power\":7,\"toughness\":7}}]}]}} "
   -- The narrowed set the widening exists for (#1512): Copy Enchantment's "any
   -- enchantment", where Clone's is "any creature".
   Spec.it s "AsCopy with a narrower eligible set (Copy Enchantment)" $
@@ -65,7 +65,7 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Enchantment) [] False Seq.empty (CopyDomain.InZone Zone.Battlefield) Nothing CopyRecipient.ThisObject True))
-      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Enchantment\"}}}} "
+      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":\"Enchantment\"}}} "
   -- CR 208.2b: two P/T-and-keyword choices, enough to show the keyword union
   -- isn't lost on the wire.
   Spec.it s "ChoiceOf (Primal Plasma)" $
@@ -113,7 +113,7 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (EntryRewrite.ChoosePlayer PlayerRelation.Opponent)
-      " {\"type\":\"ChoosePlayer\",\"value\":{\"type\":\"Opponent\"}} "
+      " {\"type\":\"ChoosePlayer\",\"value\":\"Opponent\"} "
   -- CR 614.1c / 201.4a: an as-enters name choice, carrying the restriction on
   -- which cards' names may be chosen -- Null Chamber's "other than a basic land
   -- card name", which is a supertype and a card type together.
@@ -122,7 +122,7 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (EntryRewrite.ChooseCardNames (Filter.Not (Filter.And [Filter.HasSupertype Supertype.Basic, Filter.HasCardType CardType.Land])))
-      " {\"type\":\"ChooseCardNames\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSupertype\",\"value\":{\"type\":\"Basic\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}]}}} "
+      " {\"type\":\"ChooseCardNames\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSupertype\",\"value\":\"Basic\"},{\"type\":\"HasCardType\",\"value\":\"Land\"}]}}} "
   -- CR 614.1c / 201.4a: the one-chooser twin, whose restriction Runed Halo
   -- leaves empty.
   Spec.it s "ChooseCardName (Runed Halo)" $
@@ -268,7 +268,7 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (EntryRewrite.UnderControlOf PlayerRelation.Opponent)
-      " {\"type\":\"UnderControlOf\",\"value\":{\"type\":\"Opponent\"}} "
+      " {\"type\":\"UnderControlOf\",\"value\":\"Opponent\"} "
   -- CR 614.1c / 701.21a: an as-enters sacrifice of any number, carrying both the
   -- criterion the chosen permanents must match -- Shimatsu the Bloodcloaked's is
   -- "any number of permanents", the empty conjunction -- and the counter kind the
@@ -295,14 +295,14 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (EntryRewrite.SacrificeAnyNumber (SacrificeAnyNumber.MkSacrificeAnyNumber (Filter.And [Filter.HasSubtype Subtype.Forest, Filter.Not Filter.IsTapped]) Nothing (Quantity.Literal 1)))
-      " {\"type\":\"SacrificeAnyNumber\",\"value\":{\"each\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Forest\"}},{\"type\":\"Not\",\"value\":{\"type\":\"IsTapped\"}}]},\"kind\":null}} "
+      " {\"type\":\"SacrificeAnyNumber\",\"value\":{\"each\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSubtype\",\"value\":\"Forest\"},{\"type\":\"Not\",\"value\":{\"type\":\"IsTapped\"}}]},\"kind\":null}} "
   -- CR 614.1a / 614.12: Heart of Yavimaya's "sacrifice a Forest instead".
   Spec.it s "SacrificeToEnter (Heart of Yavimaya)" $
     Common.assertCodec
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (EntryRewrite.SacrificeToEnter (SacrificeToEnter.MkSacrificeToEnter 1 (Filter.HasSubtype Subtype.Forest)))
-      " {\"type\":\"SacrificeToEnter\",\"value\":{\"count\":1,\"filter\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Forest\"}}}} "
+      " {\"type\":\"SacrificeToEnter\",\"value\":{\"count\":1,\"filter\":{\"type\":\"HasSubtype\",\"value\":\"Forest\"}}} "
   -- CR 614.1c / 614.14: an as-enters exile, carrying the criterion the exiled
   -- card must match -- Living Lore's "an instant or sorcery card".
   Spec.it s "ExileFromGraveyard (Living Lore)" $
@@ -310,7 +310,7 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (EntryRewrite.ExileFromGraveyard (ExileFromGraveyard.MkExileFromGraveyard {ExileFromGraveyard.filter = Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery], ExileFromGraveyard.players = PlayerScope.Related PlayerRelation.You, ExileFromGraveyard.count = HowMany.one, ExileFromGraveyard.orGraveyard = False, ExileFromGraveyard.kinds = [], ExileFromGraveyard.each = Quantity.Literal 1}))
-      " {\"type\":\"ExileFromGraveyard\",\"value\":{\"filter\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Sorcery\"}}]}}} "
+      " {\"type\":\"ExileFromGraveyard\",\"value\":{\"filter\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Instant\"},{\"type\":\"HasCardType\",\"value\":\"Sorcery\"}]}}} "
   -- CR 614.1c / 301.5e: an as-enters host choice, carrying the filter the host
   -- must match -- Grifter's Blade's "a creature you control it could be attached
   -- to", CR 701.3a's atom written by the card.
@@ -319,7 +319,7 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (EntryRewrite.EntersAttachedTo (Filter.And [Filter.HasCardType CardType.Creature, Filter.CanHostSubject]))
-      " {\"type\":\"EntersAttachedTo\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"CanHostSubject\"}]}} "
+      " {\"type\":\"EntersAttachedTo\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Creature\"},{\"type\":\"CanHostSubject\"}]}} "
   -- CR 614.1c: the rewrite that runs an effect -- Monstrous War-Leech's "mill
   -- four cards". Its "if it was kicked" is NOT here: that clause rides
   -- Parun.Types.PrintedReplacement one level up (CR 611.3a).
@@ -328,5 +328,5 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (EntryRewrite.RunEffects (Seq.fromList [Effect.Type.Mill (Mill.MkMill (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 4) Nothing Nothing)]))
-      " {\"type\":\"RunEffects\",\"value\":[{\"type\":\"Mill\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"quantity\":{\"type\":\"Literal\",\"value\":4}}}]} "
+      " {\"type\":\"RunEffects\",\"value\":[{\"type\":\"Mill\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":\"You\"},\"quantity\":{\"type\":\"Literal\",\"value\":4}}}]} "
   Spec.it s "has a schema" $ Common.assertHasSchema s (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))

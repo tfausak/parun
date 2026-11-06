@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -29,9 +27,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "restriction": {
                         "type": "And",
@@ -46,14 +42,10 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "Exile"
-                      },
+                      "destination": "Exile",
                       "filter": {
                         "type": "HasChosenName",
-                        "value": {
-                          "type": "AnyChooser"
-                        }
+                        "value": "AnyChooser"
                       },
                       "owner": {
                         "type": "InSlot",
@@ -65,21 +57,13 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "upTo": true,
                       "zones": [
-                        {
-                          "type": "Library"
-                        },
-                        {
-                          "type": "Hand"
-                        },
-                        {
-                          "type": "Graveyard"
-                        }
+                        "Library",
+                        "Hand",
+                        "Graveyard"
                       ]
                     }
                   }
@@ -90,9 +74,7 @@
               "opponent": {
                 "filter": {
                   "type": "IsPlayer",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 },
                 "pool": {
                   "type": "Players"
@@ -104,9 +86,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

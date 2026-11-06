@@ -48,39 +48,27 @@
       {
         "counters": [
           {
-            "key": {
-              "type": "Poison"
-            },
+            "key": "Poison",
             "value": 3
           },
           {
-            "key": {
-              "type": "Energy"
-            },
+            "key": "Energy",
             "value": 2
           },
           {
-            "key": {
-              "type": "Ticket"
-            },
+            "key": "Ticket",
             "value": 4
           },
           {
-            "key": {
-              "type": "Rad"
-            },
+            "key": "Rad",
             "value": 5
           },
           {
-            "key": {
-              "type": "Experience"
-            },
+            "key": "Experience",
             "value": 6
           },
           {
-            "key": {
-              "type": "Point"
-            },
+            "key": "Point",
             "value": 7
           }
         ],
@@ -103,9 +91,7 @@
       {
         "counters": [
           {
-            "key": {
-              "type": "Poison"
-            },
+            "key": "Poison",
             "value": 1
           }
         ],
@@ -186,9 +172,7 @@
       "check": {
         "PlayerCounters": {
           "count": 0,
-          "kind": {
-            "type": "Poison"
-          },
+          "kind": "Poison",
           "player": "bob"
         }
       },
@@ -200,9 +184,7 @@
       "check": {
         "PlayerCounters": {
           "count": 0,
-          "kind": {
-            "type": "Energy"
-          },
+          "kind": "Energy",
           "player": "bob"
         }
       },
@@ -214,9 +196,7 @@
       "check": {
         "PlayerCounters": {
           "count": 0,
-          "kind": {
-            "type": "Ticket"
-          },
+          "kind": "Ticket",
           "player": "bob"
         }
       },
@@ -228,9 +208,7 @@
       "check": {
         "PlayerCounters": {
           "count": 0,
-          "kind": {
-            "type": "Rad"
-          },
+          "kind": "Rad",
           "player": "bob"
         }
       },
@@ -242,9 +220,7 @@
       "check": {
         "PlayerCounters": {
           "count": 0,
-          "kind": {
-            "type": "Experience"
-          },
+          "kind": "Experience",
           "player": "bob"
         }
       },
@@ -256,9 +232,7 @@
       "check": {
         "PlayerCounters": {
           "count": 0,
-          "kind": {
-            "type": "Point"
-          },
+          "kind": "Point",
           "player": "bob"
         }
       },
@@ -270,9 +244,7 @@
       "check": {
         "PlayerCounters": {
           "count": 1,
-          "kind": {
-            "type": "Poison"
-          },
+          "kind": "Poison",
           "player": "carol"
         }
       },
@@ -337,9 +309,7 @@
       "check": {
         "PlayerCounters": {
           "count": 0,
-          "kind": {
-            "type": "Poison"
-          },
+          "kind": "Poison",
           "player": "bob"
         }
       },
@@ -351,9 +321,7 @@
       "check": {
         "PlayerCounters": {
           "count": 2,
-          "kind": {
-            "type": "Poison"
-          },
+          "kind": "Poison",
           "player": "carol"
         }
       },

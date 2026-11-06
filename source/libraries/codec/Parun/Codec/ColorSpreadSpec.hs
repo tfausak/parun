@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.ColorSpread" $ do
       s
       ColorSpread.codec
       ColorSpread.AnyCombination
-      " {\"type\":\"AnyCombination\"} "
+      " \"AnyCombination\" "
 
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s ColorSpread.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s ColorSpread.codec

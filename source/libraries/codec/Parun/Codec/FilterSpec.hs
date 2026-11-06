@@ -63,25 +63,25 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.HasCardType CardType.Creature)
-      " {\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}} "
+      " {\"type\":\"HasCardType\",\"value\":\"Creature\"} "
   Spec.it s "HasSupertype" $
     Common.assertCodec
       s
       codec
       (Filter.HasSupertype Supertype.Basic)
-      " {\"type\":\"HasSupertype\",\"value\":{\"type\":\"Basic\"}} "
+      " {\"type\":\"HasSupertype\",\"value\":\"Basic\"} "
   Spec.it s "HasColor" $
     Common.assertCodec
       s
       codec
       (Filter.HasColor Color.Black)
-      " {\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}} "
+      " {\"type\":\"HasColor\",\"value\":\"Black\"} "
   Spec.it s "HasSubtype" $
     Common.assertCodec
       s
       codec
       (Filter.HasSubtype Subtype.Mountain)
-      " {\"type\":\"HasSubtype\",\"value\":{\"type\":\"Mountain\"}} "
+      " {\"type\":\"HasSubtype\",\"value\":\"Mountain\"} "
   Spec.it s "HasName" $
     Common.assertCodec
       s
@@ -106,7 +106,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.HasKeywordFamily KeywordFamily.Toxic)
-      " {\"type\":\"HasKeywordFamily\",\"value\":{\"type\":\"Toxic\"}} "
+      " {\"type\":\"HasKeywordFamily\",\"value\":\"Toxic\"} "
     -- The two atoms must not share a wire shape: a card asking for the family
     -- and one asking for toxic 2 have to round-trip back to different filters.
     Spec.assertBool
@@ -124,19 +124,19 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.ControlledByRole TurnRole.Defending)
-      " {\"type\":\"ControlledByRole\",\"value\":{\"type\":\"Defending\"}} "
+      " {\"type\":\"ControlledByRole\",\"value\":\"Defending\"} "
   Spec.it s "ControlledByRole Active" $
     Common.assertCodec
       s
       codec
       (Filter.ControlledByRole TurnRole.Active)
-      " {\"type\":\"ControlledByRole\",\"value\":{\"type\":\"Active\"}} "
+      " {\"type\":\"ControlledByRole\",\"value\":\"Active\"} "
   Spec.it s "HeldByBound" $
     Common.assertCodec
       s
       codec
       (Filter.HeldByBound Holder.Controller (SlotName.MkSlotName (Text.pack "thatPlayer")))
-      " {\"type\":\"HeldByBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"slot\":\"thatPlayer\"}} "
+      " {\"type\":\"HeldByBound\",\"value\":{\"holder\":\"Controller\",\"slot\":\"thatPlayer\"}} "
   -- Runtime-only (Parun.CardSpec lints it out of the pool), but round-tripped
   -- here for the reason its codec arm exists at all: the codec is total.
   Spec.it s "HeldByPlayer" $
@@ -144,7 +144,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.HeldByPlayer Holder.Owner (PlayerId.MkPlayerId 1))
-      " {\"type\":\"HeldByPlayer\",\"value\":{\"holder\":{\"type\":\"Owner\"},\"player\":1}} "
+      " {\"type\":\"HeldByPlayer\",\"value\":{\"holder\":\"Owner\",\"player\":1}} "
   -- Runtime-only for HeldByPlayer's reason, and round-tripped here for
   -- its reason.
   Spec.it s "IsObject" $
@@ -158,7 +158,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.HeldByRecipient Holder.Controller)
-      " {\"type\":\"HeldByRecipient\",\"value\":{\"type\":\"Controller\"}} "
+      " {\"type\":\"HeldByRecipient\",\"value\":\"Controller\"} "
   Spec.it s "ControllerIsOwner" $
     Common.assertCodec
       s
@@ -176,13 +176,13 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.HeldBy Holder.Owner PlayerRelation.Opponent)
-      " {\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Owner\"},\"relation\":{\"type\":\"Opponent\"}}} "
+      " {\"type\":\"HeldBy\",\"value\":{\"holder\":\"Owner\",\"relation\":\"Opponent\"}} "
   Spec.it s "IsPlayer" $
     Common.assertCodec
       s
       codec
       (Filter.IsPlayer PlayerRelation.Opponent)
-      " {\"type\":\"IsPlayer\",\"value\":{\"type\":\"Opponent\"}} "
+      " {\"type\":\"IsPlayer\",\"value\":\"Opponent\"} "
   Spec.it s "IsControllerOfBound" $
     Common.assertCodec
       s
@@ -196,7 +196,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.Controls (ControlMargin.MoreThanYou 2) (Filter.HasCardType CardType.Land))
-      " {\"type\":\"Controls\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"margin\":{\"type\":\"MoreThanYou\",\"value\":2}}} "
+      " {\"type\":\"Controls\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":\"Land\"},\"margin\":{\"type\":\"MoreThanYou\",\"value\":2}}} "
   Spec.it s "CardsInGraveyardAtLeast" $
     Common.assertCodec
       s
@@ -226,19 +226,19 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.TargetsOnlyOne (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"TargetsOnlyOne\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"TargetsOnlyOne\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   Spec.it s "TargetsMatching" $
     Common.assertCodec
       s
       codec
       (Filter.TargetsMatching (Filter.HeldBy Holder.Controller PlayerRelation.You))
-      " {\"type\":\"TargetsMatching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
+      " {\"type\":\"TargetsMatching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":\"Controller\",\"relation\":\"You\"}}} "
   Spec.it s "TargetsPlayer You" $
     Common.assertCodec
       s
       codec
       (Filter.TargetsPlayer PlayerRelation.You)
-      " {\"type\":\"TargetsPlayer\",\"value\":{\"type\":\"You\"}} "
+      " {\"type\":\"TargetsPlayer\",\"value\":\"You\"} "
   Spec.it s "IsBound" $
     Common.assertCodec
       s
@@ -262,13 +262,13 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.ControllerRelatesToBound PlayerRelation.You Hop.Itself (SlotName.MkSlotName (Text.pack "from")))
-      " {\"type\":\"ControllerRelatesToBound\",\"value\":{\"relation\":{\"type\":\"You\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"from\"}} "
+      " {\"type\":\"ControllerRelatesToBound\",\"value\":{\"relation\":\"You\",\"hop\":\"Itself\",\"slot\":\"from\"}} "
   Spec.it s "ControllerRelatesToBound under Hop.Host" $ do
     Common.assertCodec
       s
       codec
       (Filter.ControllerRelatesToBound PlayerRelation.You Hop.Host (SlotName.MkSlotName (Text.pack "target")))
-      " {\"type\":\"ControllerRelatesToBound\",\"value\":{\"relation\":{\"type\":\"You\"},\"hop\":{\"type\":\"Host\"},\"slot\":\"target\"}} "
+      " {\"type\":\"ControllerRelatesToBound\",\"value\":{\"relation\":\"You\",\"hop\":\"Host\",\"slot\":\"target\"}} "
     Spec.assertNeWith s "CR 303.4b's host is not the bound object itself" (Codec.encode codec (Filter.ControllerRelatesToBound PlayerRelation.You Hop.Host (SlotName.MkSlotName (Text.pack "target")))) (Codec.encode codec (Filter.ControllerRelatesToBound PlayerRelation.You Hop.Itself (SlotName.MkSlotName (Text.pack "target"))))
   Spec.it s "Shares CreatureType Bound" $
     Common.assertCodec
@@ -281,13 +281,13 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.Measures (Measures.MkMeasures Measure.Toughness Comparison.LessThan (Operand.OfBound (BoundMeasure.MkBoundMeasure (SlotName.MkSlotName (Text.pack "thatExploitedCreature")) Measure.Toughness))))
-      " {\"type\":\"Measures\",\"value\":{\"measure\":{\"type\":\"Toughness\"},\"comparison\":{\"type\":\"LessThan\"},\"operand\":{\"type\":\"OfBound\",\"value\":{\"slot\":\"thatExploitedCreature\",\"measure\":{\"type\":\"Toughness\"}}}}} "
+      " {\"type\":\"Measures\",\"value\":{\"measure\":\"Toughness\",\"comparison\":\"LessThan\",\"operand\":{\"type\":\"OfBound\",\"value\":{\"slot\":\"thatExploitedCreature\",\"measure\":\"Toughness\"}}}} "
   Spec.it s "HasChosenName" $
     Common.assertCodec
       s
       codec
       (Filter.HasChosenName NameChooser.CandidateOwner)
-      " {\"type\":\"HasChosenName\",\"value\":{\"type\":\"CandidateOwner\"}} "
+      " {\"type\":\"HasChosenName\",\"value\":\"CandidateOwner\"} "
   Spec.it s "HasChosenColor" $
     Common.assertCodec
       s
@@ -323,7 +323,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.OfRelatedPlayer PlayerRelation.Opponent)
-      " {\"type\":\"OfRelatedPlayer\",\"value\":{\"type\":\"Opponent\"}} "
+      " {\"type\":\"OfRelatedPlayer\",\"value\":\"Opponent\"} "
   Spec.it s "IsAttacking" $
     Common.assertCodec
       s
@@ -335,19 +335,19 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.IsAttackingPlayer PlayerRelation.You)
-      " {\"type\":\"IsAttackingPlayer\",\"value\":{\"type\":\"You\"}} "
+      " {\"type\":\"IsAttackingPlayer\",\"value\":\"You\"} "
   Spec.it s "IsAttackingPlaneswalker" $
     Common.assertCodec
       s
       codec
       (Filter.IsAttackingPlaneswalker PlayerRelation.You)
-      " {\"type\":\"IsAttackingPlaneswalker\",\"value\":{\"type\":\"You\"}} "
+      " {\"type\":\"IsAttackingPlaneswalker\",\"value\":\"You\"} "
   Spec.it s "IsAttackingBattle" $
     Common.assertCodec
       s
       codec
       (Filter.IsAttackingBattle PlayerRelation.You)
-      " {\"type\":\"IsAttackingBattle\",\"value\":{\"type\":\"You\"}} "
+      " {\"type\":\"IsAttackingBattle\",\"value\":\"You\"} "
   Spec.it s "IsBlocking" $
     Common.assertCodec
       s
@@ -359,13 +359,13 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.HasBlockStatus BlockStatus.Unblocked)
-      " {\"type\":\"HasBlockStatus\",\"value\":{\"type\":\"Unblocked\"}} "
+      " {\"type\":\"HasBlockStatus\",\"value\":\"Unblocked\"} "
   Spec.it s "DeclaredThisTurn" $
     Common.assertCodec
       s
       codec
       (Filter.DeclaredThisTurn BlockRole.Blocker)
-      " {\"type\":\"DeclaredThisTurn\",\"value\":{\"type\":\"Blocker\"}} "
+      " {\"type\":\"DeclaredThisTurn\",\"value\":\"Blocker\"} "
   Spec.it s "CouldAttackThisTurn" $
     Common.assertCodec
       s
@@ -413,7 +413,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.LeftLibraryThisTurn LibraryDeparture.Milled)
-      " {\"type\":\"LeftLibraryThisTurn\",\"value\":{\"type\":\"Milled\"}} "
+      " {\"type\":\"LeftLibraryThisTurn\",\"value\":\"Milled\"} "
   Spec.it s "CantCrewVehicles" $
     Common.assertCodec
       s
@@ -437,7 +437,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.EnteredThisTurn EnteredZone.MkEnteredZone {EnteredZone.to = Zone.Graveyard, EnteredZone.from = Set.singleton Zone.Battlefield})
-      " {\"type\":\"EnteredThisTurn\",\"value\":{\"from\":[{\"type\":\"Battlefield\"}],\"to\":{\"type\":\"Graveyard\"}}} "
+      " {\"type\":\"EnteredThisTurn\",\"value\":{\"from\":[\"Battlefield\"],\"to\":\"Graveyard\"}} "
   Spec.it s "ControlledSinceTurnBegan" $
     Common.assertCodec
       s
@@ -449,7 +449,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.AttachedTo (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"AttachedTo\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"AttachedTo\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- Aura Graft's "attached to a permanent", which the general atom spells as the
   -- trivial nest -- and the shape that would break a codec whose payload were
   -- optional rather than required.
@@ -464,7 +464,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.HasAttached (Filter.HasSubtype Subtype.Aura))
-      " {\"type\":\"HasAttached\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}} "
+      " {\"type\":\"HasAttached\",\"value\":{\"type\":\"HasSubtype\",\"value\":\"Aura\"}} "
   Spec.it s "BeforeMove" $
     Common.assertCodec
       s
@@ -545,7 +545,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.HostOfSubjectHasCardType CardType.Creature)
-      " {\"type\":\"HostOfSubjectHasCardType\",\"value\":{\"type\":\"Creature\"}} "
+      " {\"type\":\"HostOfSubjectHasCardType\",\"value\":\"Creature\"} "
     Spec.assertNeWith s "CR 205.2a's read is of the host, not of the candidate" (Codec.encode codec (Filter.HostOfSubjectHasCardType CardType.Creature)) (Codec.encode codec (Filter.HasCardType CardType.Creature))
   Spec.it s "IsCommander" $
     Common.assertCodec
@@ -570,7 +570,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.IsActivatedAbility (Just LoyaltyKind.LoyaltyAbility))
-      " {\"type\":\"IsActivatedAbility\",\"value\":{\"type\":\"LoyaltyAbility\"}} "
+      " {\"type\":\"IsActivatedAbility\",\"value\":\"LoyaltyAbility\"} "
   Spec.it s "IsAbility" $
     Common.assertCodec
       s
@@ -588,7 +588,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.FromSource (Filter.HasCardType CardType.Artifact))
-      " {\"type\":\"FromSource\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}} "
+      " {\"type\":\"FromSource\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Artifact\"}} "
   Spec.it s "IsTapped" $
     Common.assertCodec
       s
@@ -606,7 +606,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.RepresentedByCard (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"RepresentedByCard\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"RepresentedByCard\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   Spec.it s "IsExiledFaceDown" $
     Common.assertCodec
       s
@@ -646,7 +646,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.BlockPartnerOfSource BlockRole.Blocker)
-      " {\"type\":\"BlockPartnerOfSource\",\"value\":{\"type\":\"Blocker\"}} "
+      " {\"type\":\"BlockPartnerOfSource\",\"value\":\"Blocker\"} "
   Spec.it s "HasActivatedAbility" $
     Common.assertCodec
       s
@@ -658,13 +658,13 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.HasActivatedAbility (Just AbilityKind.NonManaAbility))
-      " {\"type\":\"HasActivatedAbility\",\"value\":{\"type\":\"NonManaAbility\"}} "
+      " {\"type\":\"HasActivatedAbility\",\"value\":\"NonManaAbility\"} "
   Spec.it s "IsInZone Graveyard" $
     Common.assertCodec
       s
       codec
       (Filter.IsInZone Zone.Graveyard)
-      " {\"type\":\"IsInZone\",\"value\":{\"type\":\"Graveyard\"}} "
+      " {\"type\":\"IsInZone\",\"value\":\"Graveyard\"} "
   -- The spelling Drannith Magistrate's "from anywhere other than their hands"
   -- takes: nested under Not, where Grafdigger's Cage nests two of them under Or.
   Spec.it s "Not (IsInZone Hand)" $
@@ -672,13 +672,13 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.Not (Filter.IsInZone Zone.Hand))
-      " {\"type\":\"Not\",\"value\":{\"type\":\"IsInZone\",\"value\":{\"type\":\"Hand\"}}} "
+      " {\"type\":\"Not\",\"value\":{\"type\":\"IsInZone\",\"value\":\"Hand\"}} "
   Spec.it s "WasCastFrom Graveyard" $
     Common.assertCodec
       s
       codec
       (Filter.WasCastFrom Zone.Graveyard)
-      " {\"type\":\"WasCastFrom\",\"value\":{\"type\":\"Graveyard\"}} "
+      " {\"type\":\"WasCastFrom\",\"value\":\"Graveyard\"} "
   -- Aven Interrupter's own spelling: "from graveyards or from exile" is two of
   -- these under an Or, where the atom above stands alone on Patrician Geist.
   Spec.it s "Or [WasCastFrom Graveyard, WasCastFrom Exile]" $
@@ -686,7 +686,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.Or [Filter.WasCastFrom Zone.Graveyard, Filter.WasCastFrom Zone.Exile])
-      " {\"type\":\"Or\",\"value\":[{\"type\":\"WasCastFrom\",\"value\":{\"type\":\"Graveyard\"}},{\"type\":\"WasCastFrom\",\"value\":{\"type\":\"Exile\"}}]} "
+      " {\"type\":\"Or\",\"value\":[{\"type\":\"WasCastFrom\",\"value\":\"Graveyard\"},{\"type\":\"WasCastFrom\",\"value\":\"Exile\"}]} "
   -- Shadow the Hedgehog's "if mana from an artifact was spent to cast it". No
   -- Arm.tagged codec forces a constructor's ARM, only its tag, so a constructor
   -- with no arm here round trips nowhere and a card naming it fails to parse.
@@ -695,14 +695,14 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.TagWasSpent ProductionTag.Artifact)
-      " {\"type\":\"TagWasSpent\",\"value\":{\"type\":\"Artifact\"}} "
+      " {\"type\":\"TagWasSpent\",\"value\":\"Artifact\"} "
   -- Hallar, the Firefletcher's "if that spell was kicked".
   Spec.it s "Paid" $
     Common.assertCodec
       s
       codec
       (Filter.Paid (KeywordDesignator.OfFamily KeywordFamily.Kicker))
-      " {\"type\":\"Paid\",\"value\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Kicker\"}}} "
+      " {\"type\":\"Paid\",\"value\":{\"type\":\"OfFamily\",\"value\":\"Kicker\"}} "
   -- Synthetic Prototype Audit's "target prototyped spell".
   Spec.it s "IsPrototyped" $
     Common.assertCodec
@@ -715,19 +715,19 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       codec
       (Filter.HasDesignation Designation.Renowned)
-      " {\"type\":\"HasDesignation\",\"value\":{\"type\":\"Renowned\"}} "
+      " {\"type\":\"HasDesignation\",\"value\":\"Renowned\"} "
   Spec.it s "HasDesignation Monstrous" $
     Common.assertCodec
       s
       codec
       (Filter.HasDesignation Designation.Monstrous)
-      " {\"type\":\"HasDesignation\",\"value\":{\"type\":\"Monstrous\"}} "
+      " {\"type\":\"HasDesignation\",\"value\":\"Monstrous\"} "
   Spec.it s "HasDesignation Suspected" $
     Common.assertCodec
       s
       codec
       (Filter.HasDesignation Designation.Suspected)
-      " {\"type\":\"HasDesignation\",\"value\":{\"type\":\"Suspected\"}} "
+      " {\"type\":\"HasDesignation\",\"value\":\"Suspected\"} "
   -- CR 122.1's presence read, the one Filter atom with a CounterKind payload.
   Spec.it s "HasCounters" $
     Common.assertCodec
@@ -744,32 +744,32 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       Filter.HasCountersOfAnyKind
       " {\"type\":\"HasCountersOfAnyKind\"} "
-  Spec.it s "HasSticker" $ Common.assertCodec s codec (Filter.HasSticker StickerKind.Art) " {\"type\":\"HasSticker\",\"value\":{\"type\":\"Art\"}} "
+  Spec.it s "HasSticker" $ Common.assertCodec s codec (Filter.HasSticker StickerKind.Art) " {\"type\":\"HasSticker\",\"value\":\"Art\"} "
   Spec.it s "Stickered" $ Common.assertCodec s codec Filter.Stickered " {\"type\":\"Stickered\"} "
   Spec.it s "And" $
     Common.assertCodec
       s
       codec
       (Filter.And [Filter.HasCardType CardType.Land, Filter.HasSupertype Supertype.Basic])
-      " {\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},{\"type\":\"HasSupertype\",\"value\":{\"type\":\"Basic\"}}]} "
+      " {\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Land\"},{\"type\":\"HasSupertype\",\"value\":\"Basic\"}]} "
   Spec.it s "Or" $
     Common.assertCodec
       s
       codec
       (Filter.Or [Filter.HasCardType CardType.Creature, Filter.HasCardType CardType.Enchantment])
-      " {\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Enchantment\"}}]} "
+      " {\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Creature\"},{\"type\":\"HasCardType\",\"value\":\"Enchantment\"}]} "
   Spec.it s "Not" $
     Common.assertCodec
       s
       codec
       (Filter.Not (Filter.HasColor Color.Black))
-      " {\"type\":\"Not\",\"value\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}}} "
+      " {\"type\":\"Not\",\"value\":{\"type\":\"HasColor\",\"value\":\"Black\"}} "
   Spec.it s "Unwritten" $
     Common.assertCodec
       s
       codec
       (Filter.Unwritten (Filter.HasColor Color.White))
-      " {\"type\":\"Unwritten\",\"value\":{\"type\":\"HasColor\",\"value\":{\"type\":\"White\"}}} "
+      " {\"type\":\"Unwritten\",\"value\":{\"type\":\"HasColor\",\"value\":\"White\"}} "
   -- Nested And/Or/Not, exercising the recursion the per-constructor cases above
   -- do not.
   Spec.it s "nested And/Or/Not round-trips" $
@@ -842,7 +842,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
           ]
   Spec.describe s "Common.maybe codec" $ do
     Spec.it s "CR 702.29e's typecycling filter, present" $
-      Common.assertFromJson s (Codec.decode (Common.maybe codec)) "{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}" (Just (Filter.HasCardType CardType.Creature))
+      Common.assertFromJson s (Codec.decode (Common.maybe codec)) "{\"type\":\"HasCardType\",\"value\":\"Creature\"}" (Just (Filter.HasCardType CardType.Creature))
     Spec.it s "absent (JSON null)" $
       Common.assertFromJson s (Codec.decode (Common.maybe codec)) "null" Nothing
   Spec.it s "has a schema" $

@@ -13,9 +13,7 @@
         },
         {
           "type": "Phyrexian",
-          "value": {
-            "type": "White"
-          }
+          "value": "White"
         }
       ],
       "name": "Porcelain Legionnaire",
@@ -30,20 +28,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Phyrexian"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Phyrexian",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

@@ -14,17 +14,11 @@
             "alongside": {
               "type": "Measures",
               "value": {
-                "comparison": {
-                  "type": "GreaterThan"
-                },
-                "measure": {
-                  "type": "Power"
-                },
+                "comparison": "GreaterThan",
+                "measure": "Power",
                 "operand": {
                   "type": "OfSource",
-                  "value": {
-                    "type": "Power"
-                  }
+                  "value": "Power"
                 }
               }
             }
@@ -42,17 +36,11 @@
             "alongside": {
               "type": "Measures",
               "value": {
-                "comparison": {
-                  "type": "GreaterThan"
-                },
-                "measure": {
-                  "type": "Power"
-                },
+                "comparison": "GreaterThan",
+                "measure": "Power",
                 "operand": {
                   "type": "OfSource",
-                  "value": {
-                    "type": "Power"
-                  }
+                  "value": "Power"
                 }
               }
             }
@@ -68,9 +56,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -86,14 +72,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Goblin"
-          }
+          "Goblin"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

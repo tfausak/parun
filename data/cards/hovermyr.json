@@ -27,17 +27,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Myr"
-          }
+          "Myr"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

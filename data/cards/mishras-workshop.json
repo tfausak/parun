@@ -29,9 +29,7 @@
                           "restriction": {
                             "casts": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Artifact"
-                              }
+                              "value": "Artifact"
                             }
                           }
                         }
@@ -48,9 +46,7 @@
                           "restriction": {
                             "casts": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Artifact"
-                              }
+                              "value": "Artifact"
                             }
                           }
                         }
@@ -67,9 +63,7 @@
                           "restriction": {
                             "casts": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Artifact"
-                              }
+                              "value": "Artifact"
                             }
                           }
                         }
@@ -86,9 +80,7 @@
       "oracleText": "{T}: Add {C}{C}{C}. Spend this mana only to cast artifact spells.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

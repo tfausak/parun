@@ -17,9 +17,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -49,9 +47,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -70,9 +66,7 @@
                             "type": "Attacking",
                             "value": {
                               "attacked": "thatPlayer",
-                              "relation": {
-                                "type": "Opponent"
-                              }
+                              "relation": "Opponent"
                             }
                           },
                           "quantity": {
@@ -91,17 +85,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          },
-          {
-            "type": "Curse"
-          }
+          "Aura",
+          "Curse"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

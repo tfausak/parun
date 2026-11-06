@@ -34,9 +34,7 @@
         "name": "bob",
         "counters": [
           {
-            "key": {
-              "type": "Poison"
-            },
+            "key": "Poison",
             "value": 1
           }
         ]
@@ -45,9 +43,7 @@
         "name": "carol",
         "counters": [
           {
-            "key": {
-              "type": "Poison"
-            },
+            "key": "Poison",
             "value": 1
           }
         ]
@@ -105,9 +101,7 @@
       "check": {
         "PlayerCounters": {
           "player": "bob",
-          "kind": {
-            "type": "Poison"
-          },
+          "kind": "Poison",
           "count": 2
         }
       }
@@ -119,9 +113,7 @@
       "check": {
         "PlayerCounters": {
           "player": "carol",
-          "kind": {
-            "type": "Poison"
-          },
+          "kind": "Poison",
           "count": 2
         }
       }

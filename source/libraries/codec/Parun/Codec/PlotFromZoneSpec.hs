@@ -23,5 +23,5 @@ spec s = Spec.describe s "Parun.Codec.PlotFromZone" $ do
             PlotFromZone.matching = Filter.Not (Filter.HasCardType CardType.Land)
           }
       )
-      " {\"from\":{\"zone\":{\"type\":\"Library\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"matching\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}} "
+      " {\"from\":{\"zone\":\"Library\",\"player\":{\"type\":\"Relative\",\"value\":\"You\"}},\"matching\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PlotFromZone.codec

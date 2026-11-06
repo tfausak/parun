@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.LoopMembers" $ do
       s
       LoopMembers.codec
       LoopMembers.Every
-      " {\"type\":\"Every\"} "
+      " \"Every\" "
   Spec.it s "AnyNumber" $
     Common.assertCodec
       s
       LoopMembers.codec
       LoopMembers.AnyNumber
-      " {\"type\":\"AnyNumber\"} "
+      " \"AnyNumber\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s LoopMembers.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s LoopMembers.codec

@@ -119,9 +119,7 @@
       "source": "Don't Make a Sound",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             "$bi1",
             "$bi2"

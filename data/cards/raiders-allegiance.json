@@ -16,9 +16,7 @@
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -32,26 +30,18 @@
                       {
                         "type": "GainPlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Point"
-                          },
+                          "kind": "Point",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "PlayersDealtDamageThisTurn",
                             "value": {
-                              "kind": {
-                                "type": "Combat"
-                              },
+                              "kind": "Combat",
                               "recipient": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "AnyPlayer"
-                                }
+                                "value": "AnyPlayer"
                               }
                             }
                           }
@@ -64,9 +54,7 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Black"
-                                  }
+                                  "Black"
                                 ],
                                 "keywords": [
                                   {
@@ -84,14 +72,10 @@
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Pirate"
-                                    }
+                                    "Pirate"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -100,14 +84,10 @@
                           "quantity": {
                             "type": "PlayersDealtDamageThisTurn",
                             "value": {
-                              "kind": {
-                                "type": "Combat"
-                              },
+                              "kind": "Combat",
                               "recipient": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "AnyPlayer"
-                                }
+                                "value": "AnyPlayer"
                               }
                             }
                           }
@@ -174,14 +154,10 @@
                                 "name": "Treasure Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Treasure"
-                                    }
+                                    "Treasure"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -190,14 +166,10 @@
                           "creator": {
                             "type": "Superlative",
                             "value": {
-                              "comparison": {
-                                "type": "AtLeast"
-                              },
+                              "comparison": "AtLeast",
                               "measure": {
                                 "type": "CountersOf",
-                                "value": {
-                                  "type": "Point"
-                                }
+                                "value": "Point"
                               }
                             }
                           },
@@ -213,14 +185,10 @@
                           "player": {
                             "type": "Superlative",
                             "value": {
-                              "comparison": {
-                                "type": "AtLeast"
-                              },
+                              "comparison": "AtLeast",
                               "measure": {
                                 "type": "CountersOf",
-                                "value": {
-                                  "type": "Point"
-                                }
+                                "value": "Point"
                               }
                             }
                           },
@@ -233,21 +201,15 @@
                       {
                         "type": "RemovePlayerCounters",
                         "value": {
-                          "kind": {
-                            "type": "Point"
-                          },
+                          "kind": "Point",
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           },
                           "quantity": {
                             "type": "PlayerCounters",
                             "value": {
-                              "kind": {
-                                "type": "Point"
-                              },
+                              "kind": "Point",
                               "player": {
                                 "type": "Candidate"
                               }
@@ -288,19 +250,13 @@
                               "value": [
                                 {
                                   "type": "HasSubtype",
-                                  "value": {
-                                    "type": "Pirate"
-                                  }
+                                  "value": "Pirate"
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -319,14 +275,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ixalan"
-          }
+          "Ixalan"
         ],
         "types": [
-          {
-            "type": "Plane"
-          }
+          "Plane"
         ]
       }
     }

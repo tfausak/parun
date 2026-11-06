@@ -54,8 +54,8 @@
           "targets": ["$giant"],
           "cost": [
             { "type": "Generic", "value": 2 },
-            { "type": "OfType", "value": { "type": "Colored", "value": { "type": "White" } } },
-            { "type": "OfType", "value": { "type": "Colored", "value": { "type": "White" } } }
+            { "type": "OfType", "value": { "type": "Colored", "value": "White" } },
+            { "type": "OfType", "value": { "type": "Colored", "value": "White" } }
           ],
           "mana": ["$p1", "$p2", "$p3", "$p4", null]
         }

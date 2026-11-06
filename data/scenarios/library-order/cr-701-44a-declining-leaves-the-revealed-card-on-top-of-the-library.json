@@ -65,9 +65,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseExplore",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     }

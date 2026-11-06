@@ -29,5 +29,5 @@ spec s = Spec.describe s "Parun.Codec.Ninjutsu" $ do
             Ninjutsu.variant = NinjutsuVariant.Commander
           }
       )
-      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"variant\":{\"type\":\"Commander\"}} "
+      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"variant\":\"Commander\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

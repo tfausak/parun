@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -31,19 +29,13 @@
               "value": [
                 {
                   "type": "HasSubtype",
-                  "value": {
-                    "type": "Thopter"
-                  }
+                  "value": "Thopter"
                 },
                 {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 }
               ]
@@ -77,17 +69,13 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "Upkeep"
-                }
+                "value": "Upkeep"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -124,17 +112,11 @@
                                     },
                                     "typeLine": {
                                       "subtypes": [
-                                        {
-                                          "type": "Thopter"
-                                        }
+                                        "Thopter"
                                       ],
                                       "types": [
-                                        {
-                                          "type": "Artifact"
-                                        },
-                                        {
-                                          "type": "Creature"
-                                        }
+                                        "Artifact",
+                                        "Creature"
                                       ]
                                     }
                                   }
@@ -157,17 +139,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Artificer"
-          },
-          {
-            "type": "Vedalken"
-          }
+          "Artificer",
+          "Vedalken"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -14,9 +14,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Frog"
-                    }
+                    "value": "Frog"
                   }
                 }
               }
@@ -69,9 +67,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -97,9 +93,7 @@
                   "faces": [
                     {
                       "colorIndicator": [
-                        {
-                          "type": "Green"
-                        }
+                        "Green"
                       ],
                       "name": "Frog Token",
                       "power": {
@@ -112,14 +106,10 @@
                       },
                       "typeLine": {
                         "subtypes": [
-                          {
-                            "type": "Frog"
-                          }
+                          "Frog"
                         ],
                         "types": [
-                          {
-                            "type": "Creature"
-                          }
+                          "Creature"
                         ]
                       }
                     }
@@ -136,19 +126,13 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Qu"
-          }
+          "Qu"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

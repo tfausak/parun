@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.TriggerFrequency" $ do
       s
       TriggerFrequency.codec
       TriggerFrequency.EveryTime
-      " {\"type\":\"EveryTime\"} "
+      " \"EveryTime\" "
   Spec.it s "FirstTimeEachTurn" $
     Common.assertCodec
       s
       TriggerFrequency.codec
       TriggerFrequency.FirstTimeEachTurn
-      " {\"type\":\"FirstTimeEachTurn\"} "
+      " \"FirstTimeEachTurn\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

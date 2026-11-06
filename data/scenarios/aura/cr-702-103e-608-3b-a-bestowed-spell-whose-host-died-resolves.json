@@ -32,7 +32,7 @@
       "do": {
         "Cast": {
           "object": "$rollicker",
-          "cost": [{ "type": "Generic", "value": 1 }, { "type": "OfType", "value": { "type": "Colored", "value": { "type": "Red" } } }],
+          "cost": [{ "type": "Generic", "value": 1 }, { "type": "OfType", "value": { "type": "Colored", "value": "Red" } }],
           "targets": ["$mammoth"],
           "mana": ["$mountain-1", "$mountain-2", null]
         }

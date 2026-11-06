@@ -9,27 +9,21 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -57,17 +51,11 @@
                                       "type": "IsBound",
                                       "value": "regenerated"
                                     },
-                                    "rewrite": {
-                                      "type": "Regenerate"
-                                    }
+                                    "rewrite": "Regenerate"
                                   }
                                 },
-                                "origin": {
-                                  "type": "Other"
-                                },
-                                "uses": {
-                                  "type": "Once"
-                                }
+                                "origin": "Other",
+                                "uses": "Once"
                               }
                             }
                           ],
@@ -104,9 +92,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -121,9 +107,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -153,14 +137,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

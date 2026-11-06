@@ -15,16 +15,12 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Blue"
-                    }
+                    "value": "Blue"
                   }
                 }
               ]
             },
-            "variant": {
-              "type": "Plain"
-            }
+            "variant": "Plain"
           }
         }
       ],
@@ -37,18 +33,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -82,17 +74,13 @@
                                 "value": {
                                   "phase": {
                                     "type": "Beginning",
-                                    "value": {
-                                      "type": "Upkeep"
-                                    }
+                                    "value": "Upkeep"
                                   },
                                   "scope": {
                                     "type": "PlayersTurn",
                                     "value": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "You"
-                                      }
+                                      "value": "You"
                                     }
                                   }
                                 }
@@ -137,9 +125,7 @@
                   },
                   "eligible": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 }
               }
@@ -169,17 +155,13 @@
                                 "value": {
                                   "phase": {
                                     "type": "Beginning",
-                                    "value": {
-                                      "type": "Upkeep"
-                                    }
+                                    "value": "Upkeep"
                                   },
                                   "scope": {
                                     "type": "PlayersTurn",
                                     "value": {
                                       "type": "Relative",
-                                      "value": {
-                                        "type": "You"
-                                      }
+                                      "value": "You"
                                     }
                                   }
                                 }
@@ -224,9 +206,7 @@
                   },
                   "eligible": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 }
               }
@@ -240,14 +220,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Shapeshifter"
-          }
+          "Shapeshifter"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

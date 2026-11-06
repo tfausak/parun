@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -48,13 +46,9 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   },
-                                  "zone": {
-                                    "type": "Hand"
-                                  }
+                                  "zone": "Hand"
                                 }
                               }
                             }
@@ -74,13 +68,9 @@
                                 "value": {
                                   "player": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "You"
-                                    }
+                                    "value": "You"
                                   },
-                                  "zone": {
-                                    "type": "Hand"
-                                  }
+                                  "zone": "Hand"
                                 }
                               }
                             }
@@ -108,14 +98,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Arcane"
-          }
+          "Arcane"
         ],
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

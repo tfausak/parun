@@ -29,7 +29,7 @@ spec s = Spec.describe s "Parun.Codec.CounterPattern" $ do
           CounterPattern.onWhat = Filter.HasCardType CardType.Creature,
           CounterPattern.onWho = Nothing
         }
-      " {\"whichKind\":{\"type\":\"PlusOnePlusOne\"},\"subject\":{\"type\":\"ByAnything\"},\"whose\":{\"type\":\"You\"},\"onWhat\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"whichKind\":{\"type\":\"PlusOnePlusOne\"},\"subject\":{\"type\":\"ByAnything\"},\"whose\":{\"type\":\"You\"},\"onWhat\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- whichKind = Nothing means ANY kind, never "no kind", and the trivial filter
   -- matches every permanent. An omitted key is what that Nothing means.
   Spec.it s "Doubling Season (any kind, the trivial filter)" $

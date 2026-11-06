@@ -14,12 +14,8 @@
             "blockers": {
               "type": "Measures",
               "value": {
-                "comparison": {
-                  "type": "AtMost"
-                },
-                "measure": {
-                  "type": "Power"
-                },
+                "comparison": "AtMost",
+                "measure": "Power",
                 "operand": {
                   "type": "Literal",
                   "value": 2
@@ -52,9 +48,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -92,15 +86,11 @@
                       "value": [
                         {
                           "type": "IsPlayer",
-                          "value": {
-                            "type": "Opponent"
-                          }
+                          "value": "Opponent"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Planeswalker"
-                          }
+                          "value": "Planeswalker"
                         }
                       ]
                     },
@@ -116,17 +106,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Construct"
-          }
+          "Construct"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

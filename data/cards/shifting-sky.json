@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -48,27 +46,21 @@
               "type": "Not",
               "value": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Land"
-                }
+                "value": "Land"
               }
             }
           },
           "modifications": [
             {
               "type": "ChosenColor",
-              "value": {
-                "type": "Replace"
-              }
+              "value": "Replace"
             }
           ]
         }
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

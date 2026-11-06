@@ -12,6 +12,6 @@ spec s = Spec.describe s "Parun.Codec.DiscardWay" $ do
       s
       DiscardWay.codec
       DiscardWay.Cycled
-      " {\"type\":\"Cycled\"} "
+      " \"Cycled\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s DiscardWay.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s DiscardWay.codec

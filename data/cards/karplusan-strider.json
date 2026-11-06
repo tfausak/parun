@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -35,21 +33,15 @@
             "value": [
               {
                 "type": "HasColor",
-                "value": {
-                  "type": "Blue"
-                }
+                "value": "Blue"
               },
               {
                 "type": "HasColor",
-                "value": {
-                  "type": "Black"
-                }
+                "value": "Black"
               }
             ]
           },
-          "kind": {
-            "type": "Spell"
-          }
+          "kind": "Spell"
         }
       ],
       "toughness": {
@@ -58,14 +50,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Yeti"
-          }
+          "Yeti"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

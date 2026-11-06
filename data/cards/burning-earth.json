@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -35,23 +33,17 @@
                       "type": "Not",
                       "value": {
                         "type": "HasSupertype",
-                        "value": {
-                          "type": "Basic"
-                        }
+                        "value": "Basic"
                       }
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
+                      "value": "Land"
                     }
                   ]
                 }
               },
-              "player": {
-                "type": "AnyPlayer"
-              }
+              "player": "AnyPlayer"
             }
           },
           "modal": {
@@ -92,9 +84,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

@@ -12,19 +12,13 @@
                 "value": [
                   {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   {
                     "type": "HeldBy",
                     "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
+                      "holder": "Controller",
+                      "relation": "You"
                     }
                   },
                   {
@@ -46,18 +40,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -164,14 +154,10 @@
                                 "name": "Mutagen Token",
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Mutagen"
-                                    }
+                                    "Mutagen"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Artifact"
-                                    }
+                                    "Artifact"
                                   ]
                                 }
                               }
@@ -193,25 +179,15 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Mutant"
-          },
-          {
-            "type": "Ninja"
-          },
-          {
-            "type": "Turtle"
-          }
+          "Mutant",
+          "Ninja",
+          "Turtle"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

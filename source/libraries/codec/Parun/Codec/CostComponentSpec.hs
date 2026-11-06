@@ -84,14 +84,14 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
       s
       codec
       (CostComponent.PayHalfLife Rounding.Up)
-      " {\"type\":\"PayHalfLife\",\"value\":{\"type\":\"Up\"}} "
+      " {\"type\":\"PayHalfLife\",\"value\":\"Up\"} "
   -- The count and the Filter both ride the payload, positionally.
   Spec.it s "Sacrifice" $
     Common.assertCodec
       s
       codec
       (CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 2)) (Filter.HasSubtype Subtype.Mountain)))
-      " {\"type\":\"Sacrifice\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":2},\"whichPermanents\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Mountain\"}}}} "
+      " {\"type\":\"Sacrifice\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":2},\"whichPermanents\":{\"type\":\"HasSubtype\",\"value\":\"Mountain\"}}} "
   -- The THRESHOLD and the Filter ride the payload positionally, Sacrifice's
   -- shape -- but the Natural means something else here (CR 702.122a's total
   -- power, not a count of objects), which is why the two are separate arms.
@@ -100,7 +100,7 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
       s
       codec
       (CostComponent.TapForTotalPower (TapForTotalPower.MkTapForTotalPower 6 (Filter.HasCardType CardType.Creature)))
-      " {\"type\":\"TapForTotalPower\",\"value\":{\"totalPower\":6,\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"TapForTotalPower\",\"value\":{\"totalPower\":6,\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- A COUNT and a Filter, Sacrifice's payload shape spelled over tapping --
   -- Springleaf Drum's one untapped creature.
   Spec.it s "TapPermanents" $
@@ -108,7 +108,7 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
       s
       codec
       (CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed 1) (Filter.HasCardType CardType.Creature) False))
-      " {\"type\":\"TapPermanents\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"TapPermanents\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- TapPermanents' payload shape spelled over a return to hand -- Meloku the
   -- Clouded Mirror's one land.
   Spec.it s "ReturnPermanents" $
@@ -116,14 +116,14 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
       s
       codec
       (CostComponent.ReturnPermanents (ReturnPermanents.MkReturnPermanents 1 (Filter.HasCardType CardType.Land)))
-      " {\"type\":\"ReturnPermanents\",\"value\":{\"count\":1,\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}} "
+      " {\"type\":\"ReturnPermanents\",\"value\":{\"count\":1,\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":\"Land\"}}} "
   -- The same shape spelled over an exile -- Food Chain's one creature.
   Spec.it s "ExilePermanents" $
     Common.assertCodec
       s
       codec
       (CostComponent.ExilePermanents (ExilePermanents.MkExilePermanents 1 (Filter.HasCardType CardType.Creature)))
-      " {\"type\":\"ExilePermanents\",\"value\":{\"count\":1,\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"ExilePermanents\",\"value\":{\"count\":1,\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   Spec.it s "DiscardCards" $
     Common.assertCodec
       s
@@ -182,21 +182,21 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
       s
       codec
       (CostComponent.RemoveCounters (CountersFromPermanents.MkCountersFromPermanents (CostAmount.Fixed 1) (WhichCounters.OfKind CounterKind.PlusOnePlusOne) (Filter.HasCardType CardType.Creature) CounterSpread.FromOne))
-      " {\"type\":\"RemoveCounters\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":1},\"kind\":{\"type\":\"OfKind\",\"value\":{\"type\":\"PlusOnePlusOne\"}},\"whichPermanent\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"RemoveCounters\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":1},\"kind\":{\"type\":\"OfKind\",\"value\":{\"type\":\"PlusOnePlusOne\"}},\"whichPermanent\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- Its X form spread from among, Retribution of the Ancients'.
   Spec.it s "RemoveCounters of an announced X" $
     Common.assertCodec
       s
       codec
       (CostComponent.RemoveCounters (CountersFromPermanents.MkCountersFromPermanents (CostAmount.Announced (SlotName.MkSlotName (Text.pack "X"))) (WhichCounters.OfKind CounterKind.PlusOnePlusOne) (Filter.HasCardType CardType.Creature) CounterSpread.FromAmong))
-      " {\"type\":\"RemoveCounters\",\"value\":{\"count\":{\"type\":\"Announced\",\"value\":\"X\"},\"kind\":{\"type\":\"OfKind\",\"value\":{\"type\":\"PlusOnePlusOne\"}},\"spread\":{\"type\":\"FromAmong\"},\"whichPermanent\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"RemoveCounters\",\"value\":{\"count\":{\"type\":\"Announced\",\"value\":\"X\"},\"kind\":{\"type\":\"OfKind\",\"value\":{\"type\":\"PlusOnePlusOne\"}},\"spread\":\"FromAmong\",\"whichPermanent\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- Sacrifice's X form, Grim Hireling's.
   Spec.it s "Sacrifice of an announced X" $
     Common.assertCodec
       s
       codec
       (CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Announced (SlotName.MkSlotName (Text.pack "X")))) (Filter.HasCardType CardType.Creature)))
-      " {\"type\":\"Sacrifice\",\"value\":{\"count\":{\"type\":\"Announced\",\"value\":\"X\"},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"Sacrifice\",\"value\":{\"count\":{\"type\":\"Announced\",\"value\":\"X\"},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- CR 118.12's counter-placing cost, CR 701.63a's endure.
   Spec.it s "PutCountersOnThis" $
     Common.assertCodec
@@ -261,7 +261,7 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
       s
       codec
       (CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard 1 (Filter.HasCardType CardType.Creature)))
-      " {\"type\":\"ExileCardsFromGraveyard\",\"value\":{\"count\":1,\"whichCards\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"ExileCardsFromGraveyard\",\"value\":{\"count\":1,\"whichCards\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- CR 702.167a's [materials], which CR 702.167b reads across two zones -- a
   -- separate tag from the arm above, whose pool is the graveyard alone.
   Spec.it s "ExileMaterials" $
@@ -269,13 +269,13 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
       s
       codec
       (CostComponent.ExileMaterials (ExileMaterials.MkExileMaterials 1 False (Filter.HasCardType CardType.Creature)))
-      " {\"type\":\"ExileMaterials\",\"value\":{\"count\":1,\"whichObjects\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"ExileMaterials\",\"value\":{\"count\":1,\"whichObjects\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   Spec.it s "ExileTopFromGraveyard" $
     Common.assertCodec
       s
       codec
       (CostComponent.ExileTopFromGraveyard (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"ExileTopFromGraveyard\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"ExileTopFromGraveyard\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- CR 701.59a: a bare total mana value, no criterion beside it.
   Spec.it s "CollectEvidence" $
     Common.assertCodec
@@ -303,7 +303,7 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
       s
       codec
       (CostComponent.RevealCardFromHand (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"RevealCardFromHand\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"RevealCardFromHand\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- CR 701.4a over the hand and the battlefield at once: a count and a
   -- criterion.
   Spec.it s "Behold" $
@@ -311,21 +311,21 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
       s
       codec
       (CostComponent.Behold (Behold.MkBehold {Behold.count = 1, Behold.whichObjects = Filter.HasCardType CardType.Creature}))
-      " {\"type\":\"Behold\",\"value\":{\"count\":1,\"whichObjects\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"type\":\"Behold\",\"value\":{\"count\":1,\"whichObjects\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}} "
   -- CR 701.4a then CR 406.2: a bare criterion, one object.
   Spec.it s "BeholdAndExile" $
     Common.assertCodec
       s
       codec
       (CostComponent.BeholdAndExile (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"BeholdAndExile\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"type\":\"BeholdAndExile\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- CR 118.12's hand-to-battlefield cost: a bare criterion, one card.
   Spec.it s "PutCardFromHandOntoBattlefield" $
     Common.assertCodec
       s
       codec
       (CostComponent.PutCardFromHandOntoBattlefield (Filter.HasCardType CardType.Land))
-      " {\"type\":\"PutCardFromHandOntoBattlefield\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}} "
+      " {\"type\":\"PutCardFromHandOntoBattlefield\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Land\"}} "
   -- CR 701.17a as a cost: a bare count, the cards coming off the top with
   -- nothing to choose.
   Spec.it s "MillCards" $

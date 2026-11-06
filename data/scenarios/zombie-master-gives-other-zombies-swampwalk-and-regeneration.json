@@ -3,8 +3,8 @@
   "note": "Bob controls a Swamp, so he is not asked to block alice's Gravebane Zombie with his Grizzly Bears (an unscheduled block prompt would fail the run); after combat the Zombie regenerates from Lightning Bolt and stays on the battlefield rather than going to its library. Zombie Master has no swampwalk and no ability to activate.",
   "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Zombie Master", "label": "master"}, {"card": "Gravebane Zombie", "label": "zombie", "ready": true}, {"card": "Swamp", "label": "swamp"}, {"card": "Mountain", "label": "mountain"}], "hand": [{"card": "Lightning Bolt", "label": "bolt"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Swamp"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [
-    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Keywords": {"object": "$zombie", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Swamp"}}}, "count": 1}}},
-    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Keywords": {"object": "$master", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Swamp"}}}, "count": 0}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Keywords": {"object": "$zombie", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": "Swamp"}}, "count": 1}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Keywords": {"object": "$master", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": "Swamp"}}, "count": 0}}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$zombie"]}},
     {"turn": 1, "step": "PostcombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}},
     {"turn": 1, "step": "PostcombatMain", "player": "alice", "refuse": {"Activate": {"object": "$master", "ability": 0, "mana": ["$swamp", null]}}},

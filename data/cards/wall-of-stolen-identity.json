@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -47,9 +45,7 @@
                         {
                           "type": "AddSubtypes",
                           "value": [
-                            {
-                              "type": "Wall"
-                            }
+                            "Wall"
                           ]
                         }
                       ]
@@ -57,9 +53,7 @@
                   ],
                   "eligible": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   },
                   "whenYouDo": [
                     {
@@ -86,9 +80,7 @@
                           "value": {
                             "type": "Compares",
                             "value": {
-                              "comparison": {
-                                "type": "Exactly"
-                              },
+                              "comparison": "Exactly",
                               "measured": {
                                 "type": "Count",
                                 "value": {
@@ -104,12 +96,8 @@
                                       {
                                         "type": "HeldBy",
                                         "value": {
-                                          "holder": {
-                                            "type": "Controller"
-                                          },
-                                          "relation": {
-                                            "type": "You"
-                                          }
+                                          "holder": "Controller",
+                                          "relation": "You"
                                         }
                                       }
                                     ]
@@ -119,13 +107,9 @@
                                     "value": {
                                       "player": {
                                         "type": "Relative",
-                                        "value": {
-                                          "type": "AnyPlayer"
-                                        }
+                                        "value": "AnyPlayer"
                                       },
-                                      "zone": {
-                                        "type": "Battlefield"
-                                      }
+                                      "zone": "Battlefield"
                                     }
                                   }
                                 }
@@ -137,9 +121,7 @@
                             }
                           }
                         },
-                        "what": {
-                          "type": "Untap"
-                        }
+                        "what": "Untap"
                       }
                     }
                   ]
@@ -155,17 +137,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Shapeshifter"
-          },
-          {
-            "type": "Wall"
-          }
+          "Shapeshifter",
+          "Wall"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

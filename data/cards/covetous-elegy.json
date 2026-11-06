@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -57,16 +53,12 @@
                                 "value": [
                                   {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
+                                    "value": "Creature"
                                   },
                                   {
                                     "type": "HeldByBound",
                                     "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
+                                      "holder": "Controller",
                                       "slot": "player"
                                     }
                                   }
@@ -82,9 +74,7 @@
                         "value": {
                           "players": {
                             "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           }
                         }
                       },
@@ -101,9 +91,7 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "Not",
@@ -115,9 +103,7 @@
                           ]
                         }
                       },
-                      "sacrificer": {
-                        "type": "PermanentController"
-                      }
+                      "sacrificer": "PermanentController"
                     }
                   },
                   {
@@ -164,14 +150,10 @@
                             "name": "Treasure Token",
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Treasure"
-                                }
+                                "Treasure"
                               ],
                               "types": [
-                                {
-                                  "type": "Artifact"
-                                }
+                                "Artifact"
                               ]
                             }
                           }
@@ -188,19 +170,13 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "HeldBy",
                                 "value": {
-                                  "holder": {
-                                    "type": "Controller"
-                                  },
-                                  "relation": {
-                                    "type": "Opponent"
-                                  }
+                                  "holder": "Controller",
+                                  "relation": "Opponent"
                                 }
                               }
                             ]
@@ -210,21 +186,15 @@
                             "value": {
                               "player": {
                                 "type": "Relative",
-                                "value": {
-                                  "type": "AnyPlayer"
-                                }
+                                "value": "AnyPlayer"
                               },
-                              "zone": {
-                                "type": "Battlefield"
-                              }
+                              "zone": "Battlefield"
                             }
                           }
                         }
                       },
                       "riders": {
-                        "tapped": {
-                          "type": "Tapped"
-                        }
+                        "tapped": "Tapped"
                       }
                     }
                   }
@@ -236,9 +206,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

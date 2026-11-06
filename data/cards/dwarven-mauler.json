@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -39,9 +37,7 @@
                 "value": {
                   "grantedBy": {
                     "type": "OfFamily",
-                    "value": {
-                      "type": "Equip"
-                    }
+                    "value": "Equip"
                   }
                 }
               },
@@ -65,17 +61,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Dwarf"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Dwarf",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

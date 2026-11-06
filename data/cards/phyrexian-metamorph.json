@@ -8,9 +8,7 @@
         },
         {
           "type": "Phyrexian",
-          "value": {
-            "type": "Blue"
-          }
+          "value": "Blue"
         }
       ],
       "name": "Phyrexian Metamorph",
@@ -37,13 +35,9 @@
                           "type": "CardTypes",
                           "value": {
                             "cardTypes": [
-                              {
-                                "type": "Artifact"
-                              }
+                              "Artifact"
                             ],
-                            "mode": {
-                              "type": "InAddition"
-                            }
+                            "mode": "InAddition"
                           }
                         }
                       ]
@@ -54,15 +48,11 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Artifact"
-                        }
+                        "value": "Artifact"
                       },
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       }
                     ]
                   }
@@ -78,20 +68,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Phyrexian"
-          },
-          {
-            "type": "Shapeshifter"
-          }
+          "Phyrexian",
+          "Shapeshifter"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

@@ -16,9 +16,7 @@
                 "value": {
                   "eligible": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Land"
-                    }
+                    "value": "Land"
                   },
                   "tapped": true
                 }
@@ -29,9 +27,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

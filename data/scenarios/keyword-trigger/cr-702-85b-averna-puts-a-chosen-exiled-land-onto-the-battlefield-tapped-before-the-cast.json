@@ -32,7 +32,7 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bloodbraid-elf", "mana": ["$mountain", "$mountain-2", "$forest", "$forest-2"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Answer": { "prompt": "ChooseCardsFromAmong", "with": ["Hill Giant"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCardsFromAmong", "with": ["Mountain#3"] } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": { "type": "Exercises" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": "Exercises" } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["Forest#3", "Hill Giant"] } } }
   ],
   "final": [

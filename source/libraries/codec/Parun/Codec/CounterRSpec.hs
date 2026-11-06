@@ -32,5 +32,5 @@ spec s = Spec.describe s "Parun.Codec.CounterR" $ do
             CounterR.scaling = Scaling.AddMore 1
           }
       )
-      " {\"matching\":{\"whichKind\":{\"type\":\"PlusOnePlusOne\"},\"subject\":{\"type\":\"ByAnything\"},\"whose\":{\"type\":\"You\"},\"onWhat\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"scaling\":{\"type\":\"AddMore\",\"value\":1}} "
+      " {\"matching\":{\"whichKind\":{\"type\":\"PlusOnePlusOne\"},\"subject\":{\"type\":\"ByAnything\"},\"whose\":{\"type\":\"You\"},\"onWhat\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"scaling\":{\"type\":\"AddMore\",\"value\":1}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CounterR.codec

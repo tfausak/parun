@@ -14,9 +14,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -30,9 +28,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -48,9 +44,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -65,9 +59,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "TimesPaid",
                 "value": {
@@ -84,9 +76,7 @@
                           "type": "OfType",
                           "value": {
                             "type": "Colored",
-                            "value": {
-                              "type": "Green"
-                            }
+                            "value": "Green"
                           }
                         }
                       ]
@@ -134,9 +124,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "TimesPaid",
                 "value": {
@@ -149,9 +137,7 @@
                           "type": "OfType",
                           "value": {
                             "type": "Colored",
-                            "value": {
-                              "type": "White"
-                            }
+                            "value": "White"
                           }
                         }
                       ]
@@ -197,9 +183,7 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "You"
-                                          }
+                                          "value": "You"
                                         },
                                         "quantity": {
                                           "type": "InSlot",
@@ -239,14 +223,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Volver"
-          }
+          "Volver"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

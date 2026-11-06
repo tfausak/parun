@@ -275,7 +275,7 @@ mountainFace =
 baseFaceJson :: String
 baseFaceJson =
   "{\"name\":\"Test Card\",\"manaCost\":[{\"type\":\"Generic\",\"value\":1}],"
-    <> "\"typeLine\":{\"types\":[{\"type\":\"Creature\"}]},"
+    <> "\"typeLine\":{\"types\":[\"Creature\"]},"
     <> "\"power\":{\"type\":\"Literal\",\"value\":1},\"toughness\":{\"type\":\"Literal\",\"value\":1}}"
 
 -- | 'baseFace' with every field populated at once, except 'Face.spell', which
@@ -329,17 +329,17 @@ populatedFace =
 populatedFaceJson :: String
 populatedFaceJson =
   "{\"name\":\"Test Card\",\"manaCost\":[{\"type\":\"Generic\",\"value\":1}],"
-    <> "\"typeLine\":{\"types\":[{\"type\":\"Creature\"}]},"
+    <> "\"typeLine\":{\"types\":[\"Creature\"]},"
     <> "\"power\":{\"type\":\"Literal\",\"value\":1},\"toughness\":{\"type\":\"Literal\",\"value\":1},"
     <> "\"keywords\":[{\"type\":\"Deathtouch\"}],"
     <> "\"staticAbilities\":[{\"affected\":{\"type\":\"Attached\"},\"modifications\":[{\"type\":\"LoseAllAbilities\"}]}],"
     <> "\"activatedAbilities\":[{\"cost\":{\"mana\":[]},"
     <> "\"modal\":{\"modes\":[{}]},\"name\":\"activated\"}],"
-    <> "\"replacementEffects\":[{\"effect\":{\"type\":\"EntryR\",\"value\":{\"matching\":{\"type\":\"IsSource\"},\"rewrite\":{\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}}}}}],"
+    <> "\"replacementEffects\":[{\"effect\":{\"type\":\"EntryR\",\"value\":{\"matching\":{\"type\":\"IsSource\"},\"rewrite\":{\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}}}}}],"
     <> "\"triggeredAbilities\":[{\"condition\":{\"type\":\"Enters\",\"value\":{}},"
     <> "\"modal\":{\"modes\":[{}]}}],"
     <> "\"castingPermissions\":[{\"type\":\"CastFromLibraryWhileSearching\"}],"
-    <> "\"loyalty\":{\"type\":\"Literal\",\"value\":3},\"colorIndicator\":[{\"type\":\"White\"}],\"characteristicPT\":{\"power\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}},\"toughness\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}}},"
+    <> "\"loyalty\":{\"type\":\"Literal\",\"value\":3},\"colorIndicator\":[\"White\"],\"characteristicPT\":{\"power\":{\"type\":\"Measure\",\"value\":\"ManaValue\"},\"toughness\":{\"type\":\"Measure\",\"value\":\"ManaValue\"}},"
     <> "\"delayedAbilities\":{\"trigger\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},"
     <> "\"modal\":{\"modes\":[{}]}}},"
     <> "\"playerAbilities\":[{\"scope\":{\"type\":\"You\"},\"effect\":{\"type\":\"CantCastSpells\"}}],"
@@ -349,14 +349,14 @@ populatedFaceJson =
     <> "\"combatRestrictions\":[{\"type\":\"CantAttack\",\"value\":{\"affected\":{\"type\":\"Attached\"}}}],"
     <> "\"sacrificeRestrictions\":[{\"affected\":{\"type\":\"Attached\"}}],"
     <> "\"untapRestrictions\":[{\"affected\":{\"type\":\"Attached\"}}],"
-    <> "\"attachRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"attachers\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}}],"
+    <> "\"attachRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"attachers\":{\"type\":\"HasSubtype\",\"value\":\"Aura\"}}],"
     <> "\"counterRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"MinusOneMinusOne\"}}],"
-    <> "\"activationProhibitions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"NonManaAbility\"}}],"
-    <> "\"entryRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"origins\":[{\"type\":\"Graveyard\"}]}],"
-    <> "\"attackCosts\":[{\"subject\":{\"type\":\"Attached\"},\"perAttacker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"scope\":{\"type\":\"Controller\"}}],"
+    <> "\"activationProhibitions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":\"NonManaAbility\"}],"
+    <> "\"entryRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"origins\":[\"Graveyard\"]}],"
+    <> "\"attackCosts\":[{\"subject\":{\"type\":\"Attached\"},\"perAttacker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"scope\":\"Controller\"}],"
     <> "\"blockCosts\":[{\"subject\":{\"type\":\"Attached\"},\"perBlocker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]}}}],"
     <> "\"additionalCosts\":[{\"type\":\"TapThis\"}],"
-    <> "\"maximumX\":[{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}}],"
+    <> "\"maximumX\":[{\"type\":\"Measure\",\"value\":\"ManaValue\"}],"
     <> "\"minimumX\":1,"
     <> "\"alternativeCosts\":[{\"cost\":{\"mana\":[]}}],"
     <> "\"costReductions\":[{\"amount\":[{\"type\":\"Generic\",\"value\":3}],\"perEach\":{\"type\":\"Literal\",\"value\":1}}],"
@@ -377,7 +377,7 @@ spec s = Spec.describe s "Parun.Codec.Face" $ do
       encodeFace
       decodeFace
       minimalFace
-      " {\"name\":\"Mountain\",\"typeLine\":{\"types\":[{\"type\":\"Land\"}]}} "
+      " {\"name\":\"Mountain\",\"typeLine\":{\"types\":[\"Land\"]}} "
   Spec.it s "MkFace, every required field present and every optional field absent" $
     Common.assertJsonCodec s encodeFace decodeFace baseFace baseFaceJson
   -- CR 702.85c, on the wire: Apex Devastator's "Cascade, cascade, cascade,
@@ -390,7 +390,7 @@ spec s = Spec.describe s "Parun.Codec.Face" $ do
       decodeFace
       baseFace {Face.keywords = Map.singleton Keyword.Cascade 4}
       ( "{\"name\":\"Test Card\",\"manaCost\":[{\"type\":\"Generic\",\"value\":1}],"
-          <> "\"typeLine\":{\"types\":[{\"type\":\"Creature\"}]},"
+          <> "\"typeLine\":{\"types\":[\"Creature\"]},"
           <> "\"power\":{\"type\":\"Literal\",\"value\":1},\"toughness\":{\"type\":\"Literal\",\"value\":1},"
           <> "\"keywords\":[{\"type\":\"Cascade\"},{\"type\":\"Cascade\"},{\"type\":\"Cascade\"},{\"type\":\"Cascade\"}]}"
       )
@@ -511,14 +511,14 @@ spec s = Spec.describe s "Parun.Codec.Face" $ do
         encodeFace
         decodeFace
         baseFace {Face.colorIndicator = Set.singleton Color.White}
-        (init baseFaceJson <> ",\"colorIndicator\":[{\"type\":\"White\"}]}")
+        (init baseFaceJson <> ",\"colorIndicator\":[\"White\"]}")
     Spec.it s "characteristicPT" $
       Common.assertJsonCodec
         s
         encodeFace
         decodeFace
         baseFace {Face.characteristicPT = Just CharacteristicPT.MkCharacteristicPT {CharacteristicPT.power = Quantity.Measure Measure.ManaValue, CharacteristicPT.toughness = Quantity.Measure Measure.ManaValue}}
-        (init baseFaceJson <> ",\"characteristicPT\":{\"power\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}},\"toughness\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}}}}")
+        (init baseFaceJson <> ",\"characteristicPT\":{\"power\":{\"type\":\"Measure\",\"value\":\"ManaValue\"},\"toughness\":{\"type\":\"Measure\",\"value\":\"ManaValue\"}}}")
     Spec.it s "delayedAbilities" $
       Common.assertJsonCodec
         s
@@ -591,7 +591,7 @@ spec s = Spec.describe s "Parun.Codec.Face" $ do
         encodeFace
         decodeFace
         baseFace {Face.targetRestrictions = [TargetRestriction.MkTargetRestriction Affected.Attached StackObjectKind.Spell (Filter.And [])]}
-        (init baseFaceJson <> ",\"targetRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"Spell\"}}]}")
+        (init baseFaceJson <> ",\"targetRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":\"Spell\"}]}")
     Spec.it s "attackPermissions" $
       Common.assertJsonCodec
         s
@@ -605,7 +605,7 @@ spec s = Spec.describe s "Parun.Codec.Face" $ do
         encodeFace
         decodeFace
         baseFace {Face.attachRestrictions = [AttachRestriction.MkAttachRestriction Affected.Attached (Filter.HasSubtype Subtype.Aura)]}
-        (init baseFaceJson <> ",\"attachRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"attachers\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}}]}")
+        (init baseFaceJson <> ",\"attachRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"attachers\":{\"type\":\"HasSubtype\",\"value\":\"Aura\"}}]}")
     Spec.it s "counterRestrictions" $
       Common.assertJsonCodec
         s
@@ -619,21 +619,21 @@ spec s = Spec.describe s "Parun.Codec.Face" $ do
         encodeFace
         decodeFace
         baseFace {Face.activationProhibitions = [ActivationProhibition.MkActivationProhibition Affected.Attached (Just AbilityKind.NonManaAbility) ProhibitedCost.EveryCost Nothing]}
-        (init baseFaceJson <> ",\"activationProhibitions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"NonManaAbility\"}}]}")
+        (init baseFaceJson <> ",\"activationProhibitions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":\"NonManaAbility\"}]}")
     Spec.it s "entryRestrictions" $
       Common.assertJsonCodec
         s
         encodeFace
         decodeFace
         baseFace {Face.entryRestrictions = [EntryRestriction.MkEntryRestriction Affected.Attached (Set.singleton Zone.Graveyard)]}
-        (init baseFaceJson <> ",\"entryRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"origins\":[{\"type\":\"Graveyard\"}]}]}")
+        (init baseFaceJson <> ",\"entryRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"origins\":[\"Graveyard\"]}]}")
     Spec.it s "attackCosts" $
       Common.assertJsonCodec
         s
         encodeFace
         decodeFace
         baseFace {Face.attackCosts = [AttackCost.MkAttackCost Affected.Attached (PerCreature.Fixed (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) AttackCostScope.Controller Nothing]}
-        (init baseFaceJson <> ",\"attackCosts\":[{\"subject\":{\"type\":\"Attached\"},\"perAttacker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"scope\":{\"type\":\"Controller\"}}]}")
+        (init baseFaceJson <> ",\"attackCosts\":[{\"subject\":{\"type\":\"Attached\"},\"perAttacker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"scope\":\"Controller\"}]}")
     Spec.it s "blockCosts" $
       Common.assertJsonCodec
         s
@@ -666,12 +666,12 @@ spec s = Spec.describe s "Parun.Codec.Face" $ do
         encodeFace
         decodeFace
         baseFace {Face.modeChooser = PlayerRelation.Opponent, Face.spell = (Face.spell baseFace) {Modal.modes = Modal.modes (Face.spell baseFace) <> Modal.modes (Face.spell baseFace)}}
-        (init baseFaceJson <> ",\"modeChooser\":{\"type\":\"Opponent\"},\"spell\":{\"modes\":[{},{}]}}")
+        (init baseFaceJson <> ",\"modeChooser\":\"Opponent\",\"spell\":{\"modes\":[{},{}]}}")
     Spec.it s "modeChooser on a one-mode spell is rejected" $
       Spec.assertEqWith
         s
         "CR 700.2e: a spell with one mode has no mode to choose"
-        (Monad.void (Common.parse (Text.pack (init baseFaceJson <> ",\"modeChooser\":{\"type\":\"Opponent\"}}")) >>= decodeFace))
+        (Monad.void (Common.parse (Text.pack (init baseFaceJson <> ",\"modeChooser\":\"Opponent\"}")) >>= decodeFace))
         (Left (Text.pack "modeChooser names a chooser for a spell with one mode"))
     Spec.it s "additionalCosts" $
       Common.assertJsonCodec
@@ -760,26 +760,26 @@ spec s = Spec.describe s "Parun.Codec.Face" $ do
   -- round trip, because the encoder writes this key in its codec position and
   -- baseFaceJson can only be extended by appending.
   Spec.it s "MkFace, a vanguard's printed modifiers" $ do
-    v <- Common.assertJson s " {\"name\":\"Gerrard\",\"typeLine\":{\"types\":[{\"type\":\"Vanguard\"}]},\"vanguard\":{\"handModifier\":-4,\"lifeModifier\":0}} "
+    v <- Common.assertJson s " {\"name\":\"Gerrard\",\"typeLine\":{\"types\":[\"Vanguard\"]},\"vanguard\":{\"handModifier\":-4,\"lifeModifier\":0}} "
     Spec.assertEq s (Face.vanguard <$> decodeFace v) (Right (Just Vanguard.MkVanguard {Vanguard.handModifier = -4, Vanguard.lifeModifier = 0}))
   -- CR 903.3a, here for the vanguard's reason: 'populatedFace' leaves this at its
   -- default, so the True half needs a case of its own. The False half is
   -- 'baseFace''s round trip, whose JSON carries no key at all.
   Spec.it s "MkFace, CR 903.3a's can-be-your-commander ability" $ do
-    v <- Common.assertJson s " {\"name\":\"Freyalise\",\"typeLine\":{\"types\":[{\"type\":\"Planeswalker\"}]},\"canBeYourCommander\":true} "
+    v <- Common.assertJson s " {\"name\":\"Freyalise\",\"typeLine\":{\"types\":[\"Planeswalker\"]},\"canBeYourCommander\":true} "
     Spec.assertEq s (Face.canBeYourCommander <$> decodeFace v) (Right True)
   -- CR 103.1c, for the same reason: the True half needs its own case.
   Spec.it s "MkFace, CR 103.1c's starting-player claim" $ do
-    v <- Common.assertJson s " {\"name\":\"Power Play\",\"typeLine\":{\"types\":[{\"type\":\"Conspiracy\"}]},\"claimsStartingPlayer\":true} "
+    v <- Common.assertJson s " {\"name\":\"Power Play\",\"typeLine\":{\"types\":[\"Conspiracy\"]},\"claimsStartingPlayer\":true} "
     Spec.assertEq s (Face.claimsStartingPlayer <$> decodeFace v) (Right True)
   -- CR 407.3: the printed "Remove this card from your deck before playing if
   -- you're not playing for ante", carried as a flag.
   Spec.it s "an ante card decodes its flag" $ do
-    v <- Common.assertJson s " {\"name\":\"Contract from Below\",\"typeLine\":{\"types\":[{\"type\":\"Sorcery\"}]},\"anteOnly\":true} "
+    v <- Common.assertJson s " {\"name\":\"Contract from Below\",\"typeLine\":{\"types\":[\"Sorcery\"]},\"anteOnly\":true} "
     Spec.assertEq s (Face.anteOnly <$> decodeFace v) (Right True)
   -- Alchemy's starting intensity, for the vanguard's reason.
   Spec.it s "MkFace, a starting intensity" $ do
-    v <- Common.assertJson s " {\"name\":\"Static Discharge\",\"typeLine\":{\"types\":[{\"type\":\"Sorcery\"}]},\"startingIntensity\":3} "
+    v <- Common.assertJson s " {\"name\":\"Static Discharge\",\"typeLine\":{\"types\":[\"Sorcery\"]},\"startingIntensity\":3} "
     Spec.assertEq s (Face.startingIntensity <$> decodeFace v) (Right (Just 3))
   -- Every field at once, including the recursive card-in-card ones that only
   -- Card itself ties the knot on.
@@ -791,5 +791,5 @@ spec s = Spec.describe s "Parun.Codec.Face" $ do
     Common.assertFromJson
       s
       decodeFace
-      " {\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[{\"type\":\"Basic\"}],\"types\":[{\"type\":\"Land\"}],\"subtypes\":[{\"type\":\"Mountain\"}]},\"manaCost\":null,\"power\":null,\"toughness\":null,\"keywords\":[],\"staticAbilities\":[],\"activatedAbilities\":[],\"replacementEffects\":[],\"triggeredAbilities\":[],\"castingPermissions\":[],\"spell\":{\"modes\":[{\"clauses\":[],\"targetSlots\":{}}],\"selection\":{\"type\":\"ChooseExactly\",\"value\":1}}} "
+      " {\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[\"Basic\"],\"types\":[\"Land\"],\"subtypes\":[\"Mountain\"]},\"manaCost\":null,\"power\":null,\"toughness\":null,\"keywords\":[],\"staticAbilities\":[],\"activatedAbilities\":[],\"replacementEffects\":[],\"triggeredAbilities\":[],\"castingPermissions\":[],\"spell\":{\"modes\":[{\"clauses\":[],\"targetSlots\":{}}],\"selection\":{\"type\":\"ChooseExactly\",\"value\":1}}} "
       mountainFace

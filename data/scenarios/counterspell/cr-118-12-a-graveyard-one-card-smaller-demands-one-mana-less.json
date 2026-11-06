@@ -130,9 +130,7 @@
       "source": "Rakshasa's Disdain",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             "$bi1",
             "$bi2",

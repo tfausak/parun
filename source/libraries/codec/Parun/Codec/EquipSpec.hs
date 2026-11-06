@@ -45,7 +45,7 @@ spec s = Spec.describe s "Parun.Codec.Equip" $ do
             Equip.target = EquipTarget.Creature
           }
       )
-      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"quality\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Human\"}}} "
+      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"quality\":{\"type\":\"HasSubtype\",\"value\":\"Human\"}} "
   -- CR 702.6e: Luxior, Giada's Gift's "Equip planeswalker {1}".
   Spec.it s "MkEquip onto a planeswalker" $
     Common.assertCodec
@@ -57,7 +57,7 @@ spec s = Spec.describe s "Parun.Codec.Equip" $ do
             Equip.target = EquipTarget.Planeswalker
           }
       )
-      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"quality\":null,\"target\":{\"type\":\"Planeswalker\"}} "
+      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"quality\":null,\"target\":\"Planeswalker\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec
   -- Arm.enum derives the target's arms from the type, so this is what would
   -- catch two constructors that encode alike.

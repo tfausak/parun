@@ -8,9 +8,7 @@
             "value": {
               "phase": {
                 "type": "Beginning",
-                "value": {
-                  "type": "DrawStep"
-                }
+                "value": "DrawStep"
               },
               "scope": {
                 "type": "PlayersTurn",
@@ -53,9 +51,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -80,9 +76,7 @@
               "recipients": [
                 {
                   "type": "Player",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 }
               ]
             }
@@ -126,14 +120,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Snake"
-          }
+          "Snake"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

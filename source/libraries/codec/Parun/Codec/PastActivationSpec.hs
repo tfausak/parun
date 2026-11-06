@@ -34,7 +34,7 @@ spec s = Spec.describe s "Parun.Codec.PastActivation" $ do
             ObjectSnapshot.home = Zone.Battlefield,
             ObjectSnapshot.lapsedGrants = Set.empty
           }
-      snapshotJson n = "{\"object\":" <> show (n :: Integer) <> ",\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":1,\"owner\":1,\"zone\":{\"type\":\"Stack\"}}"
+      snapshotJson n = "{\"object\":" <> show (n :: Integer) <> ",\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":1,\"owner\":1,\"zone\":\"Stack\"}"
       -- The barest printed ability: no cost, one empty mode.
       bare = ActivatedAbility.MkActivatedAbility (Cost.MkCost Nothing []) [] 0 Nothing (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory) [] (Activator.Related PlayerRelation.You) Nothing Nothing Nothing
   Spec.it s "an ability announced at one target" $
@@ -48,7 +48,7 @@ spec s = Spec.describe s "Parun.Codec.PastActivation" $ do
           PastActivation.kind = AbilityKind.NonManaAbility,
           PastActivation.targets = [snapshotOf 6]
         }
-      (" {\"activator\":2,\"source\":" <> snapshotJson 5 <> ",\"ability\":{\"cost\":{\"mana\":null},\"modal\":{\"modes\":[{}]}},\"kind\":{\"type\":\"NonManaAbility\"},\"targets\":[" <> snapshotJson 6 <> "]} ")
+      (" {\"activator\":2,\"source\":" <> snapshotJson 5 <> ",\"ability\":{\"cost\":{\"mana\":null},\"modal\":{\"modes\":[{}]}},\"kind\":\"NonManaAbility\",\"targets\":[" <> snapshotJson 6 <> "]} ")
   -- CR 605.1a: a mana ability names no target.
   Spec.it s "a mana ability" $
     Common.assertCodec
@@ -61,6 +61,6 @@ spec s = Spec.describe s "Parun.Codec.PastActivation" $ do
           PastActivation.kind = AbilityKind.ManaAbility,
           PastActivation.targets = []
         }
-      (" {\"activator\":1,\"source\":" <> snapshotJson 7 <> ",\"ability\":null,\"kind\":{\"type\":\"ManaAbility\"},\"targets\":[]} ")
+      (" {\"activator\":1,\"source\":" <> snapshotJson 7 <> ",\"ability\":null,\"kind\":\"ManaAbility\",\"targets\":[]} ")
   Spec.it s "has a schema" $
     Common.assertHasSchema s PastActivation.codec

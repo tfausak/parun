@@ -21,9 +21,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -52,31 +50,23 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "BattlefieldAttached"
-                          },
+                          "destination": "BattlefieldAttached",
                           "filter": {
                             "type": "Or",
                             "value": [
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Aura"
-                                }
+                                "value": "Aura"
                               },
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Equipment"
-                                }
+                                "value": "Equipment"
                               }
                             ]
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -84,17 +74,11 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "zones": [
-                            {
-                              "type": "Hand"
-                            },
-                            {
-                              "type": "Graveyard"
-                            }
+                            "Hand",
+                            "Graveyard"
                           ]
                         }
                       }
@@ -111,22 +95,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Knight"
-          }
+          "Human",
+          "Knight"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

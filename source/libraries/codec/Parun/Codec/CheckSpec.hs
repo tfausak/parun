@@ -58,7 +58,7 @@ spec s = Spec.describe s "Parun.Codec.Check" $ do
   Spec.it s "PowerToughness" $
     Common.assertCodec s Check.codec (Check.Type.PowerToughness (PowerToughnessIs.Type.MkPowerToughnessIs (labelled "bear") 3 3)) " {\"PowerToughness\":{\"object\":\"$bear\",\"power\":3,\"toughness\":3}} "
   Spec.it s "PlayerCounters" $
-    Common.assertCodec s Check.codec (Check.Type.PlayerCounters (PlayerCountersAre.Type.MkPlayerCountersAre (Label.Type.MkLabel (Text.pack "bob")) PlayerCounterKind.Type.Energy 2)) " {\"PlayerCounters\":{\"player\":\"bob\",\"kind\":{\"type\":\"Energy\"},\"count\":2}} "
+    Common.assertCodec s Check.codec (Check.Type.PlayerCounters (PlayerCountersAre.Type.MkPlayerCountersAre (Label.Type.MkLabel (Text.pack "bob")) PlayerCounterKind.Type.Energy 2)) " {\"PlayerCounters\":{\"player\":\"bob\",\"kind\":\"Energy\",\"count\":2}} "
   Spec.it s "Names" $
     Common.assertCodec s Check.codec (Check.Type.Names (NamesAre.Type.MkNamesAre (labelled "clone") (Set.singleton (CardName.Type.MkCardName (Text.pack "Goblin Piker"))))) " {\"Names\":{\"object\":\"$clone\",\"names\":[\"Goblin Piker\"]}} "
   Spec.it s "Subtypes" $

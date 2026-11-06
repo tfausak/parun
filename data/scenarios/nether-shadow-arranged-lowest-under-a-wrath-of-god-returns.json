@@ -33,9 +33,7 @@
             "label": "p4"
           }
         ],
-        "graveyardOrder": {
-          "type": "Matters"
-        },
+        "graveyardOrder": "Matters",
         "hand": [
           {
             "card": "Wrath of God",
@@ -193,9 +191,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "step": "Upkeep",

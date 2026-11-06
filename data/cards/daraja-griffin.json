@@ -24,9 +24,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
+                          "regenerability": "Regenerable"
                         }
                       }
                     ]
@@ -36,9 +34,7 @@
                   "target": {
                     "filter": {
                       "type": "HasColor",
-                      "value": {
-                        "type": "Black"
-                      }
+                      "value": "Black"
                     },
                     "pool": {
                       "type": "Creatures"
@@ -64,9 +60,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -82,14 +76,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Griffin"
-          }
+          "Griffin"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

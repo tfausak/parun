@@ -23,12 +23,12 @@ spec s = Spec.describe s "Parun.Codec.PlaysLand" $ do
             PlaysLand.filter = Filter.IsBound (SlotName.MkSlotName (Text.pack "exiled"))
           }
       )
-      " {\"player\":{\"type\":\"You\"},\"from\":{\"type\":\"Exile\"},\"filter\":{\"type\":\"IsBound\",\"value\":\"exiled\"}} "
+      " {\"player\":\"You\",\"from\":\"Exile\",\"filter\":{\"type\":\"IsBound\",\"value\":\"exiled\"}} "
   -- Fastbond's "whenever you play a land": no zone, so no key.
   Spec.it s "MkPlaysLand, from any zone" $
     Common.assertCodec
       s
       PlaysLand.codec
       (PlaysLand.MkPlaysLand {PlaysLand.player = PlayerRelation.You, PlaysLand.from = Nothing, PlaysLand.filter = Filter.And []})
-      " {\"player\":{\"type\":\"You\"},\"filter\":{\"type\":\"And\",\"value\":[]}} "
+      " {\"player\":\"You\",\"filter\":{\"type\":\"And\",\"value\":[]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PlaysLand.codec

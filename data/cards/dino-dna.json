@@ -29,9 +29,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -41,9 +39,7 @@
                   "target": {
                     "filter": {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
+                      "value": "Creature"
                     },
                     "pool": {
                       "type": "CardsInGraveyard",
@@ -94,30 +90,22 @@
                             {
                               "type": "SetColors",
                               "value": [
-                                {
-                                  "type": "Green"
-                                }
+                                "Green"
                               ]
                             },
                             {
                               "type": "CardTypes",
                               "value": {
                                 "cardTypes": [
-                                  {
-                                    "type": "Creature"
-                                  }
+                                  "Creature"
                                 ],
-                                "mode": {
-                                  "type": "Replace"
-                                }
+                                "mode": "Replace"
                               }
                             },
                             {
                               "type": "SetCreatureSubtypes",
                               "value": [
-                                {
-                                  "type": "Dinosaur"
-                                }
+                                "Dinosaur"
                               ]
                             },
                             {
@@ -145,9 +133,7 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "IsExiledWithSource",
@@ -182,9 +168,7 @@
       "oracleText": "Imprint — {1}, {T}: Exile target creature card from a graveyard. Activate only as a sorcery.\n{6}: Create a token that's a copy of target creature card exiled with this artifact, except it's a 6/6 green Dinosaur creature with trample. Activate only as a sorcery.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

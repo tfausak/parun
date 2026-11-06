@@ -24,9 +24,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         }
@@ -61,9 +59,7 @@
                           },
                           "modification": {
                             "type": "LoseKeywordFamily",
-                            "value": {
-                              "type": "Landwalk"
-                            }
+                            "value": "Landwalk"
                           },
                           "ref": {
                             "type": "InSlot",
@@ -90,14 +86,10 @@
       "oracleText": "{T}: Add {R}.\n{T}: Target creature loses all landwalk abilities until end of turn.",
       "typeLine": {
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

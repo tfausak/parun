@@ -22,7 +22,7 @@ spec s = Spec.describe s "Parun.Codec.Arrival" $ do
           Arrival.end = ArrivalEnd.IntoLibrary LibraryPosition.Bottom,
           Arrival.cards = Seq.fromList [ObjectId.MkObjectId 7, ObjectId.MkObjectId 4]
         }
-      " {\"cards\":[7,4],\"end\":{\"type\":\"IntoLibrary\",\"value\":{\"type\":\"Bottom\"}},\"owner\":1} "
+      " {\"cards\":[7,4],\"end\":{\"type\":\"IntoLibrary\",\"value\":\"Bottom\"},\"owner\":1} "
   Spec.it s "one card onto a graveyard" $
     Common.assertCodec
       s

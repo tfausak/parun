@@ -24,9 +24,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "White"
-                              }
+                              "value": "White"
                             }
                           }
                         }
@@ -54,9 +52,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 }
               }
             ]
@@ -70,9 +66,7 @@
                       {
                         "type": "Designate",
                         "value": {
-                          "designation": {
-                            "type": "Harnessed"
-                          },
+                          "designation": "Harnessed",
                           "slot": "self"
                         }
                       }
@@ -98,9 +92,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -117,14 +109,10 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "HasDesignation",
-                "value": {
-                  "type": "Harnessed"
-                }
+                "value": "Harnessed"
               },
               "threshold": {
                 "type": "Literal",
@@ -143,17 +131,13 @@
                     "value": {
                       "phase": {
                         "type": "Ending",
-                        "value": {
-                          "type": "EndStep"
-                        }
+                        "value": "EndStep"
                       },
                       "scope": {
                         "type": "PlayersTurn",
                         "value": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       }
                     }
@@ -172,9 +156,7 @@
                                     "value": "target"
                                   },
                                   "slot": "exiled",
-                                  "zone": {
-                                    "type": "Exile"
-                                  }
+                                  "zone": "Exile"
                                 }
                               },
                               {
@@ -189,9 +171,7 @@
                                       "type": "Owner"
                                     }
                                   },
-                                  "zone": {
-                                    "type": "Battlefield"
-                                  }
+                                  "zone": "Battlefield"
                                 }
                               }
                             ]
@@ -219,20 +199,14 @@
                                   "type": "Not",
                                   "value": {
                                     "type": "HasCardType",
-                                    "value": {
-                                      "type": "Land"
-                                    }
+                                    "value": "Land"
                                   }
                                 },
                                 {
                                   "type": "HeldBy",
                                   "value": {
-                                    "holder": {
-                                      "type": "Controller"
-                                    },
-                                    "relation": {
-                                      "type": "You"
-                                    }
+                                    "holder": "Controller",
+                                    "relation": "You"
                                   }
                                 }
                               ]
@@ -253,22 +227,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Infinity"
-          },
-          {
-            "type": "Stone"
-          }
+          "Infinity",
+          "Stone"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

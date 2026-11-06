@@ -64,7 +64,7 @@ spec s = Spec.describe s "Parun.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.zone = Zone.Exile
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"spending\":{\"type\":\"AnyType\"}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"spending\":\"AnyType\"} "
   -- Extract Power's: CR 118.9's waiver written out, and no CR 118.14 rider --
   -- the two ride the same grant and no card in the pool prints both.
   Spec.it s "MkGrantPlayFromExile, CR 118.9's waiver" $
@@ -127,7 +127,7 @@ spec s = Spec.describe s "Parun.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.zone = Zone.Exile
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"verb\":{\"type\":\"Cast\"}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"verb\":\"Cast\"} "
   Spec.it s "a missing player, spending, alternativeCost, condition, verb, increase, landEnters or zone key decodes as the default" $
     Common.assertFromJson
       s
@@ -167,7 +167,7 @@ spec s = Spec.describe s "Parun.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.zone = Zone.Exile
           }
       )
-      " {\"duration\":{\"type\":\"Indefinite\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"alternativeCost\":{\"type\":\"WaterbendManaValue\"},\"condition\":{\"type\":\"Compares\",\"value\":{\"comparison\":{\"type\":\"Exactly\"},\"measured\":{\"type\":\"IsActivePlayer\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"verb\":{\"type\":\"Cast\"}} "
+      " {\"duration\":{\"type\":\"Indefinite\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"alternativeCost\":{\"type\":\"WaterbendManaValue\"},\"condition\":{\"type\":\"Compares\",\"value\":{\"comparison\":\"Exactly\",\"measured\":{\"type\":\"IsActivePlayer\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"verb\":\"Cast\"} "
   -- Lightstall Inquisitor's: CR 601.2f's increase and CR 614.1d's tapped entry
   -- written out.
   Spec.it s "MkGrantPlayFromExile, Lightstall Inquisitor's riders" $
@@ -188,7 +188,7 @@ spec s = Spec.describe s "Parun.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.zone = Zone.Exile
           }
       )
-      " {\"duration\":{\"type\":\"Indefinite\"},\"player\":{\"type\":\"InSlot\",\"value\":\"opponent\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"increase\":1,\"landEnters\":{\"type\":\"Tapped\"}} "
+      " {\"duration\":{\"type\":\"Indefinite\"},\"player\":{\"type\":\"InSlot\",\"value\":\"opponent\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"increase\":1,\"landEnters\":\"Tapped\"} "
   -- March of Reckless Joy's: CR 601.3's "up to two of those cards" written out.
   Spec.it s "MkGrantPlayFromExile, March of Reckless Joy's limit" $
     Common.assertCodec
@@ -228,5 +228,5 @@ spec s = Spec.describe s "Parun.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.zone = Zone.Graveyard
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"verb\":{\"type\":\"Cast\"},\"zone\":{\"type\":\"Graveyard\"}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"verb\":\"Cast\",\"zone\":\"Graveyard\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s GrantPlayFromExile.codec

@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -25,9 +23,7 @@
             "value": {
               "abilities": {
                 "type": "OfFamily",
-                "value": {
-                  "type": "Equip"
-                }
+                "value": "Equip"
               },
               "permanents": {
                 "type": "And",
@@ -53,17 +49,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          },
-          {
-            "type": "Soldier"
-          }
+          "Cat",
+          "Soldier"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

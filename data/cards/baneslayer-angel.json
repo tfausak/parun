@@ -16,9 +16,7 @@
           "value": {
             "quality": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Demon"
-              }
+              "value": "Demon"
             },
             "spares": null
           }
@@ -28,9 +26,7 @@
           "value": {
             "quality": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Dragon"
-              }
+              "value": "Dragon"
             },
             "spares": null
           }
@@ -45,18 +41,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -72,14 +64,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Angel"
-          }
+          "Angel"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

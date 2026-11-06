@@ -5,7 +5,7 @@
     "seats": [
       {
         "name": "alice",
-        "counters": [{ "key": { "type": "Energy" }, "value": 2 }],
+        "counters": [{ "key": "Energy", "value": 2 }],
         "battlefield": [{ "card": "Deadlock Trap", "label": "trap" }]
       },
       {

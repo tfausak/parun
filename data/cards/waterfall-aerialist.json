@@ -28,9 +28,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -46,17 +44,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Djinn"
-          },
-          {
-            "type": "Wizard"
-          }
+          "Djinn",
+          "Wizard"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

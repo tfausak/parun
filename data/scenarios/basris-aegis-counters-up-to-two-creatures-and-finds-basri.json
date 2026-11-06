@@ -161,9 +161,7 @@
     },
     {
       "do": {
-        "ChooseOptional": {
-          "type": "Exercises"
-        }
+        "ChooseOptional": "Exercises"
       },
       "player": "alice",
       "step": "PrecombatMain",
@@ -174,9 +172,7 @@
         "Answer": {
           "prompt": "ChooseSearchZones",
           "with": [
-            {
-              "type": "Graveyard"
-            }
+            "Graveyard"
           ]
         }
       },

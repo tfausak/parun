@@ -27,7 +27,7 @@ spec s = Spec.describe s "Parun.Codec.SacrificeEffect" $ do
       s
       SacrificeEffect.codec
       SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "thatBlocker")), SacrificeEffect.sacrificer = Sacrificer.PermanentController, SacrificeEffect.sacrificed = Nothing}
-      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"thatBlocker\"},\"sacrificer\":{\"type\":\"PermanentController\"}} "
+      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"thatBlocker\"},\"sacrificer\":\"PermanentController\"} "
   -- Golgothian Sylex's form: the sweep a bare SlotName could not express, with
   -- the other sacrificer beside it.
   Spec.it s "a filtered sweep round-trips" $
@@ -35,7 +35,7 @@ spec s = Spec.describe s "Parun.Codec.SacrificeEffect" $ do
       s
       SacrificeEffect.codec
       SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.EachMatching (Filter.Not Filter.IsToken), SacrificeEffect.sacrificer = Sacrificer.PermanentController, SacrificeEffect.sacrificed = Nothing}
-      " {\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}},\"sacrificer\":{\"type\":\"PermanentController\"}} "
+      " {\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}},\"sacrificer\":\"PermanentController\"} "
   -- God-Eternal Bontu's form: a chosen set, and the count of what went.
   Spec.it s "the sacrificed count's slot is written" $
     Common.assertCodec

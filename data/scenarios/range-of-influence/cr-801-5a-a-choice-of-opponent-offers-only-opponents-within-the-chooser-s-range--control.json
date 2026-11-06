@@ -145,9 +145,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseClash",
-          "with": {
-            "type": "Top"
-          }
+          "with": "Top"
         }
       }
     },
@@ -158,9 +156,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseClash",
-          "with": {
-            "type": "Top"
-          }
+          "with": "Top"
         }
       }
     },
@@ -206,9 +202,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseClash",
-          "with": {
-            "type": "Top"
-          }
+          "with": "Top"
         }
       }
     },
@@ -219,9 +213,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseClash",
-          "with": {
-            "type": "Top"
-          }
+          "with": "Top"
         }
       }
     },
@@ -266,9 +258,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseClash",
-          "with": {
-            "type": "Top"
-          }
+          "with": "Top"
         }
       }
     },
@@ -279,9 +269,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseClash",
-          "with": {
-            "type": "Top"
-          }
+          "with": "Top"
         }
       }
     }

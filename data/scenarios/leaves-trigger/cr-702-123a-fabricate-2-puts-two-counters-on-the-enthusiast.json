@@ -24,7 +24,7 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Weaponcraft Enthusiast", "power": 0, "toughness": 1 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "Weaponcraft Enthusiast", "kind": { "type": "PlusOnePlusOne" }, "count": 0 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseToPay": { "decision": { "type": "Pays" } } }, "source": "Weaponcraft Enthusiast" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseToPay": { "decision": "Pays" } }, "source": "Weaponcraft Enthusiast" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "Weaponcraft Enthusiast", "kind": { "type": "PlusOnePlusOne" }, "count": 2 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Weaponcraft Enthusiast", "power": 2, "toughness": 3 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Servo Token", "count": 0 } } }

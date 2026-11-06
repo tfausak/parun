@@ -14,9 +14,7 @@
                   },
                   "whichPermanents": {
                     "type": "HasSubtype",
-                    "value": {
-                      "type": "Food"
-                    }
+                    "value": "Food"
                   }
                 }
               }
@@ -68,9 +66,7 @@
           "type": "Affinity",
           "value": {
             "type": "HasSubtype",
-            "value": {
-              "type": "Food"
-            }
+            "value": "Food"
           }
         }
       ],
@@ -82,18 +78,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -141,17 +133,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Citizen"
-          },
-          {
-            "type": "Halfling"
-          }
+          "Citizen",
+          "Halfling"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

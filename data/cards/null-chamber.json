@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -24,9 +22,7 @@
             "type": "CantCastMatching",
             "value": {
               "type": "HasChosenName",
-              "value": {
-                "type": "AnyChooser"
-              }
+              "value": "AnyChooser"
             }
           },
           "scope": {
@@ -38,9 +34,7 @@
             "type": "CantPlayLands",
             "value": {
               "type": "HasChosenName",
-              "value": {
-                "type": "AnyChooser"
-              }
+              "value": "AnyChooser"
             }
           },
           "scope": {
@@ -65,15 +59,11 @@
                     "value": [
                       {
                         "type": "HasSupertype",
-                        "value": {
-                          "type": "Basic"
-                        }
+                        "value": "Basic"
                       },
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Land"
-                        }
+                        "value": "Land"
                       }
                     ]
                   }
@@ -85,14 +75,10 @@
       ],
       "typeLine": {
         "supertypes": [
-          {
-            "type": "World"
-          }
+          "World"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

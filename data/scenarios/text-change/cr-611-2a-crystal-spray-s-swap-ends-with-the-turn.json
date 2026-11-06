@@ -34,9 +34,9 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$spray", "targets": ["$paladin"], "mana": ["$i1", "$i2", "$i3", null] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Crystal Spray", "do": { "ChooseWordSwap": { "from": { "type": "Black" }, "to": { "type": "Green" } } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "$paladin", "keyword": { "type": "Protection", "value": { "quality": { "type": "HasColor", "value": { "type": "Green" } }, "spares": null } }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "$paladin", "keyword": { "type": "Protection", "value": { "quality": { "type": "HasColor", "value": "Green" }, "spares": null } }, "count": 1 } } },
     { "turn": 2, "step": "Upkeep", "player": "alice", "refuse": { "Cast": { "object": "$terror", "targets": ["$paladin"], "mana": ["$s1", "$s2"] } } },
     { "turn": 2, "step": "Upkeep", "player": "alice", "do": { "Cast": { "object": "$terror", "targets": ["$bears"], "mana": ["$s1", "$s2"] } } },
-    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Keywords": { "object": "$paladin", "keyword": { "type": "Protection", "value": { "quality": { "type": "HasColor", "value": { "type": "Black" } }, "spares": null } }, "count": 1 } } }
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Keywords": { "object": "$paladin", "keyword": { "type": "Protection", "value": { "quality": { "type": "HasColor", "value": "Black" }, "spares": null } }, "count": 1 } } }
   ]
 }

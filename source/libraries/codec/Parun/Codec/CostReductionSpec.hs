@@ -41,7 +41,7 @@ spec s = Spec.describe s "Parun.Codec.CostReduction" $ do
             CostReduction.direction = CostDirection.Less
           }
       )
-      " {\"amount\":[{\"type\":\"Generic\",\"value\":3}],\"perEach\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InHistory\",\"value\":{\"type\":\"SpellCast\",\"value\":{\"type\":\"ThisTurn\"}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Members\"}}}} "
+      " {\"amount\":[{\"type\":\"Generic\",\"value\":3}],\"perEach\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InHistory\",\"value\":{\"type\":\"SpellCast\",\"value\":\"ThisTurn\"}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Members\"}}}} "
   -- CR 601.2f, as Ertai's Scorn costs {U} less if an opponent cast two or more
   -- spells this turn.
   Spec.it s "with a condition" $
@@ -56,7 +56,7 @@ spec s = Spec.describe s "Parun.Codec.CostReduction" $ do
             CostReduction.direction = CostDirection.Less
           }
       )
-      " {\"amount\":[{\"type\":\"Generic\",\"value\":1}],\"perEach\":{\"type\":\"Literal\",\"value\":1},\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":2},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":3}}}} "
+      " {\"amount\":[{\"type\":\"Generic\",\"value\":1}],\"perEach\":{\"type\":\"Literal\",\"value\":1},\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":2},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":3}}}} "
   -- CR 601.2c / 601.2f, as Bury in Books costs {2} less if it targets an
   -- attacking creature.
   Spec.it s "with a target filter" $
@@ -85,5 +85,5 @@ spec s = Spec.describe s "Parun.Codec.CostReduction" $ do
             CostReduction.direction = CostDirection.More
           }
       )
-      " {\"amount\":[{\"type\":\"Generic\",\"value\":2}],\"perEach\":{\"type\":\"Literal\",\"value\":1},\"whichTargets\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Dragon\"}},\"direction\":{\"type\":\"More\"}} "
+      " {\"amount\":[{\"type\":\"Generic\",\"value\":2}],\"perEach\":{\"type\":\"Literal\",\"value\":1},\"whichTargets\":{\"type\":\"HasSubtype\",\"value\":\"Dragon\"},\"direction\":\"More\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CostReduction.codec

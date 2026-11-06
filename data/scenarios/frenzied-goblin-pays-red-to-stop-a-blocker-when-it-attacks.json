@@ -6,7 +6,7 @@
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$goblin"]}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"ChooseTargets": {"target": ["$giant"]}}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$mtn"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"ChooseToPay": {"decision": "Pays", "mana": ["$mtn"]}}},
     {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$giant": ["$goblin"]}}},
     {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$ogre": ["$goblin"]}}},
     {"turn": 1, "step": "DeclareBlockers", "player": "bob", "check": {"Blockers": {"attacker": "$goblin", "blockers": ["$ogre"]}}}

@@ -18,18 +18,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -55,34 +51,24 @@
                 "value": [
                   {
                     "type": "HasColor",
-                    "value": {
-                      "type": "Black"
-                    }
+                    "value": "Black"
                   },
                   {
                     "type": "HasColor",
-                    "value": {
-                      "type": "Red"
-                    }
+                    "value": "Red"
                   }
                 ]
               },
               {
                 "type": "HeldBy",
                 "value": {
-                  "holder": {
-                    "type": "Controller"
-                  },
-                  "relation": {
-                    "type": "Opponent"
-                  }
+                  "holder": "Controller",
+                  "relation": "Opponent"
                 }
               }
             ]
           },
-          "kind": {
-            "type": "Spell"
-          }
+          "kind": "Spell"
         }
       ],
       "toughness": {
@@ -91,17 +77,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Knight"
-          }
+          "Human",
+          "Knight"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

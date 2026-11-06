@@ -4,6 +4,7 @@ module Parun.Oracle.Cost where
 
 import qualified Control.Monad as Monad
 import qualified Data.Char as Char
+import qualified Data.Containers.ListUtils as ListUtils
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import qualified Parun.Oracle.Filter as Filter
@@ -13,7 +14,13 @@ import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostAmount as CostAmount
 import qualified Parun.Types.CostComponent as CostComponent
+import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterName as CounterName
+import qualified Parun.Types.CounterSpread as CounterSpread
+import qualified Parun.Types.CountersFromPermanents as CountersFromPermanents
+import qualified Parun.Types.CountersOnThis as CountersOnThis
 import qualified Parun.Types.DiscardCards as DiscardCards
+import qualified Parun.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.HybridPhyrexian as HybridPhyrexian
@@ -22,6 +29,8 @@ import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.ObjectCount as ObjectCount
 import qualified Parun.Types.Sacrifice as Sacrifice
+import qualified Parun.Types.TapPermanents as TapPermanents
+import qualified Parun.Types.WhichCounters as WhichCounters
 
 -- | A mana symbol in braces (CR 107.4).
 symbol :: ManaSymbol.ManaSymbol -> Text.Text
@@ -70,10 +79,36 @@ cost self named c = do
       | null (ManaCost.unwrap m) && not (null (Cost.components c)) -> [[]]
       | otherwise -> [[manaCost m]]
   components <- traverse (component self named) (Cost.components c)
-  pure (Text.intercalate (Text.pack ", ") (mana <> components))
+  -- Free: sacrificing the source after another component naming it joins
+  -- that one, "Remove two pressure counters from this land and sacrifice it"
+  -- (Hellion Crucible).
+  joined <-
+    components
+      : [ front <> [previous <> Text.pack " and sacrifice it"]
+        | CostComponent.SacrificeThis : before : _ <- [reverse (Cost.components c)],
+          namesSelf before,
+          (front, [previous, _]) <- [splitAt (length components - 2) components]
+        ]
+  pure (Text.intercalate (Text.pack ", ") (mana <> joined))
+
+-- | Whether a cost component names the object the cost is on, so that the
+-- effect after it may call that object "it" (Mogg Mob, Triskelion).
+namesSelf :: CostComponent.CostComponent k -> Bool
+namesSelf c = case c of
+  CostComponent.SacrificeThis -> True
+  CostComponent.ReturnThis -> True
+  CostComponent.ExileThis -> True
+  CostComponent.ExileThisFromGraveyard -> True
+  CostComponent.RemoveCountersFromThis _ -> True
+  CostComponent.RemoveCounters r -> case CountersFromPermanents.whichPermanent r of
+    Filter.Type.IsSource -> True
+    _ -> False
+  _ -> False
 
 -- | One non-mana component of a cost: "{T}", "Sacrifice a Mountain",
--- "Discard two cards" (CR 701.21a, CR 701.9a).
+-- "Discard two cards", "Remove a +1/+1 counter from this creature", "Tap an
+-- untapped creature you control", "Pay {E}{E}" (CR 701.21a, CR 701.9a, CR
+-- 118.1, CR 107.14).
 component :: Text.Text -> (k -> [Text.Text]) -> CostComponent.CostComponent k -> [Text.Text]
 component self named c = case c of
   CostComponent.TapThis -> [braced (Text.pack "T")]
@@ -87,11 +122,9 @@ component self named c = case c of
   CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every (Filter.Type.And []) _) -> [Text.pack "Discard your hand"]
   CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed n)) f CardSelection.AtRandom) -> do
     p <- Filter.phrase f named
-    let card = Filter.MkNoun (Text.pack "card") (Just (Text.pack "cards"))
     fmap (\phrase -> Text.pack "Discard " <> phrase <> Text.pack " at random") (some (toInteger n) card (Filter.merge p (Filter.MkPhrase [] [card] [])))
   CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed n)) f CardSelection.ByChoice) -> do
     p <- Filter.phrase f named
-    let card = Filter.MkNoun (Text.pack "card") (Just (Text.pack "cards"))
     fmap (Text.pack "Discard " <>) (some (toInteger n) card (Filter.merge p (Filter.MkPhrase [] [card] [])))
       <> [ Text.pack "Discard " <> Prose.article one <> Text.pack " " <> one <> Text.pack " or " <> other
          | n == 1,
@@ -100,7 +133,82 @@ component self named c = case c of
            other <- singular named card right
          ]
   CostComponent.Blight (CostAmount.Fixed n) -> [Text.pack ("Blight " <> show n)]
+  CostComponent.ReturnThis -> [Text.pack "Return " <> self <> Text.pack " to its owner's hand"]
+  CostComponent.ExileThis -> [Text.pack "Exile " <> self]
+  CostComponent.ExileThisFromGraveyard -> [Text.pack "Exile " <> self <> Text.pack " from your graveyard"]
+  CostComponent.PayEnergy (CostAmount.Fixed n) | n > 0 -> [Text.pack "Pay " <> foldMap (const energy) [1 .. n]]
+  CostComponent.PayEnergy (CostAmount.Announced _) -> [Text.pack "Pay X " <> energy]
+  CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed n) f sharing) | not sharing || n > 1 -> do
+    -- Free: "two artifacts and/or creatures" (Adaptive Gemguard).
+    p <- ListUtils.nubOrd (Filter.phrase f named <> Filter.phraseJoining Filter.Inclusive f named)
+    tapped <- some (toInteger n) permanent p
+    [Text.pack "Tap " <> tapped <> (if sharing then Text.pack " that share a creature type" else Text.empty)]
+  CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard n f) -> do
+    p <- Filter.phrase f named
+    exiled <- some (toInteger n) card (Filter.merge p (Filter.MkPhrase [] [card] []))
+    [Text.pack "Exile " <> exiled <> Text.pack " from your graveyard"]
+  CostComponent.RemoveCountersFromThis (CountersOnThis.MkCountersOnThis kind n) -> do
+    word <- counterWord named kind
+    removed <- counted (word <> Text.pack " ") (toInteger n)
+    [Text.pack "Remove " <> removed <> Text.pack " from " <> self]
+  CostComponent.RemoveCounters (CountersFromPermanents.MkCountersFromPermanents amount which f spread) -> do
+    word <- case which of
+      WhichCounters.OfKind kind -> fmap (<> Text.pack " ") (counterWord named kind)
+      WhichCounters.OfAnyKind -> [Text.empty]
+    removed <- case (spread, amount) of
+      (CounterSpread.FromAmongAtLeast, CostAmount.Fixed 0) -> [Text.pack "any number of " <> word <> Text.pack "counters"]
+      (CounterSpread.FromAmongAtLeast, CostAmount.Fixed 1) -> [Text.pack "one or more " <> word <> Text.pack "counters"]
+      (CounterSpread.FromAmongAtLeast, _) -> []
+      (_, CostAmount.Fixed n) -> counted word (toInteger n)
+      (_, CostAmount.Announced _) -> [Text.pack "X " <> word <> Text.pack "counters"]
+    from <- case (f, spread) of
+      (Filter.Type.IsSource, _) -> [self]
+      (_, CounterSpread.FromOne) -> some 1 permanent =<< Filter.phrase f named
+      _ -> fmap (Text.pack "among " <>) (Filter.describe Filter.Plural permanent =<< Filter.phrase f named)
+    [Text.pack "Remove " <> removed <> Text.pack " from " <> from]
   _ -> []
+  where
+    card = Filter.MkNoun (Text.pack "card") (Just (Text.pack "cards"))
+    permanent = Filter.MkNoun (Text.pack "permanent") (Just (Text.pack "permanents"))
+    energy = braced (Text.pack "E")
+
+-- | So many counters, the kind's word given with its trailing space or empty
+-- for counters of any kind: "a +1/+1 counter", "three counters" (CR 122.1).
+counted :: Text.Text -> Integer -> [Text.Text]
+counted word n
+  | n == 1 = [Prose.article single <> Text.pack " " <> single]
+  | n > 1 = [Prose.cardinal n <> Text.pack " " <> word <> Text.pack "counters"]
+  | otherwise = []
+  where
+    single = word <> Text.pack "counter"
+
+-- | A counter's kind as the word before "counter": "+1/+1", "flying" (CR
+-- 122.1).
+counterWord :: (k -> [Text.Text]) -> CounterKind.CounterKind k -> [Text.Text]
+counterWord named kind = case kind of
+  CounterKind.PlusOnePlusOne -> [Text.pack "+1/+1"]
+  CounterKind.MinusOneMinusOne -> [Text.pack "-1/-1"]
+  CounterKind.Keyword k -> named k
+  CounterKind.UnsafePowerToughness p t -> [signed t p <> Text.pack "/" <> signed p t]
+  CounterKind.Named n -> [CounterName.unwrap n]
+  CounterKind.Loyalty -> [Text.pack "loyalty"]
+  CounterKind.Lore -> [Text.pack "lore"]
+  CounterKind.Defense -> [Text.pack "defense"]
+  CounterKind.Time -> [Text.pack "time"]
+  CounterKind.Fade -> [Text.pack "fade"]
+  CounterKind.Age -> [Text.pack "age"]
+  CounterKind.Shield -> [Text.pack "shield"]
+  CounterKind.Finality -> [Text.pack "finality"]
+  CounterKind.Stun -> [Text.pack "stun"]
+  CounterKind.Level -> [Text.pack "level"]
+  CounterKind.Hone -> [Text.pack "hone"]
+  where
+    -- A +X/+Y counter's half, "-0" where the other half is negative.
+    signed other n
+      | n > 0 = Text.pack ("+" <> show n)
+      | n < 0 = Text.pack (show n)
+      | other < 0 = Text.pack "-0"
+      | otherwise = Text.pack "+0"
 
 -- | One object of a filter, named as a card: "land card", "Shrine card".
 singular :: (k -> [Text.Text]) -> Filter.Noun -> Filter.Type.Filter k -> [Text.Text]

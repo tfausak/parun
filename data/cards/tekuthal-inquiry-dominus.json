@@ -15,9 +15,7 @@
                   "kind": {
                     "type": "OfAnyKind"
                   },
-                  "spread": {
-                    "type": "FromAmong"
-                  },
+                  "spread": "FromAmong",
                   "whichPermanent": {
                     "type": "And",
                     "value": [
@@ -26,33 +24,23 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Artifact"
-                            }
+                            "value": "Artifact"
                           },
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Planeswalker"
-                            }
+                            "value": "Planeswalker"
                           }
                         ]
                       },
                       {
                         "type": "HeldBy",
                         "value": {
-                          "holder": {
-                            "type": "Controller"
-                          },
-                          "relation": {
-                            "type": "You"
-                          }
+                          "holder": "Controller",
+                          "relation": "You"
                         }
                       },
                       {
@@ -73,15 +61,11 @@
               },
               {
                 "type": "Phyrexian",
-                "value": {
-                  "type": "Blue"
-                }
+                "value": "Blue"
               },
               {
                 "type": "Phyrexian",
-                "value": {
-                  "type": "Blue"
-                }
+                "value": "Blue"
               }
             ]
           },
@@ -132,18 +116,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -158,9 +138,7 @@
           "effect": {
             "type": "InstructionR",
             "value": {
-              "instruction": {
-                "type": "Proliferate"
-              },
+              "instruction": "Proliferate",
               "rewrite": {
                 "type": "Scaled",
                 "value": {
@@ -181,22 +159,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Horror"
-          },
-          {
-            "type": "Phyrexian"
-          }
+          "Horror",
+          "Phyrexian"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

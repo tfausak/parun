@@ -13,11 +13,13 @@ import qualified Parun.Oracle.Prose as Prose
 import qualified Parun.Types.Backup as Backup
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.Cost as Cost.Type
+import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.Cycling as Cycling
 import qualified Parun.Types.Devour as Devour
 import qualified Parun.Types.DevourCount as DevourCount
 import qualified Parun.Types.Equip as Equip
 import qualified Parun.Types.EquipTarget as EquipTarget
+import qualified Parun.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.ForetellCost as ForetellCost
 import qualified Parun.Types.Keyword as Keyword
@@ -236,7 +238,9 @@ printed self keyword = case keyword of
   Keyword.Afterlife n -> [numbered "Afterlife" n]
   Keyword.Riot -> [Text.pack "Riot"]
   Keyword.Spectacle c -> Cost.keyworded self (keywordWord self) (Text.pack "Spectacle") c
-  Keyword.Escape c -> Cost.keyworded self (keywordWord self) (Text.pack "Escape") c
+  -- CR 601.2a moves the escaping card to the stack before CR 601.2h pays the
+  -- cost, so the cards it exiles are "other cards" whatever the filter says.
+  Keyword.Escape c -> Cost.keyworded self (keywordWord self) (Text.pack "Escape") c {Cost.Type.components = fmap otherCards (Cost.Type.components c)}
   Keyword.Companion {} -> []
   Keyword.Foretell f -> case f of
     ForetellCost.Stated c -> Cost.keyworded self (keywordWord self) (Text.pack "Foretell") c
@@ -564,3 +568,11 @@ numberedCostedKeywords =
   [ \n c -> Keyword.Reinforce Reinforce.MkReinforce {Reinforce.amount = n, Reinforce.cost = c},
     \n c -> Keyword.Suspend (Just Suspend.MkSuspend {Suspend.counters = SuspendCounters.Literal n, Suspend.cost = c})
   ]
+
+-- | A component exiling cards from a graveyard as one exiling other cards
+-- than the source.
+otherCards :: CostComponent.CostComponent k -> CostComponent.CostComponent k
+otherCards c = case c of
+  CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard n f) ->
+    CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard n (Filter.Type.And [Filter.Type.Not Filter.Type.IsSource, f]))
+  _ -> c

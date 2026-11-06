@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -23,16 +21,12 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "Exactly"
-              },
+              "comparison": "Exactly",
               "measured": {
                 "type": "IsActivePlayer",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               },
               "threshold": {
@@ -46,9 +40,7 @@
             "value": {
               "abilities": {
                 "type": "OfFamily",
-                "value": {
-                  "type": "Equip"
-                }
+                "value": "Equip"
               },
               "permanents": {
                 "type": "And",
@@ -70,17 +62,13 @@
               "cost": [],
               "grantedBy": {
                 "type": "OfFamily",
-                "value": {
-                  "type": "Equip"
-                }
+                "value": "Equip"
               },
               "onlyFirst": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -109,9 +97,7 @@
                             "type": "InSlot",
                             "value": "target"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -121,9 +107,7 @@
                   "target": {
                     "filter": {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Equipment"
-                      }
+                      "value": "Equipment"
                     },
                     "pool": {
                       "type": "CardsInGraveyard",
@@ -143,9 +127,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

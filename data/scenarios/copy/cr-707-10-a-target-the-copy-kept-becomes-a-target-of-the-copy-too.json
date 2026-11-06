@@ -153,9 +153,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseToPay",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },
@@ -166,9 +164,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseToPay",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     }

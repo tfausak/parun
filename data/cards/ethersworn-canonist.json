@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -23,9 +21,7 @@
           "condition": {
             "type": "Compares",
             "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
+              "comparison": "AtLeast",
               "measured": {
                 "type": "Count",
                 "value": {
@@ -37,17 +33,13 @@
                     "value": [
                       {
                         "type": "HeldByRecipient",
-                        "value": {
-                          "type": "Controller"
-                        }
+                        "value": "Controller"
                       },
                       {
                         "type": "Not",
                         "value": {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Artifact"
-                          }
+                          "value": "Artifact"
                         }
                       }
                     ]
@@ -56,9 +48,7 @@
                     "type": "InHistory",
                     "value": {
                       "type": "SpellCast",
-                      "value": {
-                        "type": "ThisTurn"
-                      }
+                      "value": "ThisTurn"
                     }
                   }
                 }
@@ -75,9 +65,7 @@
               "type": "Not",
               "value": {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Artifact"
-                }
+                "value": "Artifact"
               }
             }
           },
@@ -96,20 +84,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cleric"
-          },
-          {
-            "type": "Human"
-          }
+          "Cleric",
+          "Human"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

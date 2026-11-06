@@ -90,9 +90,7 @@
       "oracleText": "{T}: Add {C}.\n{4}, {T}: Target creature can't be blocked this turn.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

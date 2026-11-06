@@ -16,15 +16,11 @@
               "value": [
                 {
                   "type": "HasColor",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 },
                 {
                   "type": "HasColor",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               ]
             }
@@ -36,9 +32,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -54,14 +48,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          }
+          "Cat"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

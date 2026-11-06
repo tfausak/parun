@@ -18,7 +18,7 @@ spec s = Spec.describe s "Parun.Codec.EntryOrigin" $ do
           EntryOrigin.holder = Just (PlayerId.MkPlayerId 1),
           EntryOrigin.index = 2
         }
-      " {\"holder\":1,\"index\":2,\"zone\":{\"type\":\"Graveyard\"}} "
+      " {\"holder\":1,\"index\":2,\"zone\":\"Graveyard\"} "
   Spec.it s "a card in exile" $
     Common.assertCodec
       s
@@ -28,6 +28,6 @@ spec s = Spec.describe s "Parun.Codec.EntryOrigin" $ do
           EntryOrigin.holder = Nothing,
           EntryOrigin.index = 0
         }
-      " {\"zone\":{\"type\":\"Exile\"}} "
+      " {\"zone\":\"Exile\"} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s EntryOrigin.codec

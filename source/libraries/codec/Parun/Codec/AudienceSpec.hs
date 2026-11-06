@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.Audience" $ do
       s
       Audience.codec
       Audience.Everyone
-      " {\"type\":\"Everyone\"} "
+      " \"Everyone\" "
   Spec.it s "ThatPlayer" $
     Common.assertCodec
       s
       Audience.codec
       Audience.ThatPlayer
-      " {\"type\":\"ThatPlayer\"} "
+      " \"ThatPlayer\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s Audience.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s Audience.codec

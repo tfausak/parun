@@ -22,17 +22,17 @@ spec s = Spec.describe s "Parun.Codec.LeavesTrigger" $ do
       s
       LeavesTrigger.codec
       (LeavesTrigger.dies LeavingPermanent.Self)
-      " {\"destinations\":[{\"zone\":{\"type\":\"Graveyard\"}}]} "
+      " {\"destinations\":[{\"zone\":\"Graveyard\"}]} "
   Spec.it s "round-trips an owned destination" $
     Common.assertCodec
       s
       LeavesTrigger.codec
       LeavesTrigger.defaultValue {LeavesTrigger.destinations = Set.singleton (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.You)}
-      " {\"destinations\":[{\"owner\":{\"type\":\"You\"},\"zone\":{\"type\":\"Graveyard\"}}]} "
+      " {\"destinations\":[{\"owner\":\"You\",\"zone\":\"Graveyard\"}]} "
   Spec.it s "round-trips every field" $
     Common.assertCodec
       s
       LeavesTrigger.codec
       (LeavesTrigger.MkLeavesTrigger (LeavingPermanent.Matching (Filter.Not (Filter.HasCardType CardType.Creature))) (Set.singleton (OwnedZone.MkOwnedZone Zone.Hand PlayerRelation.AnyPlayer)) Batching.OneOrMore)
-      " {\"batching\":{\"type\":\"OneOrMore\"},\"destinations\":[{\"zone\":{\"type\":\"Hand\"}}],\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}}} "
+      " {\"batching\":\"OneOrMore\",\"destinations\":[{\"zone\":\"Hand\"}],\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s LeavesTrigger.codec

@@ -22,7 +22,7 @@
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$dragon"] } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseTargets": { "target": ["$bob"] } }, "source": "$dragon" },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Answer": { "prompt": "ChooseNumber", "with": 3 } }, "source": "$dragon" },
-    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseToPay": { "decision": { "type": "Declines" } } }, "source": "$dragon" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseToPay": { "decision": "Declines" } }, "source": "$dragon" },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Life": { "player": "bob", "life": 20 } } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Tapped": { "object": "$m1", "tapped": false } } },
     { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 15 } } }

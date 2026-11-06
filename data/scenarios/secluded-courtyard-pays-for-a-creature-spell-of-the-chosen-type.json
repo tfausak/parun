@@ -142,9 +142,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseCreatureType",
-          "with": {
-            "type": "Goblin"
-          }
+          "with": "Goblin"
         }
       }
     },
@@ -182,23 +180,17 @@
               {
                 "manaType": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 },
                 "tags": [],
-                "retention": {
-                  "type": "Ordinary"
-                },
+                "retention": "Ordinary",
                 "restriction": {
                   "activations": {
                     "type": "And",
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       {
                         "type": "HasChosenSubtype"
@@ -210,9 +202,7 @@
                     "value": [
                       {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       },
                       {
                         "type": "HasChosenSubtype"
@@ -222,9 +212,7 @@
                 },
                 "rider": null,
                 "sourceChoices": {
-                  "subtype": {
-                    "type": "Goblin"
-                  }
+                  "subtype": "Goblin"
                 }
               }
             ]

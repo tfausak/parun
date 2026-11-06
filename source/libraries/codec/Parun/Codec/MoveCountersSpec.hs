@@ -102,7 +102,7 @@ spec s = Spec.describe s "Parun.Codec.MoveCounters" $ do
             MoveCounters.to = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "self"))
           }
       )
-      " {\"from\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"kinds\":{\"type\":\"EveryOfKind\",\"value\":{\"type\":\"PlusOnePlusOne\"}},\"to\":{\"type\":\"InSlot\",\"value\":\"self\"}} "
+      " {\"from\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"kinds\":{\"type\":\"EveryOfKind\",\"value\":{\"type\":\"PlusOnePlusOne\"}},\"to\":{\"type\":\"InSlot\",\"value\":\"self\"}} "
   -- Forgotten Ancient's "move any number of +1/+1 counters from this creature
   -- onto other creatures": the SECOND side is the battlefield sweep this time,
   -- which is the case that forces the destination to be an ObjectRef rather than
@@ -118,5 +118,5 @@ spec s = Spec.describe s "Parun.Codec.MoveCounters" $ do
             MoveCounters.to = ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not Filter.IsSource])
           }
       )
-      " {\"from\":{\"type\":\"InSlot\",\"value\":\"self\"},\"kinds\":{\"type\":\"AnyNumberOfKind\",\"value\":{\"type\":\"PlusOnePlusOne\"}},\"to\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}]}}} "
+      " {\"from\":{\"type\":\"InSlot\",\"value\":\"self\"},\"kinds\":{\"type\":\"AnyNumberOfKind\",\"value\":{\"type\":\"PlusOnePlusOne\"}},\"to\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Creature\"},{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}]}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s MoveCounters.codec

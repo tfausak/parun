@@ -64,9 +64,7 @@
       "oracleText": "{8}, {T}: This artifact deals 4 damage to any target.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

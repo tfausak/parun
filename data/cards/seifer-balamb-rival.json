@@ -15,18 +15,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -49,13 +45,9 @@
               "value": {
                 "attacked": {
                   "type": "Related",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 },
-                "attacker": {
-                  "type": "You"
-                }
+                "attacker": "You"
               }
             }
           },
@@ -80,9 +72,7 @@
                     "filter": {
                       "type": "HeldByBound",
                       "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
+                        "holder": "Controller",
                         "slot": "thatPlayer"
                       }
                     },
@@ -107,13 +97,9 @@
               },
               "creature": {
                 "type": "IsAttackingPlayer",
-                "value": {
-                  "type": "Opponent"
-                }
+                "value": "Opponent"
               },
-              "role": {
-                "type": "Attacker"
-              }
+              "role": "Attacker"
             }
           },
           "modal": {
@@ -150,22 +136,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Mercenary"
-          }
+          "Human",
+          "Mercenary"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

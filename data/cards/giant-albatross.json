@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -38,9 +36,7 @@
             "value": {
               "destinations": [
                 {
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  "zone": "Graveyard"
                 }
               ]
             }
@@ -62,16 +58,12 @@
                                   "type": "InSlot",
                                   "value": "creature"
                                 },
-                                "regenerability": {
-                                  "type": "CantBeRegenerated"
-                                }
+                                "regenerability": "CantBeRegenerated"
                               }
                             }
                           ],
                           "payGate": {
-                            "branch": {
-                              "type": "IfNotPaid"
-                            },
+                            "branch": "IfNotPaid",
                             "cost": {
                               "components": [
                                 {
@@ -87,12 +79,8 @@
                             "payer": {
                               "type": "HolderOfBound",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "hop": {
-                                  "type": "Itself"
-                                },
+                                "holder": "Controller",
+                                "hop": "Itself",
                                 "slot": "creature"
                               }
                             }
@@ -104,9 +92,7 @@
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "DealtDamageTo",
@@ -124,9 +110,7 @@
                       }
                     ],
                     "payGate": {
-                      "branch": {
-                        "type": "IfPaid"
-                      },
+                      "branch": "IfPaid",
                       "cost": {
                         "mana": [
                           {
@@ -137,9 +121,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Blue"
-                              }
+                              "value": "Blue"
                             }
                           }
                         ]
@@ -158,14 +140,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Bird"
-          }
+          "Bird"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

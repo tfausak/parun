@@ -50,6 +50,6 @@ spec s = Spec.describe s "Parun.Codec.ActiveAttackProhibition" $ do
           ActiveAttackProhibition.affected = RestrictedCreatures.Matching (Filter.HasCardType CardType.Creature),
           ActiveAttackProhibition.aimedAt = Just (AimedAt.MkAimedAt (AimedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) (Set.singleton AttackTargetKind.OfPlayer))
         }
-      " {\"source\":1,\"controller\":4,\"timestamp\":2,\"expiry\":{\"type\":\"AtTurnOf\",\"value\":4},\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"aimedAt\":{\"defenders\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}},\"kinds\":[{\"type\":\"OfPlayer\"}]}} "
+      " {\"source\":1,\"controller\":4,\"timestamp\":2,\"expiry\":{\"type\":\"AtTurnOf\",\"value\":4},\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"aimedAt\":{\"defenders\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}},\"kinds\":[\"OfPlayer\"]}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActiveAttackProhibition.codec

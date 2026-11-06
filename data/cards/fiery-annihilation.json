@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -54,9 +52,7 @@
                           "slot": "creature"
                         }
                       },
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   },
                   {
@@ -68,9 +64,7 @@
                       "effect": {
                         "type": "ZoneChangeR",
                         "value": {
-                          "destination": {
-                            "type": "Exile"
-                          },
+                          "destination": "Exile",
                           "matching": {
                             "whatObject": {
                               "type": "And",
@@ -81,30 +75,20 @@
                                 },
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "IsInZone",
-                                  "value": {
-                                    "type": "Battlefield"
-                                  }
+                                  "value": "Battlefield"
                                 }
                               ]
                             },
-                            "whenDestination": {
-                              "type": "Graveyard"
-                            }
+                            "whenDestination": "Graveyard"
                           }
                         }
                       },
-                      "origin": {
-                        "type": "Other"
-                      },
-                      "uses": {
-                        "type": "Unlimited"
-                      }
+                      "origin": "Other",
+                      "uses": "Unlimited"
                     }
                   }
                 ]
@@ -129,9 +113,7 @@
                   "value": [
                     {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Equipment"
-                      }
+                      "value": "Equipment"
                     },
                     {
                       "type": "IsAttachedTo",
@@ -152,9 +134,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

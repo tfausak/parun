@@ -31,5 +31,5 @@ spec s = Spec.describe s "Parun.Codec.RepeatIf" $ do
             RepeatIf.ifHolds = Seq.singleton (Text.pack "counter")
           }
       )
-      " {\"process\":[\"create\",\"mill\"],\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"InSlot\",\"value\":\"milled\"},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"ifHolds\":[\"counter\"]} "
+      " {\"process\":[\"create\",\"mill\"],\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"InSlot\",\"value\":\"milled\"},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"ifHolds\":[\"counter\"]} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

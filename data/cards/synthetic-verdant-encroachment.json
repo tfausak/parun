@@ -8,21 +8,15 @@
             "type": "Matching",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Plains"
-              }
+              "value": "Plains"
             }
           },
           "modifications": [
             {
               "type": "LandSubtype",
               "value": {
-                "mode": {
-                  "type": "Replace"
-                },
-                "subtype": {
-                  "type": "Forest"
-                }
+                "mode": "Replace",
+                "subtype": "Forest"
               }
             }
           ]
@@ -30,14 +24,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Forest"
-          }
+          "Forest"
         ],
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

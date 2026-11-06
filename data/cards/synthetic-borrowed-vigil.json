@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -31,20 +29,14 @@
                         "value": {
                           "type": "Compares",
                           "value": {
-                            "comparison": {
-                              "type": "AtMost"
-                            },
+                            "comparison": "AtMost",
                             "measured": {
                               "type": "LifeTotal",
                               "value": {
                                 "type": "HolderOfBound",
                                 "value": {
-                                  "holder": {
-                                    "type": "Controller"
-                                  },
-                                  "hop": {
-                                    "type": "Itself"
-                                  },
+                                  "holder": "Controller",
+                                  "hop": "Itself",
                                   "slot": "target"
                                 }
                               }
@@ -90,9 +82,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

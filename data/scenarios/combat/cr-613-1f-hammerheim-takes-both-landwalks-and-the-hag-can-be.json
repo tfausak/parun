@@ -121,9 +121,7 @@
             "type": "Landwalk",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Swamp"
-              }
+              "value": "Swamp"
             }
           },
           "object": "$hag"
@@ -141,9 +139,7 @@
             "type": "Landwalk",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Forest"
-              }
+              "value": "Forest"
             }
           },
           "object": "$hag"

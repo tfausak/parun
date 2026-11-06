@@ -41,9 +41,7 @@
                             "value": {
                               "type": "Compares",
                               "value": {
-                                "comparison": {
-                                  "type": "AtLeast"
-                                },
+                                "comparison": "AtLeast",
                                 "measured": {
                                   "type": "Count",
                                   "value": {
@@ -66,13 +64,9 @@
                                       "value": {
                                         "player": {
                                           "type": "Relative",
-                                          "value": {
-                                            "type": "AnyPlayer"
-                                          }
+                                          "value": "AnyPlayer"
                                         },
-                                        "zone": {
-                                          "type": "Battlefield"
-                                        }
+                                        "zone": "Battlefield"
                                       }
                                     }
                                   }
@@ -84,9 +78,7 @@
                               }
                             }
                           },
-                          "what": {
-                            "type": "Untap"
-                          }
+                          "what": "Untap"
                         }
                       }
                     ]
@@ -108,9 +100,7 @@
                         },
                         {
                           "type": "IsAttackingPlayer",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         }
                       ]
                     },
@@ -128,9 +118,7 @@
       "oracleText": "You may choose not to untap this land during your untap step.\n{T}: Tap target creature without flying that's attacking you. It doesn't untap during its controller's untap step for as long as this land remains tapped.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       },
       "untapRestrictions": [

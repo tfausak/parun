@@ -19,5 +19,5 @@ spec s = Spec.describe s "Parun.Codec.BecameDesignated" $ do
             BecameDesignated.object = ObjectId.MkObjectId 1
           }
       )
-      " {\"designation\":{\"type\":\"Renowned\"},\"object\":1} "
+      " {\"designation\":\"Renowned\",\"object\":1} "
   Spec.it s "has a schema" $ Common.assertHasSchema s BecameDesignated.codec

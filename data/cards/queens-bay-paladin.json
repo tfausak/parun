@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -80,9 +76,7 @@
                             ]
                           },
                           "slot": "returned",
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       },
                       {
@@ -90,9 +84,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Count",
@@ -101,9 +93,7 @@
                                 "type": "Greatest",
                                 "value": {
                                   "type": "Measure",
-                                  "value": {
-                                    "type": "ManaValue"
-                                  }
+                                  "value": "ManaValue"
                                 }
                               },
                               "filter": {
@@ -132,9 +122,7 @@
                     },
                     "filter": {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Vampire"
-                      }
+                      "value": "Vampire"
                     },
                     "pool": {
                       "type": "CardsInGraveyard",
@@ -154,17 +142,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Knight"
-          },
-          {
-            "type": "Vampire"
-          }
+          "Knight",
+          "Vampire"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

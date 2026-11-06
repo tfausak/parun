@@ -59,9 +59,7 @@
       "oracleText": "{X}, {T}: Target player mills X cards.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

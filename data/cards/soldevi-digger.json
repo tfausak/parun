@@ -24,14 +24,10 @@
                             "type": "TopOfGraveyard",
                             "value": {
                               "type": "Relative",
-                              "value": {
-                                "type": "You"
-                              }
+                              "value": "You"
                             }
                           },
-                          "zone": {
-                            "type": "Library"
-                          }
+                          "zone": "Library"
                         }
                       }
                     ]
@@ -52,9 +48,7 @@
       "oracleText": "{2}: Put the top card of your graveyard on the bottom of your library.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

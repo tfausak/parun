@@ -15,9 +15,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Green"
-                  }
+                  "value": "Green"
                 }
               }
             ]
@@ -30,14 +28,10 @@
                     "condition": {
                       "type": "Compares",
                       "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
+                        "comparison": "Exactly",
                         "measured": {
                           "type": "HasDesignation",
-                          "value": {
-                            "type": "Monstrous"
-                          }
+                          "value": "Monstrous"
                         },
                         "threshold": {
                           "type": "Literal",
@@ -65,9 +59,7 @@
                       {
                         "type": "Designate",
                         "value": {
-                          "designation": {
-                            "type": "Monstrous"
-                          },
+                          "designation": "Monstrous",
                           "slot": "self",
                           "value": {
                             "type": "InSlot",
@@ -92,18 +84,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -122,9 +110,7 @@
           "condition": {
             "type": "PermanentBecomesDesignated",
             "value": {
-              "designation": {
-                "type": "Monstrous"
-              },
+              "designation": "Monstrous",
               "filter": {
                 "type": "IsSource"
               }
@@ -143,33 +129,23 @@
                             "faces": [
                               {
                                 "colorIndicator": [
-                                  {
-                                    "type": "Green"
-                                  }
+                                  "Green"
                                 ],
                                 "name": "Hydra Token",
                                 "power": {
                                   "type": "DesignationValue",
-                                  "value": {
-                                    "type": "Monstrous"
-                                  }
+                                  "value": "Monstrous"
                                 },
                                 "toughness": {
                                   "type": "DesignationValue",
-                                  "value": {
-                                    "type": "Monstrous"
-                                  }
+                                  "value": "Monstrous"
                                 },
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Hydra"
-                                    }
+                                    "Hydra"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -177,9 +153,7 @@
                           },
                           "quantity": {
                             "type": "DesignationValue",
-                            "value": {
-                              "type": "Monstrous"
-                            }
+                            "value": "Monstrous"
                           }
                         }
                       }
@@ -193,14 +167,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Hydra"
-          }
+          "Hydra"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

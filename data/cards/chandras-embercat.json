@@ -24,9 +24,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           },
                           "restriction": {
@@ -35,24 +33,18 @@
                               "value": [
                                 {
                                   "type": "HasSubtype",
-                                  "value": {
-                                    "type": "Elemental"
-                                  }
+                                  "value": "Elemental"
                                 },
                                 {
                                   "type": "And",
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Planeswalker"
-                                      }
+                                      "value": "Planeswalker"
                                     },
                                     {
                                       "type": "HasSubtype",
-                                      "value": {
-                                        "type": "Chandra"
-                                      }
+                                      "value": "Chandra"
                                     }
                                   ]
                                 }
@@ -78,9 +70,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -96,17 +86,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Cat"
-          },
-          {
-            "type": "Elemental"
-          }
+          "Cat",
+          "Elemental"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

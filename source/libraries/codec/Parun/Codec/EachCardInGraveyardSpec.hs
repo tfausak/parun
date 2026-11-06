@@ -24,7 +24,7 @@ spec s = Spec.describe s "Parun.Codec.EachCardInGraveyard" $ do
             EachCardInGraveyard.filter = Filter.HasCardType CardType.Creature
           }
       )
-      " {\"graveyards\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"graveyards\":{\"type\":\"Scoped\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   -- The arm the PlayerScope this field used to hold could not say: Angel of
   -- Finality's "target player's graveyard"; see #1310.
   Spec.it s "MkEachCardInGraveyard, a slot-named graveyard" $
@@ -36,5 +36,5 @@ spec s = Spec.describe s "Parun.Codec.EachCardInGraveyard" $ do
             EachCardInGraveyard.filter = Filter.HasCardType CardType.Creature
           }
       )
-      " {\"graveyards\":{\"type\":\"InSlot\",\"value\":\"player\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"graveyards\":{\"type\":\"InSlot\",\"value\":\"player\"},\"filter\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s EachCardInGraveyard.codec

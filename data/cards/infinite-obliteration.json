@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -38,15 +34,11 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "restriction": {
                         "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
+                        "value": "Creature"
                       }
                     }
                   }
@@ -57,14 +49,10 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "Exile"
-                      },
+                      "destination": "Exile",
                       "filter": {
                         "type": "HasChosenName",
-                        "value": {
-                          "type": "AnyChooser"
-                        }
+                        "value": "AnyChooser"
                       },
                       "owner": {
                         "type": "InSlot",
@@ -73,21 +61,13 @@
                       "quantity": null,
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "upTo": true,
                       "zones": [
-                        {
-                          "type": "Library"
-                        },
-                        {
-                          "type": "Hand"
-                        },
-                        {
-                          "type": "Graveyard"
-                        }
+                        "Library",
+                        "Hand",
+                        "Graveyard"
                       ]
                     }
                   }
@@ -98,9 +78,7 @@
               "player": {
                 "filter": {
                   "type": "IsPlayer",
-                  "value": {
-                    "type": "Opponent"
-                  }
+                  "value": "Opponent"
                 },
                 "pool": {
                   "type": "Players"
@@ -112,9 +90,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

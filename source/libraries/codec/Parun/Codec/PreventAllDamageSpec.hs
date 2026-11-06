@@ -63,7 +63,7 @@ spec s = Spec.describe s "Parun.Codec.PreventAllDamage" $ do
             PreventAllDamage.riders = Seq.singleton (Text.pack "a rider")
           }
       )
-      " {\"direction\":{\"type\":\"DealtBy\"},\"duration\":{\"type\":\"UntilEndOfTurn\"},\"kind\":{\"type\":\"Combat\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"riders\":[\"a rider\"]} "
+      " {\"direction\":\"DealtBy\",\"duration\":{\"type\":\"UntilEndOfTurn\"},\"kind\":\"Combat\",\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"riders\":[\"a rider\"]} "
   -- CR 609.7a's "by a source of your choice" on the UNBOUNDED shield, which is
   -- Auriok Replica: the key is WRITTEN and its Filter is the trivial one, since
   -- the card names no property the chosen source must have. Elided and
@@ -127,7 +127,7 @@ spec s = Spec.describe s "Parun.Codec.PreventAllDamage" $ do
             PreventAllDamage.riders = Seq.empty
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"kind\":{\"type\":\"Combat\"},\"whatRecipient\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Dog\"}}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"kind\":\"Combat\",\"whatRecipient\":{\"type\":\"HasSubtype\",\"value\":\"Dog\"}} "
   -- The PLAYER half beside the described objects, Comeuppance's "to you and
   -- planeswalkers you control": one row, so the key is written beside
   -- whatRecipient rather than as a second effect.
@@ -147,5 +147,5 @@ spec s = Spec.describe s "Parun.Codec.PreventAllDamage" $ do
             PreventAllDamage.riders = Seq.empty
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"whatRecipient\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Dog\"}},\"whoRecipient\":{\"type\":\"You\"}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"whatRecipient\":{\"type\":\"HasSubtype\",\"value\":\"Dog\"},\"whoRecipient\":\"You\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

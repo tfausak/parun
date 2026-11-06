@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -45,9 +41,7 @@
               },
               "matching": {
                 "type": "HasSupertype",
-                "value": {
-                  "type": "Legendary"
-                }
+                "value": "Legendary"
               },
               "perEach": {
                 "type": "AgainstExiledPile",
@@ -91,9 +85,7 @@
                             "value": "target"
                           },
                           "slot": "exiled",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -101,9 +93,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Count",
@@ -112,9 +102,7 @@
                                 "type": "Greatest",
                                 "value": {
                                   "type": "Measure",
-                                  "value": {
-                                    "type": "ManaValue"
-                                  }
+                                  "value": "ManaValue"
                                 }
                               },
                               "filter": {
@@ -134,9 +122,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Count",
@@ -145,9 +131,7 @@
                                 "type": "Greatest",
                                 "value": {
                                   "type": "Measure",
-                                  "value": {
-                                    "type": "ManaValue"
-                                  }
+                                  "value": "ManaValue"
                                 }
                               },
                               "filter": {
@@ -179,15 +163,11 @@
                       "value": [
                         {
                           "type": "HasSupertype",
-                          "value": {
-                            "type": "Legendary"
-                          }
+                          "value": "Legendary"
                         },
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         }
                       ]
                     },
@@ -209,14 +189,10 @@
       ],
       "typeLine": {
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

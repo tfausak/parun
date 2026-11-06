@@ -32,9 +32,7 @@
                                 "value": {
                                   "players": {
                                     "type": "Relative",
-                                    "value": {
-                                      "type": "Opponent"
-                                    }
+                                    "value": "Opponent"
                                   }
                                 }
                               }
@@ -87,26 +85,18 @@
                           "effect": {
                             "type": "ZoneChangeR",
                             "value": {
-                              "destination": {
-                                "type": "Exile"
-                              },
+                              "destination": "Exile",
                               "matching": {
                                 "whatObject": {
                                   "type": "IsBound",
                                   "value": "spell"
                                 },
-                                "whenDestination": {
-                                  "type": "Graveyard"
-                                }
+                                "whenDestination": "Graveyard"
                               }
                             }
                           },
-                          "origin": {
-                            "type": "Other"
-                          },
-                          "uses": {
-                            "type": "Unlimited"
-                          }
+                          "origin": "Other",
+                          "uses": "Unlimited"
                         }
                       }
                     ]
@@ -122,23 +112,17 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Instant"
-                              }
+                              "value": "Instant"
                             },
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Sorcery"
-                              }
+                              "value": "Sorcery"
                             }
                           ]
                         },
                         {
                           "type": "HasColor",
-                          "value": {
-                            "type": "Red"
-                          }
+                          "value": "Red"
                         }
                       ]
                     },
@@ -192,9 +176,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -244,18 +226,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -263,19 +241,13 @@
       "oracleText": "[+1]: Chandra deals 3 damage to each opponent.\n[−2]: You may cast target red instant or sorcery card from your graveyard. If that spell would be put into your graveyard, exile it instead.\n[−8]: Discard your hand, then draw seven cards. Until end of turn, you may cast spells from your hand without paying their mana costs.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Chandra"
-          }
+          "Chandra"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

@@ -9,27 +9,21 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               },
               {
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Red"
-                  }
+                  "value": "Red"
                 }
               }
             ]
@@ -89,27 +83,21 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -130,9 +118,7 @@
             "value": {
               "type": "Declaration",
               "value": {
-                "player": {
-                  "type": "AnyPlayer"
-                }
+                "player": "AnyPlayer"
               }
             }
           },
@@ -149,14 +135,10 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfCombat"
-                          }
+                          "retention": "UntilEndOfCombat"
                         }
                       },
                       {
@@ -166,14 +148,10 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfCombat"
-                          }
+                          "retention": "UntilEndOfCombat"
                         }
                       },
                       {
@@ -183,14 +161,10 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfCombat"
-                          }
+                          "retention": "UntilEndOfCombat"
                         }
                       },
                       {
@@ -200,14 +174,10 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfCombat"
-                          }
+                          "retention": "UntilEndOfCombat"
                         }
                       },
                       {
@@ -217,14 +187,10 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfCombat"
-                          }
+                          "retention": "UntilEndOfCombat"
                         }
                       },
                       {
@@ -234,14 +200,10 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           },
-                          "retention": {
-                            "type": "UntilEndOfCombat"
-                          }
+                          "retention": "UntilEndOfCombat"
                         }
                       }
                     ]
@@ -254,22 +216,14 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Avatar"
-          },
-          {
-            "type": "Human"
-          }
+          "Avatar",
+          "Human"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

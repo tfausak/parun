@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -33,18 +31,14 @@
                       "effect": {
                         "type": "ZoneChangeR",
                         "value": {
-                          "destination": {
-                            "type": "Exile"
-                          },
+                          "destination": "Exile",
                           "matching": {
                             "whatObject": {
                               "type": "And",
                               "value": [
                                 {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
+                                  "value": "Creature"
                                 },
                                 {
                                   "type": "Not",
@@ -53,51 +47,35 @@
                                     "value": [
                                       {
                                         "type": "WasCastFrom",
-                                        "value": {
-                                          "type": "Hand"
-                                        }
+                                        "value": "Hand"
                                       },
                                       {
                                         "type": "WasCastFrom",
-                                        "value": {
-                                          "type": "Library"
-                                        }
+                                        "value": "Library"
                                       },
                                       {
                                         "type": "WasCastFrom",
-                                        "value": {
-                                          "type": "Graveyard"
-                                        }
+                                        "value": "Graveyard"
                                       },
                                       {
                                         "type": "WasCastFrom",
-                                        "value": {
-                                          "type": "Exile"
-                                        }
+                                        "value": "Exile"
                                       },
                                       {
                                         "type": "WasCastFrom",
-                                        "value": {
-                                          "type": "Command"
-                                        }
+                                        "value": "Command"
                                       }
                                     ]
                                   }
                                 }
                               ]
                             },
-                            "whenDestination": {
-                              "type": "Battlefield"
-                            }
+                            "whenDestination": "Battlefield"
                           }
                         }
                       },
-                      "origin": {
-                        "type": "Other"
-                      },
-                      "uses": {
-                        "type": "Unlimited"
-                      }
+                      "origin": "Other",
+                      "uses": "Unlimited"
                     }
                   },
                   {
@@ -105,9 +83,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -123,9 +99,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

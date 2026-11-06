@@ -15,9 +15,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -40,14 +38,10 @@
                 "type": "EachCreature",
                 "value": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 }
               },
-              "role": {
-                "type": "Blocker"
-              }
+              "role": "Blocker"
             }
           },
           "modal": {
@@ -71,12 +65,8 @@
                             "value": {
                               "type": "HolderOfBound",
                               "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "hop": {
-                                  "type": "Itself"
-                                },
+                                "holder": "Controller",
+                                "hop": "Itself",
                                 "slot": "thatAttacker"
                               }
                             }
@@ -93,14 +83,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Wall"
-          }
+          "Wall"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

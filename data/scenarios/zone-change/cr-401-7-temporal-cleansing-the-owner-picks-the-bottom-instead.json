@@ -140,9 +140,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseLibraryEnd",
-          "with": {
-            "type": "Bottom"
-          }
+          "with": "Bottom"
         }
       }
     },
@@ -165,9 +163,7 @@
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "Blue"
-                }
+                "value": "Blue"
               }
             }
           ],

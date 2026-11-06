@@ -99,9 +99,7 @@
       "do": {
         "Answer": {
           "prompt": "OfferedMiracleReveal",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       }
     },

@@ -12,6 +12,6 @@ spec s = Spec.describe s "Parun.Codec.DamageDealer" $ do
       s
       DamageDealer.codec
       DamageDealer.Source
-      " {\"type\":\"Source\"} "
+      " \"Source\" "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s DamageDealer.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s DamageDealer.codec

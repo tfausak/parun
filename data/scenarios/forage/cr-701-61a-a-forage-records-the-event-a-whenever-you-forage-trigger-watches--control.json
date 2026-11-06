@@ -46,9 +46,7 @@
       "step": "BeginningOfCombat",
       "player": "alice",
       "do": {
-        "ChooseOptional": {
-          "type": "Declines"
-        }
+        "ChooseOptional": "Declines"
       },
       "source": "$cult"
     },

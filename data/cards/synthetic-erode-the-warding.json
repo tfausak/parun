@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -28,9 +26,7 @@
                           "type": "Hexproof",
                           "value": {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Zombie"
-                            }
+                            "value": "Zombie"
                           }
                         }
                       },
@@ -56,9 +52,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

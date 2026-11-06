@@ -24,9 +24,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Black"
-                              }
+                              "value": "Black"
                             }
                           }
                         }
@@ -54,9 +52,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -73,9 +69,7 @@
                           "scope": {
                             "type": "Superlative",
                             "value": {
-                              "comparison": {
-                                "type": "AtLeast"
-                              },
+                              "comparison": "AtLeast",
                               "measure": {
                                 "type": "LifeTotal"
                               }
@@ -94,9 +88,7 @@
                           "blockers": {
                             "type": "HeldByBound",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
+                              "holder": "Controller",
                               "slot": "chosen"
                             }
                           },
@@ -143,19 +135,13 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Gate"
-          }
+          "Gate"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

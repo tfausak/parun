@@ -182,9 +182,7 @@
       "source": "Mana Leak",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             "$bi1",
             "$bi2",

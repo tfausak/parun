@@ -66,9 +66,7 @@
                       "value": "charge"
                     }
                   },
-                  "spread": {
-                    "type": "FromAmongAtLeast"
-                  },
+                  "spread": "FromAmongAtLeast",
                   "whichPermanent": {
                     "type": "IsSource"
                   }
@@ -90,9 +88,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         }
@@ -108,9 +104,7 @@
                             "type": "OfType",
                             "value": {
                               "type": "Colored",
-                              "value": {
-                                "type": "Red"
-                              }
+                              "value": "Red"
                             }
                           }
                         }
@@ -133,9 +127,7 @@
       "oracleText": "{2}, {T}: Put a charge counter on this artifact.\n{T}, Remove any number of charge counters from this artifact: Add {R}, then add an additional {R} for each charge counter removed this way.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

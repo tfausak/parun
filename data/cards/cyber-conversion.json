@@ -6,18 +6,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -35,17 +31,11 @@
                       "characteristics": {
                         "typeLine": {
                           "subtypes": [
-                            {
-                              "type": "Cyberman"
-                            }
+                            "Cyberman"
                           ],
                           "types": [
-                            {
-                              "type": "Artifact"
-                            },
-                            {
-                              "type": "Creature"
-                            }
+                            "Artifact",
+                            "Creature"
                           ]
                         }
                       },
@@ -70,9 +60,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

@@ -72,20 +72,14 @@
               {
                 "manaType": {
                   "type": "Colored",
-                  "value": {
-                    "type": "White"
-                  }
+                  "value": "White"
                 },
                 "restriction": null,
-                "retention": {
-                  "type": "Ordinary"
-                },
+                "retention": "Ordinary",
                 "rider": null,
                 "sourceChoices": null,
                 "tags": [
-                  {
-                    "type": "Artifact"
-                  }
+                  "Artifact"
                 ]
               }
             ]

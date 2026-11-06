@@ -25,18 +25,14 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "Hand"
-                          },
+                          "destination": "Hand",
                           "filter": {
                             "type": "And",
                             "value": []
                           },
                           "owner": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -44,9 +40,7 @@
                           },
                           "searcher": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           }
                         }
                       }
@@ -68,9 +62,7 @@
       "oracleText": "{6}, {T}: Search your library for a card, put that card into your hand, then shuffle.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

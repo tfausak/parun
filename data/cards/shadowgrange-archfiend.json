@@ -25,9 +25,7 @@
                   "type": "OfType",
                   "value": {
                     "type": "Colored",
-                    "value": {
-                      "type": "Black"
-                    }
+                    "value": "Black"
                   }
                 }
               ]
@@ -44,9 +42,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -80,24 +76,16 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "Measures",
                                 "value": {
-                                  "comparison": {
-                                    "type": "AtLeast"
-                                  },
-                                  "measure": {
-                                    "type": "Power"
-                                  },
+                                  "comparison": "AtLeast",
+                                  "measure": "Power",
                                   "operand": {
                                     "type": "OfEachOtherCandidate",
-                                    "value": {
-                                      "type": "Power"
-                                    }
+                                    "value": "Power"
                                   }
                                 }
                               }
@@ -106,9 +94,7 @@
                           "permanents": "sacrificed",
                           "players": {
                             "type": "Relative",
-                            "value": {
-                              "type": "Opponent"
-                            }
+                            "value": "Opponent"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -121,9 +107,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Count",
@@ -132,9 +116,7 @@
                                 "type": "Greatest",
                                 "value": {
                                   "type": "Measure",
-                                  "value": {
-                                    "type": "Power"
-                                  }
+                                  "value": "Power"
                                 }
                               },
                               "filter": {
@@ -159,14 +141,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Demon"
-          }
+          "Demon"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

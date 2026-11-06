@@ -32,9 +32,7 @@
         "name": "bob",
         "counters": [
           {
-            "key": {
-              "type": "Poison"
-            },
+            "key": "Poison",
             "value": 2
           }
         ]

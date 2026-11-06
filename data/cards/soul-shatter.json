@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -35,32 +33,22 @@
                             "value": [
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               },
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Planeswalker"
-                                }
+                                "value": "Planeswalker"
                               }
                             ]
                           },
                           {
                             "type": "Measures",
                             "value": {
-                              "comparison": {
-                                "type": "AtLeast"
-                              },
-                              "measure": {
-                                "type": "ManaValue"
-                              },
+                              "comparison": "AtLeast",
+                              "measure": "ManaValue",
                               "operand": {
                                 "type": "OfEachOtherCandidate",
-                                "value": {
-                                  "type": "ManaValue"
-                                }
+                                "value": "ManaValue"
                               }
                             }
                           }
@@ -68,9 +56,7 @@
                       },
                       "players": {
                         "type": "Relative",
-                        "value": {
-                          "type": "Opponent"
-                        }
+                        "value": "Opponent"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -86,9 +72,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

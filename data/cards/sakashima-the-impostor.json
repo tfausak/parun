@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -52,9 +48,7 @@
                         {
                           "type": "AddSupertypes",
                           "value": [
-                            {
-                              "type": "Legendary"
-                            }
+                            "Legendary"
                           ]
                         },
                         {
@@ -72,18 +66,14 @@
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "Blue"
-                                      }
+                                      "value": "Blue"
                                     }
                                   },
                                   {
                                     "type": "OfType",
                                     "value": {
                                       "type": "Colored",
-                                      "value": {
-                                        "type": "Blue"
-                                      }
+                                      "value": "Blue"
                                     }
                                   }
                                 ]
@@ -105,17 +95,13 @@
                                                     "value": {
                                                       "phase": {
                                                         "type": "Ending",
-                                                        "value": {
-                                                          "type": "EndStep"
-                                                        }
+                                                        "value": "EndStep"
                                                       },
                                                       "scope": {
                                                         "type": "PlayersTurn",
                                                         "value": {
                                                           "type": "Relative",
-                                                          "value": {
-                                                            "type": "AnyPlayer"
-                                                          }
+                                                          "value": "AnyPlayer"
                                                         }
                                                       }
                                                     }
@@ -133,9 +119,7 @@
                                                                     "type": "InSlot",
                                                                     "value": "self"
                                                                   },
-                                                                  "zone": {
-                                                                    "type": "Hand"
-                                                                  }
+                                                                  "zone": "Hand"
                                                                 }
                                                               }
                                                             ]
@@ -163,9 +147,7 @@
                   ],
                   "eligible": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 }
               }
@@ -179,22 +161,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Human"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Human",
+          "Rogue"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

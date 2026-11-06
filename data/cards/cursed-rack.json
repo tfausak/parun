@@ -30,9 +30,7 @@
               },
               "rewrite": {
                 "type": "ChoosePlayer",
-                "value": {
-                  "type": "Opponent"
-                }
+                "value": "Opponent"
               }
             }
           }
@@ -40,9 +38,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

@@ -4,6 +4,7 @@ module Parun.Oracle.Target where
 
 import qualified Control.Monad as Monad
 import qualified Data.Bifunctor as Bifunctor
+import qualified Data.Containers.ListUtils as ListUtils
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
@@ -318,11 +319,12 @@ object context determiner ref = case ref of
   ObjectRef.EachMatching Filter.Type.IsHostOfSource -> fmap (\h -> MkReference h [] Filter.Singular) (host context)
   ObjectRef.EachMatching f -> case determiner of
     -- Free for a disjunction: one description (Magmaquake's "each creature
-    -- without flying or planeswalker") or one per disjunct ("each creature
+    -- without flying or planeswalker", or Iron Spider, Stark Upgrade's "each
+    -- artifact creature and/or Vehicle") or one per disjunct ("each creature
     -- without flying and each planeswalker").
     Each ->
       let whole = do
-            p <- Filter.phrase f (keyword context)
+            p <- ListUtils.nubOrd (Filter.phrase f (keyword context) <> Filter.phraseJoining Filter.Inclusive f (keyword context))
             text <- Filter.describe Filter.Singular permanent p
             [MkReference (Text.pack "each " <> text) [] Filter.Plural]
           apart = case f of

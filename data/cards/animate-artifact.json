@@ -5,9 +5,7 @@
         {
           "filter": {
             "type": "HasCardType",
-            "value": {
-              "type": "Artifact"
-            }
+            "value": "Artifact"
           },
           "pool": {
             "type": "Permanents"
@@ -23,9 +21,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -48,9 +44,7 @@
                   "type": "Not",
                   "value": {
                     "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
+                    "value": "Creature"
                   }
                 }
               ]
@@ -60,23 +54,15 @@
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Artifact"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Artifact",
+                "mode": "InAddition"
               }
             },
             {
               "type": "CardType",
               "value": {
-                "cardType": {
-                  "type": "Creature"
-                },
-                "mode": {
-                  "type": "InAddition"
-                }
+                "cardType": "Creature",
+                "mode": "InAddition"
               }
             },
             {
@@ -84,15 +70,11 @@
               "value": {
                 "power": {
                   "type": "Measure",
-                  "value": {
-                    "type": "ManaValue"
-                  }
+                  "value": "ManaValue"
                 },
                 "toughness": {
                   "type": "Measure",
-                  "value": {
-                    "type": "ManaValue"
-                  }
+                  "value": "ManaValue"
                 }
               }
             }
@@ -101,14 +83,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

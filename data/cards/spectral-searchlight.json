@@ -56,9 +56,7 @@
       "oracleText": "{T}: Choose a player. That player adds one mana of any color they choose.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

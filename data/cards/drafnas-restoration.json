@@ -6,9 +6,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -26,18 +24,14 @@
                       "placement": {
                         "type": "ArrangedBy",
                         "value": {
-                          "position": {
-                            "type": "Top"
-                          }
+                          "position": "Top"
                         }
                       },
                       "ref": {
                         "type": "InSlot",
                         "value": "cards"
                       },
-                      "zone": {
-                        "type": "Library"
-                      }
+                      "zone": "Library"
                     }
                   }
                 ]
@@ -53,9 +47,7 @@
                 },
                 "filter": {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Artifact"
-                  }
+                  "value": "Artifact"
                 },
                 "pool": {
                   "type": "CardsInGraveyard",
@@ -76,9 +68,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

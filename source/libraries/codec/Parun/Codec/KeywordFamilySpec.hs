@@ -14,273 +14,273 @@ spec s = Spec.describe s "Parun.Codec.KeywordFamily" $ do
       s
       KeywordFamily.codec
       KeywordFamily.Hexproof
-      " {\"type\":\"Hexproof\"} "
+      " \"Hexproof\" "
 
   Spec.it s "Landwalk" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Landwalk
-      " {\"type\":\"Landwalk\"} "
+      " \"Landwalk\" "
 
   Spec.it s "Protection" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Protection
-      " {\"type\":\"Protection\"} "
+      " \"Protection\" "
 
   Spec.it s "Buyback" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Buyback
-      " {\"type\":\"Buyback\"} "
+      " \"Buyback\" "
 
   Spec.it s "Cycling" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Cycling
-      " {\"type\":\"Cycling\"} "
+      " \"Cycling\" "
 
   Spec.it s "Flashback" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Flashback
-      " {\"type\":\"Flashback\"} "
+      " \"Flashback\" "
 
   Spec.it s "Plot" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Plot
-      " {\"type\":\"Plot\"} "
+      " \"Plot\" "
 
   Spec.it s "Foretell" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Foretell
-      " {\"type\":\"Foretell\"} "
+      " \"Foretell\" "
 
   Spec.it s "Miracle" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Miracle
-      " {\"type\":\"Miracle\"} "
+      " \"Miracle\" "
 
   Spec.it s "Morph" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Morph
-      " {\"type\":\"Morph\"} "
+      " \"Morph\" "
 
   Spec.it s "Amplify" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Amplify
-      " {\"type\":\"Amplify\"} "
+      " \"Amplify\" "
 
   Spec.it s "Kicker" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Kicker
-      " {\"type\":\"Kicker\"} "
+      " \"Kicker\" "
 
   Spec.it s "Entwine" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Entwine
-      " {\"type\":\"Entwine\"} "
+      " \"Entwine\" "
 
   Spec.it s "Bushido" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Bushido
-      " {\"type\":\"Bushido\"} "
+      " \"Bushido\" "
 
   Spec.it s "Modular" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Modular
-      " {\"type\":\"Modular\"} "
+      " \"Modular\" "
 
   Spec.it s "Vanishing" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Vanishing
-      " {\"type\":\"Vanishing\"} "
+      " \"Vanishing\" "
 
   Spec.it s "Fading" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Fading
-      " {\"type\":\"Fading\"} "
+      " \"Fading\" "
 
   Spec.it s "Poisonous" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Poisonous
-      " {\"type\":\"Poisonous\"} "
+      " \"Poisonous\" "
 
   Spec.it s "Renown" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Renown
-      " {\"type\":\"Renown\"} "
+      " \"Renown\" "
 
   Spec.it s "Afterlife" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Afterlife
-      " {\"type\":\"Afterlife\"} "
+      " \"Afterlife\" "
 
   Spec.it s "Hideaway" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Hideaway
-      " {\"type\":\"Hideaway\"} "
+      " \"Hideaway\" "
 
   Spec.it s "Dredge" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Dredge
-      " {\"type\":\"Dredge\"} "
+      " \"Dredge\" "
 
   Spec.it s "Soulshift" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Soulshift
-      " {\"type\":\"Soulshift\"} "
+      " \"Soulshift\" "
 
   Spec.it s "Ninjutsu" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Ninjutsu
-      " {\"type\":\"Ninjutsu\"} "
+      " \"Ninjutsu\" "
 
   Spec.it s "Bloodthirst" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Bloodthirst
-      " {\"type\":\"Bloodthirst\"} "
+      " \"Bloodthirst\" "
 
   Spec.it s "Tribute" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Tribute
-      " {\"type\":\"Tribute\"} "
+      " \"Tribute\" "
 
   Spec.it s "Reinforce" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Reinforce
-      " {\"type\":\"Reinforce\"} "
+      " \"Reinforce\" "
 
   Spec.it s "Ripple" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Ripple
-      " {\"type\":\"Ripple\"} "
+      " \"Ripple\" "
 
   Spec.it s "Annihilator" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Annihilator
-      " {\"type\":\"Annihilator\"} "
+      " \"Annihilator\" "
 
   Spec.it s "Mobilize" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Mobilize
-      " {\"type\":\"Mobilize\"} "
+      " \"Mobilize\" "
 
   Spec.it s "Firebending" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Firebending
-      " {\"type\":\"Firebending\"} "
+      " \"Firebending\" "
 
   Spec.it s "Unearth" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Unearth
-      " {\"type\":\"Unearth\"} "
+      " \"Unearth\" "
 
   Spec.it s "Embalm" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Embalm
-      " {\"type\":\"Embalm\"} "
+      " \"Embalm\" "
 
   Spec.it s "Eternalize" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Eternalize
-      " {\"type\":\"Eternalize\"} "
+      " \"Eternalize\" "
 
   Spec.it s "LevelUp" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.LevelUp
-      " {\"type\":\"LevelUp\"} "
+      " \"LevelUp\" "
 
   Spec.it s "Outlast" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Outlast
-      " {\"type\":\"Outlast\"} "
+      " \"Outlast\" "
 
   Spec.it s "Crew" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Crew
-      " {\"type\":\"Crew\"} "
+      " \"Crew\" "
 
   Spec.it s "Saddle" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Saddle
-      " {\"type\":\"Saddle\"} "
+      " \"Saddle\" "
 
   Spec.it s "Fabricate" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Fabricate
-      " {\"type\":\"Fabricate\"} "
+      " \"Fabricate\" "
 
   -- CR 702.168a: the family CR 702.168d and CR 701.58d both name, "a face-down
   -- permanent you control with a disguise ability".
@@ -289,52 +289,52 @@ spec s = Spec.describe s "Parun.Codec.KeywordFamily" $ do
       s
       KeywordFamily.codec
       KeywordFamily.Disguise
-      " {\"type\":\"Disguise\"} "
+      " \"Disguise\" "
 
   Spec.it s "Ward" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Ward
-      " {\"type\":\"Ward\"} "
+      " \"Ward\" "
 
   Spec.it s "Rampage" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Rampage
-      " {\"type\":\"Rampage\"} "
+      " \"Rampage\" "
 
   Spec.it s "Frenzy" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Frenzy
-      " {\"type\":\"Frenzy\"} "
+      " \"Frenzy\" "
 
   Spec.it s "Afflict" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Afflict
-      " {\"type\":\"Afflict\"} "
+      " \"Afflict\" "
 
   Spec.it s "MoreThanMeetsTheEye" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.MoreThanMeetsTheEye
-      " {\"type\":\"MoreThanMeetsTheEye\"} "
+      " \"MoreThanMeetsTheEye\" "
 
   Spec.it s "Toxic" $
     Common.assertCodec
       s
       KeywordFamily.codec
       KeywordFamily.Toxic
-      " {\"type\":\"Toxic\"} "
+      " \"Toxic\" "
 
   -- The family tag and the written instance's tag share a name and must stay
-  -- distinguishable on the wire: `{"type":"Toxic"}` is CR 702.164's ability and
+  -- distinguishable on the wire: `"Toxic"` is CR 702.164's ability and
   -- `{"type":"Toxic","value":2}` is what a card prints. Pinned here rather than
   -- left to the Filter arms, since this is a property of the two keyword codecs
   -- and not of the atoms that carry them.

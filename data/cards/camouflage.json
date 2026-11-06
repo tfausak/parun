@@ -9,18 +9,14 @@
               "type": "PlayersTurn",
               "value": {
                 "type": "Relative",
-                "value": {
-                  "type": "You"
-                }
+                "value": "You"
               }
             },
             "window": {
               "type": "Step",
               "value": {
                 "type": "Combat",
-                "value": {
-                  "type": "DeclareAttackers"
-                }
+                "value": "DeclareAttackers"
               }
             }
           }
@@ -31,9 +27,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -70,9 +64,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

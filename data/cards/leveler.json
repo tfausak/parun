@@ -35,9 +35,7 @@
                           "ref": {
                             "type": "EachCardInYourLibrary"
                           },
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       }
                     ]
@@ -50,17 +48,11 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Juggernaut"
-          }
+          "Juggernaut"
         ],
         "types": [
-          {
-            "type": "Artifact"
-          },
-          {
-            "type": "Creature"
-          }
+          "Artifact",
+          "Creature"
         ]
       }
     }

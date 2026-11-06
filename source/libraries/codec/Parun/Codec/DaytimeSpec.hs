@@ -12,13 +12,13 @@ spec s = Spec.describe s "Parun.Codec.Daytime" $ do
       s
       Daytime.codec
       Daytime.Day
-      " {\"type\":\"Day\"} "
+      " \"Day\" "
   Spec.it s "Night" $
     Common.assertCodec
       s
       Daytime.codec
       Daytime.Night
-      " {\"type\":\"Night\"} "
+      " \"Night\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives
   -- the arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

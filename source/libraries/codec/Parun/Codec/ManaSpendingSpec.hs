@@ -12,19 +12,19 @@ spec s = Spec.describe s "Parun.Codec.ManaSpending" $ do
       s
       ManaSpending.codec
       ManaSpending.AsProduced
-      " {\"type\":\"AsProduced\"} "
+      " \"AsProduced\" "
   Spec.it s "AnyType" $
     Common.assertCodec
       s
       ManaSpending.codec
       ManaSpending.AnyType
-      " {\"type\":\"AnyType\"} "
+      " \"AnyType\" "
   Spec.it s "AnyColor" $
     Common.assertCodec
       s
       ManaSpending.codec
       ManaSpending.AnyColor
-      " {\"type\":\"AnyColor\"} "
+      " \"AnyColor\" "
   -- Exhaustive where the literals above are representative: Arm.enum derives the
   -- arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

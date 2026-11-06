@@ -12,7 +12,7 @@ spec s = Spec.describe s "Parun.Codec.ExcessDestination" $ do
       s
       ExcessDestination.codec
       ExcessDestination.ToRecipientController
-      " {\"type\":\"ToRecipientController\"} "
+      " \"ToRecipientController\" "
   -- Exhaustive where the literal above is representative: Arm.enum derives the
   -- arm list from the type, so this is what would catch a constructor the
   -- derivation missed or two that encode alike.

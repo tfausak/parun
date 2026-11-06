@@ -27,7 +27,7 @@ spec s = Spec.describe s "Parun.Codec.RequireBlock" $ do
             RequireBlock.arity = RequirementArity.AnySubject
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"blocker\":{\"type\":\"Named\",\"value\":{\"type\":\"InSlot\",\"value\":\"blocker\"}},\"attacker\":{\"type\":\"Named\",\"value\":{\"type\":\"InSlot\",\"value\":\"attacker\"}},\"arity\":{\"type\":\"AnySubject\"}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"blocker\":{\"type\":\"Named\",\"value\":{\"type\":\"InSlot\",\"value\":\"blocker\"}},\"attacker\":{\"type\":\"Named\",\"value\":{\"type\":\"InSlot\",\"value\":\"attacker\"}},\"arity\":\"AnySubject\"} "
   -- Both defaults, no attacker and EachSubject, are omitted.
   Spec.it s "MkRequireBlock, defaults omitted" $
     Common.assertCodec

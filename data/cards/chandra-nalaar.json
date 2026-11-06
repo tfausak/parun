@@ -144,9 +144,7 @@
                                   "value": [
                                     {
                                       "type": "HasCardType",
-                                      "value": {
-                                        "type": "Creature"
-                                      }
+                                      "value": "Creature"
                                     },
                                     {
                                       "type": "Or",
@@ -154,21 +152,15 @@
                                         {
                                           "type": "HeldByBound",
                                           "value": {
-                                            "holder": {
-                                              "type": "Controller"
-                                            },
+                                            "holder": "Controller",
                                             "slot": "target"
                                           }
                                         },
                                         {
                                           "type": "ControllerRelatesToBound",
                                           "value": {
-                                            "hop": {
-                                              "type": "Itself"
-                                            },
-                                            "relation": {
-                                              "type": "You"
-                                            },
+                                            "hop": "Itself",
+                                            "relation": "You",
                                             "slot": "target"
                                           }
                                         }
@@ -209,18 +201,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -228,19 +216,13 @@
       "oracleText": "[+1]: Chandra Nalaar deals 1 damage to target player or planeswalker.\n[−X]: Chandra Nalaar deals X damage to target creature.\n[−8]: Chandra Nalaar deals 10 damage to target player or planeswalker and each creature that player or that planeswalker's controller controls.",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Chandra"
-          }
+          "Chandra"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

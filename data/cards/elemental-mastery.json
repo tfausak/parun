@@ -17,9 +17,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -34,9 +32,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -74,9 +70,7 @@
                                     "faces": [
                                       {
                                         "colorIndicator": [
-                                          {
-                                            "type": "Red"
-                                          }
+                                          "Red"
                                         ],
                                         "keywords": [
                                           {
@@ -94,14 +88,10 @@
                                         },
                                         "typeLine": {
                                           "subtypes": [
-                                            {
-                                              "type": "Elemental"
-                                            }
+                                            "Elemental"
                                           ],
                                           "types": [
-                                            {
-                                              "type": "Creature"
-                                            }
+                                            "Creature"
                                           ]
                                         }
                                       }
@@ -109,9 +99,7 @@
                                   },
                                   "quantity": {
                                     "type": "Measure",
-                                    "value": {
-                                      "type": "Power"
-                                    }
+                                    "value": "Power"
                                   },
                                   "slot": "tokens"
                                 }
@@ -127,17 +115,13 @@
                                         "value": {
                                           "phase": {
                                             "type": "Ending",
-                                            "value": {
-                                              "type": "EndStep"
-                                            }
+                                            "value": "EndStep"
                                           },
                                           "scope": {
                                             "type": "PlayersTurn",
                                             "value": {
                                               "type": "Relative",
-                                              "value": {
-                                                "type": "AnyPlayer"
-                                              }
+                                              "value": "AnyPlayer"
                                             }
                                           }
                                         }
@@ -155,9 +139,7 @@
                                                         "type": "InSlot",
                                                         "value": "tokens"
                                                       },
-                                                      "zone": {
-                                                        "type": "Exile"
-                                                      }
+                                                      "zone": "Exile"
                                                     }
                                                   }
                                                 ]
@@ -185,14 +167,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

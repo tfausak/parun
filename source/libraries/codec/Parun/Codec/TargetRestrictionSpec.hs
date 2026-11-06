@@ -24,7 +24,7 @@ spec s = Spec.describe s "Parun.Codec.TargetRestriction" $ do
             TargetRestriction.aimers = Filter.And []
           }
       )
-      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"kind\":{\"type\":\"Spell\"}} "
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}},\"kind\":\"Spell\"} "
   -- Karplusan Strider's "this creature can't be the target of blue or black
   -- spells".
   Spec.it s "aimers" $
@@ -37,5 +37,5 @@ spec s = Spec.describe s "Parun.Codec.TargetRestriction" $ do
             TargetRestriction.aimers = Filter.Or [Filter.HasColor Color.Blue, Filter.HasColor Color.Black]
           }
       )
-      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"aimers\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasColor\",\"value\":{\"type\":\"Blue\"}},{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}}]},\"kind\":{\"type\":\"Spell\"}} "
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"aimers\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasColor\",\"value\":\"Blue\"},{\"type\":\"HasColor\",\"value\":\"Black\"}]},\"kind\":\"Spell\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s (TargetRestriction.codec Affected.codec)

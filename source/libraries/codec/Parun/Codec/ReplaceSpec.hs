@@ -37,7 +37,7 @@ spec s = Spec.describe s "Parun.Codec.Replace" $ do
             Replace.effect = ReplacementEffect.DestructionR (DestructionR.MkDestructionR Nothing DestructionRewrite.Regenerate)
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"uses\":{\"type\":\"Once\"},\"origin\":{\"type\":\"Other\"},\"effect\":{\"type\":\"DestructionR\",\"value\":{\"rewrite\":{\"type\":\"Regenerate\"}}}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"uses\":\"Once\",\"origin\":\"Other\",\"effect\":{\"type\":\"DestructionR\",\"value\":{\"rewrite\":\"Regenerate\"}}} "
   -- CR 614.15 / 614.1: Galvanic Blast's metalcraft clause, the case that writes
   -- the key.
   Spec.it s "MkReplace, condition written" $
@@ -52,5 +52,5 @@ spec s = Spec.describe s "Parun.Codec.Replace" $ do
             Replace.effect = ReplacementEffect.DestructionR (DestructionR.MkDestructionR Nothing DestructionRewrite.Regenerate)
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"uses\":{\"type\":\"Once\"},\"origin\":{\"type\":\"SelfReplacement\"},\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":3}}},\"effect\":{\"type\":\"DestructionR\",\"value\":{\"rewrite\":{\"type\":\"Regenerate\"}}}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"uses\":\"Once\",\"origin\":\"SelfReplacement\",\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":\"AtLeast\",\"threshold\":{\"type\":\"Literal\",\"value\":3}}},\"effect\":{\"type\":\"DestructionR\",\"value\":{\"rewrite\":\"Regenerate\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

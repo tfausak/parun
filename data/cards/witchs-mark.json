@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -31,9 +29,7 @@
                       "value": {
                         "player": {
                           "type": "Relative",
-                          "value": {
-                            "type": "You"
-                          }
+                          "value": "You"
                         },
                         "quantity": {
                           "type": "Literal",
@@ -54,9 +50,7 @@
                     "value": {
                       "player": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -97,9 +91,7 @@
                                     "value": [
                                       {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Creature"
-                                        }
+                                        "value": "Creature"
                                       },
                                       {
                                         "type": "HasAttached",
@@ -134,9 +126,7 @@
                                   "value": {
                                     "destinations": [
                                       {
-                                        "zone": {
-                                          "type": "Graveyard"
-                                        }
+                                        "zone": "Graveyard"
                                       }
                                     ]
                                   }
@@ -152,9 +142,7 @@
                                               "value": {
                                                 "player": {
                                                   "type": "Relative",
-                                                  "value": {
-                                                    "type": "Opponent"
-                                                  }
+                                                  "value": "Opponent"
                                                 },
                                                 "quantity": {
                                                   "type": "Literal",
@@ -172,17 +160,11 @@
                             ],
                             "typeLine": {
                               "subtypes": [
-                                {
-                                  "type": "Aura"
-                                },
-                                {
-                                  "type": "Role"
-                                }
+                                "Aura",
+                                "Role"
                               ],
                               "types": [
-                                {
-                                  "type": "Enchantment"
-                                }
+                                "Enchantment"
                               ]
                             }
                           }
@@ -215,12 +197,8 @@
                 "filter": {
                   "type": "HeldBy",
                   "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                    "holder": "Controller",
+                    "relation": "You"
                   }
                 },
                 "pool": {
@@ -233,9 +211,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

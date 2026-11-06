@@ -17,18 +17,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -43,9 +39,7 @@
               "value": [
                 {
                   "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "value": "Creature"
                 },
                 {
                   "type": "HasAttached",
@@ -101,9 +95,7 @@
                               },
                               {
                                 "type": "HasCardType",
-                                "value": {
-                                  "type": "Creature"
-                                }
+                                "value": "Creature"
                               }
                             ]
                           }
@@ -127,17 +119,11 @@
                                   "effect": {
                                     "type": "DestructionR",
                                     "value": {
-                                      "rewrite": {
-                                        "type": "Regenerate"
-                                      }
+                                      "rewrite": "Regenerate"
                                     }
                                   },
-                                  "origin": {
-                                    "type": "Other"
-                                  },
-                                  "uses": {
-                                    "type": "Once"
-                                  }
+                                  "origin": "Other",
+                                  "uses": "Once"
                                 }
                               }
                             ]
@@ -154,14 +140,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

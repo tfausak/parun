@@ -5,19 +5,13 @@
       "oracleText": "({T}: Add {W}.)",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Plains"
-          }
+          "Plains"
         ],
         "supertypes": [
-          {
-            "type": "Basic"
-          }
+          "Basic"
         ],
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

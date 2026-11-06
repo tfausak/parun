@@ -138,9 +138,7 @@
           "of": "Designations",
           "object": "$suspect",
           "is": [
-            {
-              "type": "Suspected"
-            }
+            "Suspected"
           ]
         }
       }

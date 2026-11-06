@@ -18,9 +18,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -39,9 +37,7 @@
                 "whatRecipient": {
                   "type": "IsSource"
                 },
-                "whichKind": {
-                  "type": "Combat"
-                }
+                "whichKind": "Combat"
               },
               "rewrite": {
                 "type": "PreventAll"
@@ -57,9 +53,7 @@
                 "whatSource": {
                   "type": "IsSource"
                 },
-                "whichKind": {
-                  "type": "Combat"
-                }
+                "whichKind": "Combat"
               },
               "rewrite": {
                 "type": "PreventAll"
@@ -74,14 +68,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Wall"
-          }
+          "Wall"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -135,7 +135,7 @@ spec s = Spec.describe s "Parun.Codec.Clause" $ do
           )
           (Seq.singleton (Effect.Counter (Counter.MkCounter (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "spell"))) Nothing Nothing Nothing)))
       )
-      " {\"effects\":[{\"type\":\"Counter\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"spell\"}}}],\"payGate\":{\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":{\"type\":\"IfNotPaid\"}}} "
+      " {\"effects\":[{\"type\":\"Counter\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"spell\"}}}],\"payGate\":{\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":\"Controller\",\"hop\":\"Itself\",\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":\"IfNotPaid\"}} "
   -- CR 701.46a: adapt's "if this permanent has no +1/+1 counters on it".
   Spec.it s "a clause carrying a condition writes the key" $
     Common.assertJsonCodec
@@ -150,7 +150,7 @@ spec s = Spec.describe s "Parun.Codec.Clause" $ do
           Nothing
           Seq.empty
       )
-      " {\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"ObjectCounters\",\"value\":{\"type\":\"PlusOnePlusOne\"}},\"comparison\":{\"type\":\"Exactly\"},\"threshold\":{\"type\":\"Literal\",\"value\":0}}}} "
+      " {\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"ObjectCounters\",\"value\":{\"type\":\"PlusOnePlusOne\"}},\"comparison\":\"Exactly\",\"threshold\":{\"type\":\"Literal\",\"value\":0}}}} "
   Spec.it s "an empty clause omits every default field" $
     Common.assertJsonCodec
       s

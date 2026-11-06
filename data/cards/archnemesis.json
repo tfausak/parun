@@ -5,9 +5,7 @@
         {
           "filter": {
             "type": "IsPlayer",
-            "value": {
-              "type": "Opponent"
-            }
+            "value": "Opponent"
           },
           "pool": {
             "type": "Players"
@@ -23,18 +21,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -50,9 +44,7 @@
                 "attacked": {
                   "type": "Enchanted"
                 },
-                "attacker": {
-                  "type": "You"
-                }
+                "attacker": "You"
               }
             }
           },
@@ -80,9 +72,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -95,9 +85,7 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
+                            "value": "You"
                           },
                           "quantity": {
                             "type": "Literal",
@@ -120,13 +108,9 @@
               "value": {
                 "attacked": {
                   "type": "Related",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 },
-                "attacker": {
-                  "type": "AnyPlayer"
-                }
+                "attacker": "AnyPlayer"
               }
             }
           },
@@ -153,14 +137,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       }
     }

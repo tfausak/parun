@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -27,43 +25,31 @@
                   {
                     "type": "Search",
                     "value": {
-                      "destination": {
-                        "type": "BattlefieldTapped"
-                      },
+                      "destination": "BattlefieldTapped",
                       "filter": {
                         "type": "Or",
                         "value": [
                           {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Plains"
-                            }
+                            "value": "Plains"
                           },
                           {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Island"
-                            }
+                            "value": "Island"
                           },
                           {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Swamp"
-                            }
+                            "value": "Swamp"
                           },
                           {
                             "type": "HasSubtype",
-                            "value": {
-                              "type": "Mountain"
-                            }
+                            "value": "Mountain"
                           }
                         ]
                       },
                       "owner": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       },
                       "quantity": {
                         "type": "Literal",
@@ -71,9 +57,7 @@
                       },
                       "searcher": {
                         "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
+                        "value": "You"
                       }
                     }
                   }
@@ -85,9 +69,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Sorcery"
-          }
+          "Sorcery"
         ]
       }
     }

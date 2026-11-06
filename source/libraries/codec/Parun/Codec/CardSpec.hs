@@ -115,7 +115,7 @@ spec s = Spec.describe s "Parun.Codec.Card" $ do
       s
       Card.codec
       mountainCard
-      " {\"faces\":[{\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[{\"type\":\"Basic\"}],\"types\":[{\"type\":\"Land\"}],\"subtypes\":[{\"type\":\"Mountain\"}]}}]} "
+      " {\"faces\":[{\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[\"Basic\"],\"types\":[\"Land\"],\"subtypes\":[\"Mountain\"]}}]} "
   Spec.it s "a card with two faces round-trips, and layout is omitted when Normal" $ do
     let face n =
           (bareFace (CardName.MkCardName (Text.pack n)))
@@ -133,14 +133,14 @@ spec s = Spec.describe s "Parun.Codec.Card" $ do
       s
       Card.codec
       card
-      " {\"faces\":[{\"name\":\"Wax\",\"typeLine\":{\"types\":[{\"type\":\"Instant\"}]}},{\"name\":\"Wane\",\"typeLine\":{\"types\":[{\"type\":\"Instant\"}]}}]} "
+      " {\"faces\":[{\"name\":\"Wax\",\"typeLine\":{\"types\":[\"Instant\"]}},{\"name\":\"Wane\",\"typeLine\":{\"types\":[\"Instant\"]}}]} "
   -- Omission is permitted on input, never required: a file that spells the
   -- default out must still load.
   Spec.it s "a card that spells its layout out still decodes" $
     Common.assertFromJson
       s
       (Codec.decode Card.codec)
-      " {\"faces\":[{\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[{\"type\":\"Basic\"}],\"types\":[{\"type\":\"Land\"}],\"subtypes\":[{\"type\":\"Mountain\"}]}}],\"layout\":{\"type\":\"Normal\"}} "
+      " {\"faces\":[{\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[\"Basic\"],\"types\":[\"Land\"],\"subtypes\":[\"Mountain\"]}}],\"layout\":{\"type\":\"Normal\"}} "
       mountainCard
   -- Where the at-least-one-face invariant is enforced: Card.faces is a NonEmpty
   -- so that Parun.Engine.Card.combined can be total, and Common.nonEmpty is

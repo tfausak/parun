@@ -14,12 +14,12 @@ spec s = Spec.describe s "Parun.Codec.DrawReveal" $ do
       s
       DrawReveal.codec
       (DrawReveal.MkDrawReveal {DrawReveal.obligation = RevealObligation.Optional, DrawReveal.nth = Just 1})
-      " {\"obligation\":{\"type\":\"Optional\"},\"nth\":1} "
+      " {\"obligation\":\"Optional\",\"nth\":1} "
   -- Booby Trap's "each card they draw": no ordinal, so no key.
   Spec.it s "no ordinal writes no key" $
     Common.assertCodec
       s
       DrawReveal.codec
       (DrawReveal.MkDrawReveal RevealObligation.Mandatory Nothing)
-      " {\"obligation\":{\"type\":\"Mandatory\"}} "
+      " {\"obligation\":\"Mandatory\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DrawReveal.codec

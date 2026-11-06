@@ -83,14 +83,10 @@
           "with": {
             "manaType": {
               "type": "Colored",
-              "value": {
-                "type": "Red"
-              }
+              "value": "Red"
             },
             "restriction": null,
-            "retention": {
-              "type": "Ordinary"
-            },
+            "retention": "Ordinary",
             "rider": null,
             "sourceChoices": null,
             "tags": []

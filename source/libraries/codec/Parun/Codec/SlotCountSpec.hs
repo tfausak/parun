@@ -42,6 +42,6 @@ spec s = Spec.describe s "Parun.Codec.SlotCount" $ do
       s
       SlotCount.codec
       (SlotCount.UpToComputed (Quantity.Devotion (Devotion.MkDevotion (PlayerRef.Relative PlayerRelation.You) (Set.singleton Color.Black))))
-      " {\"type\":\"UpToComputed\",\"value\":{\"type\":\"Devotion\",\"value\":{\"colors\":[{\"type\":\"Black\"}],\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}}} "
+      " {\"type\":\"UpToComputed\",\"value\":{\"type\":\"Devotion\",\"value\":{\"colors\":[\"Black\"],\"player\":{\"type\":\"Relative\",\"value\":\"You\"}}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s SlotCount.codec

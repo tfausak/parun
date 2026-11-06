@@ -68,9 +68,7 @@
                               "value": {
                                 "quality": {
                                   "type": "HasCardType",
-                                  "value": {
-                                    "type": "Artifact"
-                                  }
+                                  "value": "Artifact"
                                 },
                                 "spares": null
                               }
@@ -101,9 +99,7 @@
       "oracleText": "{T}: Add {C}.\n{1}, {T}: Target creature gains protection from artifacts until end of turn.",
       "typeLine": {
         "types": [
-          {
-            "type": "Land"
-          }
+          "Land"
         ]
       }
     }

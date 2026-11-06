@@ -16,18 +16,14 @@
                     },
                     "whichCards": {
                       "type": "HasSubtype",
-                      "value": {
-                        "type": "Zombie"
-                      }
+                      "value": "Zombie"
                     }
                   }
                 }
               ],
               "mana": []
             },
-            "variant": {
-              "type": "Plain"
-            }
+            "variant": "Plain"
           }
         }
       ],
@@ -40,18 +36,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -67,20 +59,12 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Beast"
-          },
-          {
-            "type": "Dinosaur"
-          },
-          {
-            "type": "Zombie"
-          }
+          "Beast",
+          "Dinosaur",
+          "Zombie"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

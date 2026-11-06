@@ -61,9 +61,7 @@
       "oracleText": "{6}, {T}: Two target players exchange life totals.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

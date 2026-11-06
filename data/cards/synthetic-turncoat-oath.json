@@ -10,18 +10,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -54,33 +50,25 @@
                           "value": [
                             {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
                             {
                               "type": "Or",
                               "value": [
                                 {
                                   "type": "IsAttackingPlaneswalker",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 },
                                 {
                                   "type": "IsAttackingBattle",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                                  "value": "You"
                                 }
                               ]
                             }
                           ]
                         }
                       },
-                      "zone": {
-                        "type": "Exile"
-                      }
+                      "zone": "Exile"
                     }
                   }
                 ]
@@ -93,15 +81,11 @@
                   "value": [
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Planeswalker"
-                      }
+                      "value": "Planeswalker"
                     },
                     {
                       "type": "HasCardType",
-                      "value": {
-                        "type": "Battle"
-                      }
+                      "value": "Battle"
                     }
                   ]
                 },
@@ -115,9 +99,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

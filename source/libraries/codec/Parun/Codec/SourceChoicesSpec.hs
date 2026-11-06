@@ -39,6 +39,6 @@ spec s = Spec.describe s "Parun.Codec.SourceChoices" $ do
           SourceChoices.number = Just 5,
           SourceChoices.acquisition = Acquisition.Copied (Timestamp.MkTimestamp 3)
         }
-      " {\"names\":{\"4\":\"Shock\"},\"colors\":[{\"type\":\"Red\"}],\"subtype\":{\"type\":\"Goblin\"},\"number\":5,\"acquisition\":{\"type\":\"Copied\",\"value\":3}} "
+      " {\"names\":{\"4\":\"Shock\"},\"colors\":[\"Red\"],\"subtype\":\"Goblin\",\"number\":5,\"acquisition\":{\"type\":\"Copied\",\"value\":3}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s SourceChoices.codec

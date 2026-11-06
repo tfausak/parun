@@ -22,5 +22,5 @@ spec s = Spec.describe s "Parun.Codec.AgainstExiledPile" $ do
       s
       codec
       AgainstExiledPile.MkAgainstExiledPile {AgainstExiledPile.pile = ExiledPile.CraftMaterials, AgainstExiledPile.quantity = Quantity.Measure Measure.Power}
-      " {\"pile\":{\"type\":\"CraftMaterials\"},\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}} "
+      " {\"pile\":{\"type\":\"CraftMaterials\"},\"quantity\":{\"type\":\"Measure\",\"value\":\"Power\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

@@ -26,7 +26,7 @@ spec s = Spec.describe s "Parun.Codec.SpendManaAsThough" $ do
             SpendManaAsThough.casting = Nothing
           }
       )
-      " {\"which\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"White\"}}},\"asThough\":[{\"type\":\"Colored\",\"value\":{\"type\":\"White\"}},{\"type\":\"Colored\",\"value\":{\"type\":\"Blue\"}}],\"only\":false} "
+      " {\"which\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"White\"}},\"asThough\":[{\"type\":\"Colored\",\"value\":\"White\"},{\"type\":\"Colored\",\"value\":\"Blue\"}],\"only\":false} "
   -- Celestial Dawn's second clause, which carries the word "only".
   Spec.it s "a restriction" $
     Common.assertCodec
@@ -39,7 +39,7 @@ spec s = Spec.describe s "Parun.Codec.SpendManaAsThough" $ do
             SpendManaAsThough.casting = Nothing
           }
       )
-      " {\"which\":{\"type\":\"NotOfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"White\"}}},\"asThough\":[{\"type\":\"Colorless\"}],\"only\":true} "
+      " {\"which\":{\"type\":\"NotOfType\",\"value\":{\"type\":\"Colored\",\"value\":\"White\"}},\"asThough\":[{\"type\":\"Colorless\"}],\"only\":true} "
   -- Vizier of the Menagerie's "to cast creature spells".
   Spec.it s "a clause about one kind of spell" $
     Common.assertCodec
@@ -52,5 +52,5 @@ spec s = Spec.describe s "Parun.Codec.SpendManaAsThough" $ do
             SpendManaAsThough.casting = Just (Filter.HasCardType CardType.Creature)
           }
       )
-      " {\"which\":{\"type\":\"Any\"},\"asThough\":[{\"type\":\"Colorless\"}],\"only\":false,\"casting\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"which\":{\"type\":\"Any\"},\"asThough\":[{\"type\":\"Colorless\"}],\"only\":false,\"casting\":{\"type\":\"HasCardType\",\"value\":\"Creature\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s SpendManaAsThough.codec

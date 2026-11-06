@@ -10,7 +10,7 @@ import qualified Parun.Types.Zone as Zone
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.CopyDomain" $ do
   Spec.it s "InZone (Superior Spider-Man)" $
-    Common.assertCodec s CopyDomain.codec (CopyDomain.InZone Zone.Graveyard) " {\"type\":\"InZone\",\"value\":{\"type\":\"Graveyard\"}} "
+    Common.assertCodec s CopyDomain.codec (CopyDomain.InZone Zone.Graveyard) " {\"type\":\"InZone\",\"value\":\"Graveyard\"} "
   Spec.it s "InPile (Dinosaur Headdress)" $
     Common.assertCodec s CopyDomain.codec (CopyDomain.InPile ExiledPile.CraftMaterials) " {\"type\":\"InPile\",\"value\":{\"type\":\"CraftMaterials\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CopyDomain.codec

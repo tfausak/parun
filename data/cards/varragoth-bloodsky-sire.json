@@ -13,9 +13,7 @@
                 "type": "OfType",
                 "value": {
                   "type": "Colored",
-                  "value": {
-                    "type": "Black"
-                  }
+                  "value": "Black"
                 }
               }
             ]
@@ -32,9 +30,7 @@
                       {
                         "type": "Search",
                         "value": {
-                          "destination": {
-                            "type": "Top"
-                          },
+                          "destination": "Top",
                           "filter": {
                             "type": "And",
                             "value": []
@@ -85,9 +81,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -103,22 +97,14 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Demon"
-          },
-          {
-            "type": "Rogue"
-          }
+          "Demon",
+          "Rogue"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

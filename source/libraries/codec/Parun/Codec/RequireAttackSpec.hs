@@ -26,7 +26,7 @@ spec s = Spec.describe s "Parun.Codec.RequireAttack" $ do
             RequireAttack.defender = Just (AttackTargetRef.Players (PlayerRef.Relative PlayerRelation.You))
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"attacker\":{\"type\":\"Named\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}},\"defender\":{\"type\":\"Players\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"attacker\":{\"type\":\"Named\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}},\"defender\":{\"type\":\"Players\",\"value\":{\"type\":\"Relative\",\"value\":\"You\"}}} "
   -- Courtly Provocateur's "attacks this turn if able": no defender, elided.
   Spec.it s "MkRequireAttack, no defender" $
     Common.assertCodec

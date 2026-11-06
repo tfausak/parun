@@ -10,13 +10,13 @@
     {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"ChooseTargets": {"target": ["$bears"]}}},
     {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"ChooseOptional": "Exercises"}},
     {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Tapped": {"object": "$bears", "tapped": true}}},
     {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Cast": {"object": "$second", "mana": ["$w2", "$f2", "$i2"]}}},
     {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"ChooseTargets": {"target": ["$giant"]}}},
     {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"ChooseOptional": "Exercises"}},
     {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Tapped": {"object": "$giant", "tapped": false}}}
   ]
 }

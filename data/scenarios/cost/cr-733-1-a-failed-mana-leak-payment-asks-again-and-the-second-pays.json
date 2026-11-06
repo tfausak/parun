@@ -98,9 +98,7 @@
       "player": "bob",
       "refuse": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             null
           ]
@@ -113,9 +111,7 @@
       "player": "bob",
       "do": {
         "ChooseToPay": {
-          "decision": {
-            "type": "Pays"
-          },
+          "decision": "Pays",
           "mana": [
             "$tomb",
             "$bob-island"

@@ -17,7 +17,7 @@ spec s = Spec.describe s "Parun.Codec.CardArrivedIn" $ do
       s
       CardArrivedIn.codec
       (CardArrivedIn.MkCardArrivedIn {CardArrivedIn.to = Zone.Graveyard, CardArrivedIn.excluding = Set.empty})
-      " {\"to\":{\"type\":\"Graveyard\"}} "
+      " {\"to\":\"Graveyard\"} "
   -- Asymmetric on purpose, Parun.Codec.MovedBetweenSpec's reason: both keys carry
   -- a Zone, so only a case whose destination and exclusion differ catches a
   -- codec that read one out of the other.
@@ -26,5 +26,5 @@ spec s = Spec.describe s "Parun.Codec.CardArrivedIn" $ do
       s
       CardArrivedIn.codec
       (CardArrivedIn.MkCardArrivedIn {CardArrivedIn.to = Zone.Graveyard, CardArrivedIn.excluding = Set.singleton Zone.Battlefield})
-      " {\"excluding\":[{\"type\":\"Battlefield\"}],\"to\":{\"type\":\"Graveyard\"}} "
+      " {\"excluding\":[\"Battlefield\"],\"to\":\"Graveyard\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CardArrivedIn.codec

@@ -81,9 +81,7 @@
                             "type": "InSlot",
                             "value": "creature"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     ]
@@ -96,19 +94,13 @@
                       "value": [
                         {
                           "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
+                          "value": "Creature"
                         },
                         {
                           "type": "Measures",
                           "value": {
-                            "comparison": {
-                              "type": "AtMost"
-                            },
-                            "measure": {
-                              "type": "ManaValue"
-                            },
+                            "comparison": "AtMost",
+                            "measure": "ManaValue",
                             "operand": {
                               "type": "Literal",
                               "value": 2
@@ -165,17 +157,13 @@
                                       "value": {
                                         "phase": {
                                           "type": "Ending",
-                                          "value": {
-                                            "type": "EndStep"
-                                          }
+                                          "value": "EndStep"
                                         },
                                         "scope": {
                                           "type": "PlayersTurn",
                                           "value": {
                                             "type": "Relative",
-                                            "value": {
-                                              "type": "You"
-                                            }
+                                            "value": "You"
                                           }
                                         }
                                       }
@@ -193,9 +181,7 @@
                                                       "faces": [
                                                         {
                                                           "colorIndicator": [
-                                                            {
-                                                              "type": "White"
-                                                            }
+                                                            "White"
                                                           ],
                                                           "keywords": [
                                                             {
@@ -213,14 +199,10 @@
                                                           },
                                                           "typeLine": {
                                                             "subtypes": [
-                                                              {
-                                                                "type": "Cat"
-                                                              }
+                                                              "Cat"
                                                             ],
                                                             "types": [
-                                                              {
-                                                                "type": "Creature"
-                                                              }
+                                                              "Creature"
                                                             ]
                                                           }
                                                         }
@@ -266,18 +248,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "White"
-            }
+            "value": "White"
           }
         }
       ],
@@ -285,19 +263,13 @@
       "oracleText": "[+1]: Put a +1/+1 counter on each of up to two target creatures.\n[−2]: Return target creature card with mana value 2 or less from your graveyard to the battlefield.\n[−7]: You get an emblem with \"At the beginning of your end step, create three 1/1 white Cat creature tokens with lifelink.\"",
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Ajani"
-          }
+          "Ajani"
         ],
         "supertypes": [
-          {
-            "type": "Legendary"
-          }
+          "Legendary"
         ],
         "types": [
-          {
-            "type": "Planeswalker"
-          }
+          "Planeswalker"
         ]
       }
     }

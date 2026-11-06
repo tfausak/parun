@@ -26,5 +26,5 @@ spec s = Spec.describe s "Parun.Codec.CrewRestriction" $ do
               )
           )
       )
-      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HasAttached\",\"value\":{\"type\":\"IsSource\"}}]}}} "
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":\"Creature\"},{\"type\":\"HasAttached\",\"value\":{\"type\":\"IsSource\"}}]}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CrewRestriction.codec

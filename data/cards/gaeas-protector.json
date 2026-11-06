@@ -3,9 +3,7 @@
     {
       "blockRequirements": [
         {
-          "arity": {
-            "type": "AnySubject"
-          },
+          "arity": "AnySubject",
           "attacker": {
             "type": "Matching",
             "value": {
@@ -23,9 +21,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -41,17 +37,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          },
-          {
-            "type": "Warrior"
-          }
+          "Elemental",
+          "Warrior"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

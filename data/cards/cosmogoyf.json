@@ -11,12 +11,8 @@
             "filter": {
               "type": "HeldBy",
               "value": {
-                "holder": {
-                  "type": "Owner"
-                },
-                "relation": {
-                  "type": "You"
-                }
+                "holder": "Owner",
+                "relation": "You"
               }
             },
             "scope": {
@@ -24,13 +20,9 @@
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 },
-                "zone": {
-                  "type": "Exile"
-                }
+                "zone": "Exile"
               }
             }
           }
@@ -44,12 +36,8 @@
             "filter": {
               "type": "HeldBy",
               "value": {
-                "holder": {
-                  "type": "Owner"
-                },
-                "relation": {
-                  "type": "You"
-                }
+                "holder": "Owner",
+                "relation": "You"
               }
             },
             "scope": {
@@ -57,13 +45,9 @@
               "value": {
                 "player": {
                   "type": "Relative",
-                  "value": {
-                    "type": "AnyPlayer"
-                  }
+                  "value": "AnyPlayer"
                 },
-                "zone": {
-                  "type": "Exile"
-                }
+                "zone": "Exile"
               }
             }
           }
@@ -74,18 +58,14 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         },
         {
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Green"
-            }
+            "value": "Green"
           }
         }
       ],
@@ -108,17 +88,11 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          },
-          {
-            "type": "Lhurgoyf"
-          }
+          "Elemental",
+          "Lhurgoyf"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

@@ -20,12 +20,8 @@
                     {
                       "type": "HybridPhyrexian",
                       "value": {
-                        "left": {
-                          "type": "Green"
-                        },
-                        "right": {
-                          "type": "Blue"
-                        }
+                        "left": "Green",
+                        "right": "Blue"
                       }
                     }
                   ]
@@ -33,9 +29,7 @@
               },
               "matching": {
                 "type": "HasColor",
-                "value": {
-                  "type": "Green"
-                }
+                "value": "Green"
               },
               "subject": {
                 "type": "Spells"
@@ -49,9 +43,7 @@
       ],
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

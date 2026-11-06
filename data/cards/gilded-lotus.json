@@ -47,9 +47,7 @@
       "oracleText": "{T}: Add three mana of any one color.",
       "typeLine": {
         "types": [
-          {
-            "type": "Artifact"
-          }
+          "Artifact"
         ]
       }
     }

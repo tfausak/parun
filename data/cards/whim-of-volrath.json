@@ -19,9 +19,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -40,12 +38,8 @@
                         "type": "UntilEndOfTurn"
                       },
                       "families": [
-                        {
-                          "type": "BasicLandType"
-                        },
-                        {
-                          "type": "Color"
-                        }
+                        "BasicLandType",
+                        "Color"
                       ],
                       "forbidden": [],
                       "slot": "target"
@@ -66,9 +60,7 @@
       },
       "typeLine": {
         "types": [
-          {
-            "type": "Instant"
-          }
+          "Instant"
         ]
       }
     }

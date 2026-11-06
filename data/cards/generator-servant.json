@@ -36,13 +36,9 @@
                           "rider": {
                             "condition": {
                               "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
+                              "value": "Creature"
                             },
-                            "effect": {
-                              "type": "GainsHasteUntilEndOfTurn"
-                            }
+                            "effect": "GainsHasteUntilEndOfTurn"
                           }
                         }
                       }
@@ -63,9 +59,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Red"
-            }
+            "value": "Red"
           }
         }
       ],
@@ -81,14 +75,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Elemental"
-          }
+          "Elemental"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

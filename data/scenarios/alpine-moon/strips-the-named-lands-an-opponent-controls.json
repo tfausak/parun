@@ -21,7 +21,7 @@
     {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Subtypes": {"object": "$plateau", "subtypes": ["Mountain", "Plains"]}}},
     {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Subtypes": {"object": "$arbor", "subtypes": ["Dryad"]}}},
     {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Types": {"object": "$arbor", "types": ["Creature", "Land"]}}},
-    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$shock", "targets": ["$alice"], "mana": ["$bobtundra", null], "yields": [[{"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$shock", "targets": ["$alice"], "mana": ["$bobtundra", null], "yields": [[{"manaType": {"type": "Colored", "value": "Red"}, "tags": [], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null}]]}}},
     {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
     {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 18}}}
   ]

@@ -98,15 +98,15 @@ spec s = Spec.describe s "Parun.Codec.Player" $ do
           Player.graveyardOrder = GraveyardOrder.Matters,
           Player.crankCounter = Designation.Sprocket1
         }
-      ( " {\"life\":-1,\"startingLife\":40,\"status\":{\"type\":\"Departed\",\"value\":{\"type\":\"Conceded\"}}"
-          <> ",\"counters\":[{\"key\":{\"type\":\"Energy\"},\"value\":2}"
-          <> ",{\"key\":{\"type\":\"Poison\"},\"value\":0}]"
+      ( " {\"life\":-1,\"startingLife\":40,\"status\":{\"type\":\"Departed\",\"value\":\"Conceded\"}"
+          <> ",\"counters\":[{\"key\":\"Energy\",\"value\":2}"
+          <> ",{\"key\":\"Poison\",\"value\":0}]"
           <> ",\"ringTemptations\":3,\"speed\":4"
-          <> ",\"designations\":[{\"type\":\"CitysBlessing\"},{\"type\":\"EnduringStory\"}]"
+          <> ",\"designations\":[\"CitysBlessing\",\"EnduringStory\"]"
           <> ",\"commander\":[{\"serial\":20,\"startingOwner\":1},{\"serial\":21,\"startingOwner\":1}],\"commanderCasts\":[{\"key\":{\"serial\":20,\"startingOwner\":1},\"value\":6},{\"key\":{\"serial\":21,\"startingOwner\":1},\"value\":19}]"
           <> ",\"commanderDamage\":[{\"key\":{\"serial\":22,\"startingOwner\":2},\"value\":8}],\"dungeons\":[9,11],\"outsideTheGame\":{\"12\":13},\"chosenStickerSheets\":[0,2],\"completedDungeons\":10,\"completedDungeonNames\":[\"Tomb of Annihilation\",\"Undercity\"]"
           <> ",\"startingDeck\":{\"14\":15},\"companion\":{\"type\":\"InPool\",\"value\":16},\"companionTaken\":true"
-          <> ",\"graveyardOrder\":{\"type\":\"Matters\"},\"crankCounter\":{\"type\":\"Sprocket1\"}} "
+          <> ",\"graveyardOrder\":\"Matters\",\"crankCounter\":\"Sprocket1\"} "
       )
   Spec.it s "has a schema" $
     Common.assertHasSchema s Player.codec

@@ -95,18 +95,14 @@
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "White"
-                }
+                "value": "White"
               }
             },
             {
               "type": "OfType",
               "value": {
                 "type": "Colored",
-                "value": {
-                  "type": "White"
-                }
+                "value": "White"
               }
             }
           ],
@@ -274,9 +270,7 @@
             "type": "Landwalk",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Island"
-              }
+              "value": "Island"
             }
           },
           "count": 1
@@ -307,9 +301,7 @@
             "type": "Landwalk",
             "value": {
               "type": "HasSubtype",
-              "value": {
-                "type": "Island"
-              }
+              "value": "Island"
             }
           },
           "count": 0

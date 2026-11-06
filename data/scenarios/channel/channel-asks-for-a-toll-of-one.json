@@ -116,9 +116,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Exercises"
-          }
+          "with": "Exercises"
         }
       },
       "player": "alice",
@@ -129,9 +127,7 @@
       "do": {
         "Answer": {
           "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Declines"
-          }
+          "with": "Declines"
         }
       },
       "player": "alice",

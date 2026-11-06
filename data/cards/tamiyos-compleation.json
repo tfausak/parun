@@ -8,21 +8,15 @@
             "value": [
               {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Artifact"
-                }
+                "value": "Artifact"
               },
               {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
+                "value": "Creature"
               },
               {
                 "type": "HasCardType",
-                "value": {
-                  "type": "Planeswalker"
-                }
+                "value": "Planeswalker"
               }
             ]
           },
@@ -45,9 +39,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -100,9 +92,7 @@
                               },
                               {
                                 "type": "HasSubtype",
-                                "value": {
-                                  "type": "Equipment"
-                                }
+                                "value": "Equipment"
                               }
                             ]
                           }
@@ -118,14 +108,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Aura"
-          }
+          "Aura"
         ],
         "types": [
-          {
-            "type": "Enchantment"
-          }
+          "Enchantment"
         ]
       },
       "untapRestrictions": [

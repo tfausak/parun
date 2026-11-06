@@ -72,7 +72,7 @@ spec s = Spec.describe s "Parun.Codec.Expiry" $ do
               While.condition = Condition.Compares (Compares.MkCompares (Quantity.Literal 0) Comparison.Exactly (Quantity.Literal 0))
             }
       )
-      " {\"type\":\"While\",\"value\":{\"player\":0,\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":0},\"comparison\":{\"type\":\"Exactly\"},\"threshold\":{\"type\":\"Literal\",\"value\":0}}}}} "
+      " {\"type\":\"While\",\"value\":{\"player\":0,\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":0},\"comparison\":\"Exactly\",\"threshold\":{\"type\":\"Literal\",\"value\":0}}}}} "
   -- CR 611.2a, as a concrete player.
   Spec.it s "AtTurnOf carries its player" $
     Common.assertCodec
@@ -86,7 +86,7 @@ spec s = Spec.describe s "Parun.Codec.Expiry" $ do
       s
       Expiry.codec
       (Expiry.AtStepOf (StepBegan.MkStepBegan (Phase.Beginning BeginningStep.Upkeep) (PlayerId.MkPlayerId 2)))
-      " {\"type\":\"AtStepOf\",\"value\":{\"phase\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}},\"player\":2}} "
+      " {\"type\":\"AtStepOf\",\"value\":{\"phase\":{\"type\":\"Beginning\",\"value\":\"Upkeep\"},\"player\":2}} "
   -- CR 611.2a's other phrasing, which needs the turn as well as the player: the
   -- effect ends at the end of the first turn of theirs numbered above it.
   Spec.it s "AtEndOfTurnOf carries its player and turn" $
@@ -130,7 +130,7 @@ spec s = Spec.describe s "Parun.Codec.Expiry" $ do
               StepOfControllerOf.object = ObjectId.MkObjectId 5
             }
       )
-      " {\"type\":\"AtStepOfControllerOf\",\"value\":{\"object\":5,\"phase\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Untap\"}}}} "
+      " {\"type\":\"AtStepOfControllerOf\",\"value\":{\"object\":5,\"phase\":{\"type\":\"Beginning\",\"value\":\"Untap\"}}} "
   Spec.it s "DuringTurnOfControllerOf carries its object and turn" $
     Common.assertCodec
       s
@@ -164,7 +164,7 @@ spec s = Spec.describe s "Parun.Codec.Expiry" $ do
       s
       Expiry.codec
       (Expiry.AtEndOf (PhaseSelector.Step (Phase.Combat CombatStep.EndOfCombat)))
-      " {\"type\":\"AtEndOf\",\"value\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"EndOfCombat\"}}}} "
+      " {\"type\":\"AtEndOf\",\"value\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":\"EndOfCombat\"}}} "
     Spec.assertBool
       s
       (Codec.encode Expiry.codec (Expiry.AtEndOf PhaseSelector.CombatPhase) /= Codec.encode Expiry.codec (Expiry.AtEndOf (PhaseSelector.Step (Phase.Combat CombatStep.EndOfCombat))))
@@ -190,7 +190,7 @@ spec s = Spec.describe s "Parun.Codec.Expiry" $ do
       s
       Expiry.codec
       (Expiry.WhenPaid (PaidExpiry.MkPaidExpiry (PlayerId.MkPlayerId 2) (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Blue)])) []) (ObjectId.MkObjectId 7)))
-      " {\"type\":\"WhenPaid\",\"value\":{\"player\":2,\"cost\":{\"mana\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Blue\"}}}]},\"resolution\":7}} "
+      " {\"type\":\"WhenPaid\",\"value\":{\"player\":2,\"cost\":{\"mana\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":\"Blue\"}}]},\"resolution\":7}} "
   -- CR 611.2a: the one-shot Duration.UntilUsed arms into, distinct from
   -- AtCleanup, which it also honours.
   Spec.it s "WhenUsed" $

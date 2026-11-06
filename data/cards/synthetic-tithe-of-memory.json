@@ -15,9 +15,7 @@
               "mana": []
             }
           },
-          "scope": {
-            "type": "EveryAttack"
-          },
+          "scope": "EveryAttack",
           "subject": {
             "type": "Matching",
             "value": {
@@ -35,9 +33,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Blue"
-            }
+            "value": "Blue"
           }
         }
       ],
@@ -52,14 +48,10 @@
       },
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Spirit"
-          }
+          "Spirit"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }

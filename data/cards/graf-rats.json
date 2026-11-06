@@ -10,9 +10,7 @@
           "type": "OfType",
           "value": {
             "type": "Colored",
-            "value": {
-              "type": "Black"
-            }
+            "value": "Black"
           }
         }
       ],
@@ -33,17 +31,13 @@
             "value": {
               "phase": {
                 "type": "Combat",
-                "value": {
-                  "type": "BeginningOfCombat"
-                }
+                "value": "BeginningOfCombat"
               },
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
                   "type": "Relative",
-                  "value": {
-                    "type": "You"
-                  }
+                  "value": "You"
                 }
               }
             }
@@ -54,9 +48,7 @@
               {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "AtLeast"
-                  },
+                  "comparison": "AtLeast",
                   "measured": {
                     "type": "Count",
                     "value": {
@@ -72,23 +64,15 @@
                           {
                             "type": "HeldBy",
                             "value": {
-                              "holder": {
-                                "type": "Owner"
-                              },
-                              "relation": {
-                                "type": "You"
-                              }
+                              "holder": "Owner",
+                              "relation": "You"
                             }
                           },
                           {
                             "type": "HeldBy",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "relation": {
-                                "type": "You"
-                              }
+                              "holder": "Controller",
+                              "relation": "You"
                             }
                           }
                         ]
@@ -98,13 +82,9 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     }
@@ -118,9 +98,7 @@
               {
                 "type": "Compares",
                 "value": {
-                  "comparison": {
-                    "type": "AtLeast"
-                  },
+                  "comparison": "AtLeast",
                   "measured": {
                     "type": "Count",
                     "value": {
@@ -132,9 +110,7 @@
                         "value": [
                           {
                             "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
+                            "value": "Creature"
                           },
                           {
                             "type": "HasName",
@@ -143,23 +119,15 @@
                           {
                             "type": "HeldBy",
                             "value": {
-                              "holder": {
-                                "type": "Owner"
-                              },
-                              "relation": {
-                                "type": "You"
-                              }
+                              "holder": "Owner",
+                              "relation": "You"
                             }
                           },
                           {
                             "type": "HeldBy",
                             "value": {
-                              "holder": {
-                                "type": "Controller"
-                              },
-                              "relation": {
-                                "type": "You"
-                              }
+                              "holder": "Controller",
+                              "relation": "You"
                             }
                           }
                         ]
@@ -169,13 +137,9 @@
                         "value": {
                           "player": {
                             "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
+                            "value": "AnyPlayer"
                           },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "zone": "Battlefield"
                         }
                       }
                     }
@@ -208,9 +172,7 @@
                                     "value": [
                                       {
                                         "type": "HasCardType",
-                                        "value": {
-                                          "type": "Creature"
-                                        }
+                                        "value": "Creature"
                                       },
                                       {
                                         "type": "HasName",
@@ -219,23 +181,15 @@
                                       {
                                         "type": "HeldBy",
                                         "value": {
-                                          "holder": {
-                                            "type": "Owner"
-                                          },
-                                          "relation": {
-                                            "type": "You"
-                                          }
+                                          "holder": "Owner",
+                                          "relation": "You"
                                         }
                                       },
                                       {
                                         "type": "HeldBy",
                                         "value": {
-                                          "holder": {
-                                            "type": "Controller"
-                                          },
-                                          "relation": {
-                                            "type": "You"
-                                          }
+                                          "holder": "Controller",
+                                          "relation": "You"
                                         }
                                       }
                                     ]
@@ -251,9 +205,7 @@
                             ]
                           },
                           "slot": "melded",
-                          "zone": {
-                            "type": "Exile"
-                          }
+                          "zone": "Exile"
                         }
                       },
                       {
@@ -321,19 +273,13 @@
                                                         "value": [
                                                           {
                                                             "type": "HasCardType",
-                                                            "value": {
-                                                              "type": "Creature"
-                                                            }
+                                                            "value": "Creature"
                                                           },
                                                           {
                                                             "type": "HeldBy",
                                                             "value": {
-                                                              "holder": {
-                                                                "type": "Controller"
-                                                              },
-                                                              "relation": {
-                                                                "type": "You"
-                                                              }
+                                                              "holder": "Controller",
+                                                              "relation": "You"
                                                             }
                                                           },
                                                           {
@@ -366,19 +312,13 @@
                                                         "value": [
                                                           {
                                                             "type": "HasCardType",
-                                                            "value": {
-                                                              "type": "Creature"
-                                                            }
+                                                            "value": "Creature"
                                                           },
                                                           {
                                                             "type": "HeldBy",
                                                             "value": {
-                                                              "holder": {
-                                                                "type": "Controller"
-                                                              },
-                                                              "relation": {
-                                                                "type": "You"
-                                                              }
+                                                              "holder": "Controller",
+                                                              "relation": "You"
                                                             }
                                                           },
                                                           {
@@ -402,17 +342,11 @@
                                 ],
                                 "typeLine": {
                                   "subtypes": [
-                                    {
-                                      "type": "Eldrazi"
-                                    },
-                                    {
-                                      "type": "Horror"
-                                    }
+                                    "Eldrazi",
+                                    "Horror"
                                   ],
                                   "types": [
-                                    {
-                                      "type": "Creature"
-                                    }
+                                    "Creature"
                                   ]
                                 }
                               }
@@ -430,14 +364,10 @@
       ],
       "typeLine": {
         "subtypes": [
-          {
-            "type": "Rat"
-          }
+          "Rat"
         ],
         "types": [
-          {
-            "type": "Creature"
-          }
+          "Creature"
         ]
       }
     }
