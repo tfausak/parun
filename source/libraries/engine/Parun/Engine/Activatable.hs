@@ -622,11 +622,12 @@ affordableX mCeiling aimable stamp named spendable pid srcId gs cost = Cost.grea
 -- activation -- its printed activation cost, then each alternative an effect
 -- offers in its place (Kíli the Resourceful's {0} for an equip cost), duplicates
 -- dropped. The gate offers the activation if any is payable, and
--- Parun.Engine.Activate.activateAbility asks which one when two are.
-costsFor :: PlayerId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> [Cost Keyword]
-costsFor pid ability gs =
+-- Parun.Engine.Activate.activateAbility asks which one when two are. `effects`
+-- is the player's rows (PlayerEffect.applying), taken once per enumeration.
+costsFor :: [(RowSource, PlayerEffect.Type.PlayerEffect)] -> PlayerId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> [Cost Keyword]
+costsFor effects pid ability gs =
   let printed = ActivatedAbility.cost ability
-      alternatives = fmap (\m -> Cost.Type.MkCost (Just m) []) (PlayerEffect.alternativeActivationCosts pid (ActivatedAbility.keyword ability) gs)
+      alternatives = fmap (\m -> Cost.Type.MkCost (Just m) []) (PlayerEffect.alternativeActivationCosts effects pid (ActivatedAbility.keyword ability) gs)
    in ListUtils.nubOrd (printed : alternatives)
 
 -- CR 602.2/602.5: the ability is a member of the source's abilities
@@ -735,4 +736,4 @@ activatableGiven pools sources pid srcId ability gs =
         && riderOk pid srcId ability gs
         && loyaltyOk pid srcId ability gs
         && Modal.selectionPossible fillable (Modal.Type.selection modal)
-        && any (payableCostAtGiven rows aimable sources (Target.board pools) (leastX pid srcId ability gs) (ActivatedAbility.keyword ability) (ActivatedAbility.name ability) (ActivationRestriction.spendableTypes srcId (ActivatedAbility.restrictions ability) gs) pid srcId gs) (costsFor pid ability gs)
+        && any (payableCostAtGiven rows aimable sources (Target.board pools) (leastX pid srcId ability gs) (ActivatedAbility.keyword ability) (ActivatedAbility.name ability) (ActivationRestriction.spendableTypes srcId (ActivatedAbility.restrictions ability) gs) pid srcId gs) (costsFor rows pid ability gs)

@@ -324,7 +324,7 @@ zonesFunctionedAgainst itself delayed effect = case effect of
   Effect.TakeTheInitiative {} -> Set.empty
   Effect.Designate (Designate.MkDesignate {}) -> Set.empty
   Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> Set.empty
-  Effect.Unsuspect _ -> Set.empty
+  Effect.Undesignate _ -> Set.empty
   Effect.SetHalfLocked (SetHalfLocked.MkSetHalfLocked {}) -> Set.empty
   Effect.CounterAndMark _ -> Set.empty
   Effect.BecomeProtector _ -> Set.empty

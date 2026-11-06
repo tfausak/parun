@@ -525,12 +525,13 @@ data Object = MkObject
     -- Suspected is the one member with rules meaning of its own: CR 701.60c gives
     -- the permanent menace and "this creature can't block" for as long as it is
     -- suspected, both read off this set live rather than stamped, so nothing has
-    -- to be unwound when Effect.Unsuspect deletes the member (CR 701.60a).
+    -- to be unwound when Effect.Undesignate deletes the member (CR 701.60a).
     --
     -- Prepared is the second such member: CR 722.3c keeps a copy of the permanent
     -- in exile "for as long as the prepared permanent remains on the battlefield
     -- and has the prepared designation", which Parun.Engine.Sba reads off this set
-    -- live for the same reason.
+    -- live for the same reason, so Effect.Undesignate's CR 722.3b write needs
+    -- nothing more.
     designations :: Set.Set Designation.Designation,
     -- | CR 701.37c: the value of X this permanent became monstrous with, so that
     -- "other abilities of that permanent may also refer to X" have something to
@@ -542,7 +543,7 @@ data Object = MkObject
     -- WHICH mark (Parun.Types.Designation's own argument), so the writer records
     -- the number the same way whatever the mark is, and Quantity.DesignationValue
     -- reads a key back. A separate field from `designations` above rather than a
-    -- Map replacing it: CR 701.60c reads membership live and Effect.Unsuspect
+    -- Map replacing it: CR 701.60c reads membership live and Effect.Undesignate
     -- deletes a member, neither of which wants a payload.
     --
     -- Per-incarnation, `designations` above's route and each rule's own "until it

@@ -6,6 +6,8 @@ data Undoing
     IllegalProposal
   | -- | Its total cost was not paid (CR 601.2h, 508.1j, 509.1f).
     UnpaidCost
+  | -- | It broke a combat restriction or requirement (CR 508.1c, 508.1d, 509.1b, 509.1c).
+    IllegalDeclaration
   | -- | It repeated a game choice a fragmented loop had already made (CR 732.3).
     RepeatedLoop
   deriving (Bounded, Enum, Eq, Ord, Show)

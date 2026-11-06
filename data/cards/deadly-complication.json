@@ -75,10 +75,13 @@
               {
                 "effects": [
                   {
-                    "type": "Unsuspect",
+                    "type": "Undesignate",
                     "value": {
-                      "type": "InSlot",
-                      "value": "suspect"
+                      "designation": "Suspected",
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "suspect"
+                      }
                     }
                   }
                 ],

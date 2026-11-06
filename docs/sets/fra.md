@@ -445,8 +445,5 @@ first.
 - #6494: Tomik, Orzhov Lawmage. An attack limit scopes to players, never to one
   planeswalker (CR 508.1c).
 
-- #6487: Infinite Coursework. No effect removes the prepared designation (CR
-  722.3b).
-
 - #6496: Loot, the Anomaly. `CombatDamageAmount` can't treat a negative power as
   positive (CR 510.1a, 107.1b).

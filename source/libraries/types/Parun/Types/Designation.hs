@@ -68,13 +68,11 @@ module Parun.Types.Designation where
 -- itself carries. What READS one differs more: CR 701.60c hangs menace and
 -- "this creature can't block" off `Suspected` alone (Parun.Engine.Projection and
 -- Parun.Engine.CombatRestriction case on this constructor for it), and CR 701.60a
--- lets a SPELL OR ABILITY end `Suspected`, which is why Effect.Unsuspect is its
--- own opcode rather than a designation-parameterised inverse of Effect.Designate
--- -- no rule takes renowned, monstrous, solved, harnessed or saddled away, the
--- last of those ending on the clock instead.
--- `Prepared` is `Suspected`'s shape in the second respect and not the first: CR
--- 722.3c ends it too, at the moment the copy is cast, but no opcode takes it --
--- Parun.Engine.Cast does, at CR 601.2i. What it adds that no other mark has is a
+-- lets a SPELL OR ABILITY end `Suspected`, as CR 722.3b does `Prepared`, which
+-- Effect.Undesignate writes -- no rule takes renowned, monstrous, solved,
+-- harnessed or saddled away, the last of those ending on the clock instead.
+-- `Prepared` also ends by rule: CR 722.3c's last sentence, which
+-- Parun.Engine.Cast writes at CR 601.2i. What it adds that no other mark has is a
 -- precondition on GAINING it and an object minted as it is gained, both
 -- Parun.Engine.Prepare's.
 data Designation
@@ -82,9 +80,8 @@ data Designation
     Renowned
   | -- | CR 701.37b: monstrous, the marker CR 701.37a's monstrosity action sets.
     Monstrous
-  | -- | CR 701.60b: suspected, which CR 701.60a's suspect instruction sets and,
-    -- unlike every other mark here, which a spell or ability can take away
-    -- again.
+  | -- | CR 701.60b: suspected, which CR 701.60a's suspect instruction sets and
+    -- which a spell or ability can take away again, as `Prepared`.
     Suspected
   | -- | CR 719.3b: solved, the marker CR 719.3a's "to solve" trigger sets and
     -- CR 719.3c's "Solved --" ability is gated on. Renowned's shape: set by a
@@ -95,8 +92,8 @@ data Designation
     -- also ends at end of turn -- see the note above.
     Saddled
   | -- | CR 722.3b: prepared, which CR 722.3a's "becomes prepared" instruction
-    -- sets and which CR 722.3b takes away again -- Suspected's shape rather than
-    -- Renowned's, and the only other mark here that a rule removes.
+    -- sets and which CR 722.3b lets a rule or effect take away again --
+    -- Suspected's shape rather than Renowned's.
     --
     -- Two clauses of CR 722.3a are gates the other marks have no counterpart for,
     -- and Parun.Engine.Prepare holds both: "a permanent can't gain this
