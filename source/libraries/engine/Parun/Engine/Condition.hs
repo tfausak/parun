@@ -47,7 +47,6 @@ import qualified Parun.Types.Condition as Condition.Type
 import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.EntersTrigger as EntersTrigger
 import Parun.Types.GameState (GameState)
-import qualified Parun.Types.GameState as GameState
 import Parun.Types.ObjectId (ObjectId)
 import Parun.Types.PlayerId (PlayerId)
 import Parun.Types.Recipient (Recipient)
@@ -79,8 +78,10 @@ holds viewOf context gs oid condition =
         -- (Parun.Engine.ActivationRestriction's DuringPhase arm). With no
         -- perspective only a scope naming no player can hold.
         Condition.Type.During (DuringPhase.MkDuringPhase window scope) ->
-          Turn.inWindow window (GameState.phase gs)
-            && maybe (Turn.perspectiveFree scope) (Turn.turnScopeAdmits (Count.scopePlayers viewOf context gs) gs scope (GameState.activePlayer gs)) (Filter.perspective context)
+          maybe
+            (Turn.perspectiveFree scope && any (Turn.inWindow window . snd) (Turn.runningTurns gs))
+            (Turn.duringRunningTurn (Count.scopePlayers viewOf context gs) gs (Just window) scope)
+            (Filter.perspective context)
 
 -- CR 107.3m: the amounts a triggered ability's condition may read off the spell
 -- that became its source. Seeded into Filter.Context's boundAmounts by CR 603.4's

@@ -3270,7 +3270,9 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- not the battlefield. Game.isSpell keeps the abilities sharing the zone out
   -- (CR 112.1), a classification of the object's kind and not of its identity. In
   -- the STACK's own order, top first (CR 405.2), not APNAP: one shared zone has an
-  -- order the rules already read. Read LIVE (CR 608.2h).
+  -- order the rules already read. Read LIVE (CR 608.2h). In Grand Melee, the
+  -- resolving object's own marker's stack (docs/decisions.md, "Which stack and
+  -- turn a resolving Grand Melee object names").
   ObjectRef.EachSpell filter_ ->
     let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         viewOf = Projection.viewsOf gs

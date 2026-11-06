@@ -118,6 +118,7 @@ import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.TokenLot as TokenLot
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
+import qualified Parun.Types.TurnRegisters as TurnRegisters
 import qualified Parun.Types.TypeLine as TypeLine
 import qualified Parun.Types.Undoing as Undoing
 import qualified Parun.Types.WhichTurn as WhichTurn
@@ -683,7 +684,7 @@ zoneMembers zone pid gs =
         Zone.Exile -> ownedShared (GameState.exile gs)
         Zone.Command -> ownedShared (GameState.command gs)
         Zone.Ante -> ownedShared (GameState.ante gs)
-        Zone.Stack -> filter ownedBy (GameState.stack gs)
+        Zone.Stack -> filter ownedBy (allStacks gs)
 
 -- CR 404.1: the top card of a player's graveyard, its NEWEST arrival and so its
 -- LAST member (insertIntoZone appends one). Parun.Types.ObjectRef.TopOfGraveyard
@@ -1061,7 +1062,9 @@ removeFromZones oid gs =
           GameState.command = Set.delete oid (GameState.command gs),
           GameState.ante = Set.delete oid (GameState.ante gs),
           GameState.sideDecks = fmap (fromPile Zone.Command) (GameState.sideDecks gs),
-          GameState.stack = filter (/= oid) (GameState.stack gs)
+          GameState.stack = filter (/= oid) (GameState.stack gs),
+          -- CR 807.5: and off whichever stack holds it.
+          GameState.parkedTurns = fmap (\r -> r {TurnRegisters.stack = filter (/= oid) (TurnRegisters.stack r)}) (GameState.parkedTurns gs)
         }
 
 -- CR 614.12: where an object is, so that an entry it is about to make can
@@ -1129,6 +1132,12 @@ insertIntoZone zone position pid oid gs = case zone of
   Zone.Command -> gs {GameState.command = Set.insert oid (GameState.command gs)}
   Zone.Ante -> gs {GameState.ante = Set.insert oid (GameState.ante gs)}
   Zone.Stack -> putOnStack (GameState.nextEventGroup gs) oid gs
+
+-- | CR 405.1 / 807.5: every stack's objects, top first -- GameState.stack,
+-- then each parked Grand Melee turn's by marker number -- which a read about
+-- an object on "the stack" with no stack of its own ranges over.
+allStacks :: GameState -> [ObjectId]
+allStacks gs = GameState.stack gs <> foldMap TurnRegisters.stack (GameState.parkedTurns gs)
 
 -- CR 405.2: put an object on top of the stack, noting `since`, the first event
 -- group that counts as after it (GameState.stackedIn): CR 610.3a's "after that

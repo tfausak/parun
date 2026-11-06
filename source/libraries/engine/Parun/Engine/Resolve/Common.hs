@@ -1716,7 +1716,7 @@ damageSourceCandidates context gs filter_ =
       pool =
         Set.fromList
           ( Set.toList (GameState.battlefield gs)
-              <> filter (\oid -> Game.isSpell oid gs) (GameState.stack gs)
+              <> filter (\oid -> Game.isSpell oid gs) (Game.allStacks gs)
               <> referredToSources gs
               <> filter faceUp (Set.toList (GameState.command gs))
           )
@@ -1762,7 +1762,7 @@ damageSourceCandidates context gs filter_ =
 -- of them: an activated ability's own id is not something it refers to.
 referredToSources :: GameState -> [ObjectId]
 referredToSources gs =
-  foldMap (\oid -> foldMap referentsOfObject (Game.lookupObject oid gs)) (GameState.stack gs)
+  foldMap (\oid -> foldMap referentsOfObject (Game.lookupObject oid gs)) (Game.allStacks gs)
     <> foldMap (\row -> ActiveReplacement.source row : (referentsOfReplacement (ActiveReplacement.effect row) <> foldMap Set.toList (ActiveReplacement.slots row))) (GameState.replacements gs)
     <> foldMap (\entry -> DelayedTrigger.source entry : referentsOfBindings (DelayedTrigger.bindings entry)) (GameState.delayedTriggers gs)
     -- CR 106.6a's spend triggers wait on the unspent units that carry them.

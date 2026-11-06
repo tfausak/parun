@@ -1303,7 +1303,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger direction relation scope _ frequency) ->
     let admits (LifeChange.MkLifeChange pid _ first) =
           PlayerRelation.holds (Game.teams gs) relation you pid
-            && Turn.turnScopeAdmits scopeNamed gs scope (GameState.activePlayer gs) you
+            && Turn.duringRunningTurn scopeNamed gs Nothing scope you
             && case frequency of
               TriggerFrequency.EveryTime -> True
               TriggerFrequency.FirstTimeEachTurn -> first
@@ -1410,11 +1410,10 @@ armMatches bindings board gs bearer you cond event = case cond of
         -- which spell -- the bearer, or one the Filter admits as its
         -- controller sees it.
         admits controller spell =
-          Turn.turnScopeAdmits scopeNamed gs scope (GameState.activePlayer gs) you
-            -- "During combat" off the GAME STATE, the TurnScope's reason: the
-            -- event happened in this same settle, so the phase standing now is
-            -- its phase.
-            && maybe True (`Turn.inWindow` GameState.phase gs) window
+          -- "During combat" off the running turns, the TurnScope's reason:
+          -- the event happened in this same settle, so the step each turn
+          -- stands in now is its step there.
+          Turn.duringRunningTurn scopeNamed gs window scope you
             && case subject of
               ActingPermanent.Self -> spell == bearer
               ActingPermanent.Matching f -> Filter.matches bearerContext (Projection.viewOfSpell controller spell gs) f
@@ -2105,7 +2104,7 @@ armMatches bindings board gs bearer you cond event = case cond of
     bearerContext = Projection.framedByBindings gs bindings (Projection.sourceContext gs (Just you) bearer)
     -- CR 102.1: the seats a TurnScope.PlayersTurn names, read from the bearer.
     scopeNamed = Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) bearerContext gs
-    admitsTurn scope = Turn.turnScopeAdmits scopeNamed gs scope (GameState.activePlayer gs) you
+    admitsTurn scope = Turn.duringRunningTurn scopeNamed gs Nothing scope you
     -- A damage condition's watched permanent, the damage's source or recipient:
     -- the bearer by id, or a permanent the Filter admits. The Filter reads it
     -- through `board`, CR 603.10's battlefield immediately after the damage:

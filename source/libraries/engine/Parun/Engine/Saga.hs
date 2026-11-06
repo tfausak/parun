@@ -303,7 +303,7 @@ awaitingChapter pcs events gs oid =
         GameEvent.CountersPut (CountersPlaced.MkCountersPlaced _ target CounterKind.Lore before after) ->
           target == oid && any (chapterTriggers restricted before after) chapters
         _ -> False
-   in any onStack (GameState.stack gs) || any pending events
+   in any onStack (Game.allStacks gs) || any pending events
 
 -- | CR 704.5s / 715.4: the Sagas whose controllers sacrifice them, paired with the
 -- sacrificing player. The state-based action's CLASSIFIER half, taking the

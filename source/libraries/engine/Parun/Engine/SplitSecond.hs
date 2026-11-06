@@ -16,9 +16,9 @@
 module Parun.Engine.SplitSecond where
 
 import qualified Data.Map as Map
+import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Projection as Projection
 import Parun.Types.GameState (GameState)
-import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword
 
 -- CR 702.61a: is a spell with split second on the stack right now?
@@ -47,4 +47,4 @@ import qualified Parun.Types.Keyword as Keyword
 inForce :: GameState -> Bool
 inForce gs =
   let onStack oid = Map.member Keyword.SplitSecond (Projection.keywordsOf oid gs)
-   in any onStack (GameState.stack gs)
+   in any onStack (Game.allStacks gs)

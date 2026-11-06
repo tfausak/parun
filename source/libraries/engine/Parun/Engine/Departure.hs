@@ -555,7 +555,7 @@ nonCardStackObjectsCease pid gs =
       -- CR 901.10b: an ability from a phenomenon this player owns stays, for
       -- the new planar controller.
       theirs oid = Projection.controllerOf oid gs == Just pid && notACard oid && Plane.phenomenonOwnerOf oid gs /= Just pid
-   in List.foldl' (flip Game.cease) gs (filter theirs (GameState.stack gs))
+   in List.foldl' (flip Game.cease) gs (filter theirs (Game.allStacks gs))
 
 -- CR 800.4a, fourth clause: objects still controlled by the departing player are
 -- exiled. CR 800.4a's third example is the case it exists for -- Bribery's Serra
@@ -640,7 +640,7 @@ remainingControlledExiled pid = do
 controlledBy :: PlayerId -> GameState -> [ObjectId]
 controlledBy pid gs =
   let grants = Projection.controlGrants gs
-      onStack = filter (\oid -> Projection.controllerOf oid gs == Just pid) (GameState.stack gs)
+      onStack = filter (\oid -> Projection.controllerOf oid gs == Just pid) (Game.allStacks gs)
       phasedOut = filter (\oid -> Projection.controllerOfGiven grants oid gs == Just pid) (Map.keys (GameState.phasedOut gs))
    in Projection.controlsGiven grants pid gs <> onStack <> phasedOut
 

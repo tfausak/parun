@@ -60,6 +60,7 @@ import qualified Parun.Types.Source as Source
 import qualified Parun.Types.Status as Status
 import qualified Parun.Types.Teams as Teams
 import qualified Parun.Types.Timestamp as Timestamp
+import qualified Parun.Types.TurnResume as TurnResume
 import qualified Parun.Types.Zone as Zone
 
 -- CR 103.4's twenty, CR 903.7 / CR 103.4c's forty for a Commander game taken off
@@ -359,6 +360,8 @@ blankGame settings order active =
       GameState.exilePiles = Map.empty,
       GameState.extraTurns = [],
       GameState.turnMarkers = [],
+      GameState.parkedTurns = Map.empty,
+      GameState.turnResume = TurnResume.AtStepStart,
       -- CR 100.6a: parun models no match around this game, so the match it
       -- belongs to has had no subgame yet.
       GameState.subgamesThisMatch = 0,

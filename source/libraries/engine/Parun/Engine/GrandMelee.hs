@@ -1,10 +1,6 @@
 -- | CR 807: the Grand Melee variant -- its options, CR 807.4's turn markers and
--- CR 807.5a's priority over the stack.
---
--- Not implemented: CR 807.4b's simultaneous turns and CR 807.5's stack per
--- marker. Marker holders take their turns one at a time over the one stack,
--- the next marker in number order going next where its holder can begin
--- (nextMarker, #6117).
+-- CR 807.5a's priority over each marker's stack. Parun.Engine.Engine runs the
+-- markers' turns at once (CR 807.4b), each over its own stack (CR 807.5).
 module Parun.Engine.GrandMelee where
 
 import qualified Data.List as List
@@ -69,10 +65,10 @@ handOut gs
 markersFor :: Natural -> Natural
 markersFor players = max 1 (div players 4)
 
--- | CR 807.5a: whether a player gets priority for the stack, which is the
--- marker under way's (the active player's) -- that marker, or the controller
--- of an object on the stack, is within their range of influence. Everyone
--- outside the variant.
+-- | CR 807.5a: whether a player gets priority for the stack of the turn
+-- GameState's fields hold -- its marker (the active player's), or the
+-- controller of an object on that stack, is within their range of
+-- influence. Everyone outside the variant.
 eligible :: GameState -> PlayerId -> Bool
 eligible gs pid =
   not (GameSettings.grandMelee (GameState.settings gs))
@@ -174,13 +170,13 @@ departed pids gs
             n : _ -> designate cost n moved
             _ -> moved
 
--- | CR 807.4c / 807.4g / 807.4i: the marker under way once its holder's turn
--- ends, and its number. Removed if designated; kept if its holder's ordinary
--- turn is still to come, or if they have an extra turn pending and no marker
--- within three seats to their right; passed left otherwise.
-passTurn :: GameState -> (Maybe Natural, GameState)
-passTurn gs = case List.find TurnMarker.underWay (GameState.turnMarkers gs) of
-  Nothing -> (Nothing, gs)
+-- | CR 807.4c / 807.4g / 807.4i: the marker numbered `n` once its holder's
+-- turn ends. Removed if designated; kept if its holder's ordinary turn is
+-- still to come, or if they have an extra turn pending and no marker within
+-- three seats to their right; passed left otherwise.
+passTurn :: Natural -> GameState -> GameState
+passTurn n gs = case markerNumbered n gs of
+  Nothing -> gs
   Just marker ->
     let pid = TurnMarker.holder marker
         playing = List.elem pid (Game.stillPlaying gs)
@@ -191,17 +187,15 @@ passTurn gs = case List.find TurnMarker.underWay (GameState.turnMarkers gs) of
           | playing && TurnMarker.owesTurn marker = keep
           | playing && extra && not (crowded rightOf marker gs) = keep
           | otherwise = passLeft marker gs
-     in (Just (TurnMarker.number marker), after)
+     in after
 
--- | CR 807.4d: the marker whose turn begins next -- the first after `ended` in
--- number order whose holder can begin, or failing one the first after it.
-nextMarker :: Maybe Natural -> GameState -> Maybe TurnMarker
-nextMarker ended gs =
-  let (upTo, after) = List.partition (\m -> maybe True (TurnMarker.number m <=) ended) (GameState.turnMarkers gs)
-      order = after <> upTo
-   in case filter (\m -> not (blocked m gs)) order of
-        m : _ -> Just m
-        [] -> Maybe.listToMaybe order
+-- | CR 807.4d: the marker whose turn begins next among those with none under
+-- way -- the first in number order whose holder can begin, or failing one the
+-- first.
+nextMarker :: GameState -> Maybe TurnMarker
+nextMarker gs =
+  let idle = filter (not . TurnMarker.underWay) (GameState.turnMarkers gs)
+   in Maybe.listToMaybe (filter (\m -> not (blocked m gs)) idle <> idle)
 
 -- | CR 807.4i / 807.4j: begin this marker's turn -- its holder's most recently
 -- created extra turn if they have one pending, and their ordinary turn under

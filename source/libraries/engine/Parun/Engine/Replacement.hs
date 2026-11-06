@@ -2763,7 +2763,7 @@ observedSource :: GameState -> ReplacementCandidate -> Bool
 observedSource gs c =
   (Maybe.isJust (ReplacementCandidate.rider c) && Maybe.isJust (Game.lookupObject source gs))
     || any (\entry -> DelayedTrigger.source entry == source && Mentions.readsPrevention (DelayedTrigger.ability entry)) (GameState.delayedTriggers gs)
-    || any stackedReader (GameState.stack gs)
+    || any stackedReader (Game.allStacks gs)
   where
     source = ReplacementCandidate.source c
     stackedReader oid = case fmap Object.source (Game.lookupObject oid gs) of

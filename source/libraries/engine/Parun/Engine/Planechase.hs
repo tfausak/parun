@@ -176,7 +176,7 @@ ownersLeft before pids = do
 
 -- CR 901.10a: every planeswalking ability on the stack ceases to exist.
 ceasePlaneswalking :: GameState -> GameState
-ceasePlaneswalking gs = List.foldl' (flip Game.cease) gs (filter (`isPlaneswalkingAbility` gs) (GameState.stack gs))
+ceasePlaneswalking gs = List.foldl' (flip Game.cease) gs (filter (`isPlaneswalkingAbility` gs) (Game.allStacks gs))
 
 -- | CR 901.8: is this object a planeswalking ability? Read as CR 901.8's own
 -- inherent ability, which is the rule's and not a card's.
@@ -206,7 +206,7 @@ encounterTop pid away = do
 spentPhenomena :: [PendingTrigger.PendingTrigger] -> GameState -> [ObjectId]
 spentPhenomena waiting gs =
   let phenomena = filter (\oid -> maybe False Plane.isPhenomenonFace (Game.faceOf oid gs)) (faceUp gs)
-      onStack oid = any (fromSource oid) (GameState.stack gs)
+      onStack oid = any (fromSource oid) (Game.allStacks gs)
       fromSource oid stacked = case fmap Object.source (Game.lookupObject stacked gs) of
         Just (Source.OfTrigger triggered) -> TriggeredAbilitySource.source triggered == oid
         _ -> False

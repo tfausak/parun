@@ -106,10 +106,6 @@ data GameSettings = MkGameSettings
     -- Parun.Engine.GrandMelee.setUp writes it with CR 807.2's options and
     -- hands out CR 807.4's turn markers (GameState.turnMarkers), and
     -- Parun.Engine.GrandMelee.eligible reads it for CR 807.5a.
-    --
-    -- Not implemented: CR 807.4b's simultaneous turns and CR 807.5's stack
-    -- per marker. Marker holders take their turns one after another, over
-    -- the one stack (#6117).
     grandMelee :: Bool,
     -- | CR 407.1: whether this game is played for ante. Off by default
     -- ('plain'); read by Parun.Engine.Setup's CR 407.2 step and

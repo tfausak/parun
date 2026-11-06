@@ -81,6 +81,7 @@ import qualified Parun.Types.Source as Source
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.TriggerSource as TriggerSource
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
+import qualified Parun.Types.TurnRegisters as TurnRegisters
 
 -- | Whether choosing between these two objects is choosing between options the
 -- game cannot tell apart. Takes the projection rather than computing it, so a
@@ -211,7 +212,7 @@ objects pcs gs a b =
 -- proves the damage arm, both ways; the other three are regression fences.
 actedOnBy :: ObjectId -> GameState -> (Set.Set ObjectId, Set.Set ObjectId, Set.Set ObjectId, Set.Set ObjectId)
 actedOnBy oid gs =
-  let events = fmap LoggedEvent.event (Foldable.toList (GameState.events gs))
+  let events = fmap LoggedEvent.event (Foldable.toList (GameState.events gs <> foldMap TurnRegisters.events (GameState.parkedTurns gs)))
       damagers =
         Set.fromList [DamageEvent.source dealt | event@(GameEvent.DamageDealt dealt) <- events, (Game.damageRecipient event >>= Recipient.objectOf) == Just oid]
           <> Set.fromList [DamageEvent.source dealt | dealt <- Foldable.toList (GameState.damageBeforeThisTurn gs), Recipient.objectOf (DamageEvent.target dealt) == Just oid]
@@ -245,7 +246,8 @@ representatives pcs gs candidates =
 --     GameState.control (keyed by a player, and every PlayerControl on the stack
 --     names a Decider, a lifetime and rule 724.7's restriction -- no object),
 --     GameState.monarch, GameState.initiative, GameState.drewFromEmpty,
---     GameState.loopInvolvement, GameState.extraTurns, GameState.turnMarkers
+--     GameState.loopInvolvement, GameState.extraTurns, GameState.turnMarkers,
+--     GameState.turnResume
 --     and the per-player
 --     counters (landsPlayed, departedThisTurn, turnsBegun,
 --     spellsCastLastTurn, resolvedNames) are keyed by or valued
@@ -277,6 +279,11 @@ representatives pcs gs candidates =
 --     every permanent alike, so objects COMPARES the two entries in each
 --     rather than searching for the ids, and searches only a sample's
 --     attachers.
+--   * GameState.parkedTurns holds each parked Grand Melee turn's copy of the
+--     turn fields (CR 807.4b), read beside the live ones by namedByStored,
+--     namedByRelation and actedOnBy; its stacks are a zone, as
+--     GameState.stack is. Its look-back fields are not read through the two
+--     views, which read the live turn's alone (gap #6538).
 --   * GameState.eventsLastTurn is read by the per-seat view and by the "last
 --     turn" tallies (Quantity's SpellsCast and LifeChanged), which count per
 --     PLAYER and name no object, so no choice between objects can turn on it.
@@ -354,6 +361,7 @@ quiet gs =
 namedByStored :: ObjectId -> GameState -> Bool
 namedByStored oid gs =
   combatNames oid (GameState.combat gs)
+    || any (combatNames oid . TurnRegisters.combat) (GameState.parkedTurns gs)
     || any (continuousNames oid gs) (GameState.continuousEffects gs)
     || any (copyNames oid) (GameState.copyEffects gs)
     || any (playerEffectRowNames oid) (GameState.playerEffects gs)
@@ -587,6 +595,7 @@ namedByRelation :: ObjectId -> GameState -> Bool
 namedByRelation oid gs =
   let relates names = any (\(key, value) -> key == oid || Set.member oid (names value)) . Map.toList
       keyed = Map.member oid
+      parked = Map.elems (GameState.parkedTurns gs)
    in relates phasedOutNames (GameState.phasedOut gs)
         || relates returnWatchNames (GameState.movedUntil gs)
         || relates Set.singleton (GameState.haunting gs)
@@ -617,6 +626,14 @@ namedByRelation oid gs =
         || any (any (spentActivationNames oid) . Map.keys) (Map.elems (GameState.activatedThisTurn gs))
         || any (any (spentActivationNames oid) . Map.keys . Object.activatedOnce) (Map.elems (GameState.objects gs))
         || any (activationNames oid) (GameState.activationsThisTurn gs)
+        -- CR 807.4b: each parked Grand Melee turn's own, as the fields above.
+        || any (keyed . TurnRegisters.activatedThisTurn) parked
+        || any (keyed . TurnRegisters.stackedIn) parked
+        || any (keyed . TurnRegisters.castPermissionsUsedThisTurn) parked
+        || any (keyed . TurnRegisters.rollModifiersUsedThisTurn) parked
+        || any (triggeredNames oid) [record | r <- parked, GameEvent.AbilityTriggered record <- fmap LoggedEvent.event (Foldable.toList (TurnRegisters.events r))]
+        || any (any (any (spentActivationNames oid) . Map.keys) . Map.elems . TurnRegisters.activatedThisTurn) parked
+        || any (any (activationNames oid) . TurnRegisters.activationsThisTurn) parked
         || any (any (attackedLastTurnNames oid)) (Map.elems (GameState.attacksInOwnLastTurn gs))
 
 -- The objects a GameState.phasedOut row names BEYOND its key: none, since CR

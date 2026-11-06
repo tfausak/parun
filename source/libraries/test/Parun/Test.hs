@@ -779,6 +779,8 @@ import qualified Parun.Codec.TriggeredAbilitySourceSpec
 import qualified Parun.Codec.TriggeredAbilitySpec
 import qualified Parun.Codec.TurnFaceDownSpec
 import qualified Parun.Codec.TurnMarkerSpec
+import qualified Parun.Codec.TurnRegistersSpec
+import qualified Parun.Codec.TurnResumeSpec
 import qualified Parun.Codec.TurnRoleSpec
 import qualified Parun.Codec.TurnScopeSpec
 import qualified Parun.Codec.TurnUpEventSpec
@@ -1801,6 +1803,8 @@ spec s registry corpus = do
   Parun.Codec.TurnedFaceUpSpec.spec s
   Parun.Codec.TurnFaceDownSpec.spec s
   Parun.Codec.TurnMarkerSpec.spec s
+  Parun.Codec.TurnRegistersSpec.spec s
+  Parun.Codec.TurnResumeSpec.spec s
   Parun.Codec.TurnRoleSpec.spec s
   Parun.Codec.TurnScopeSpec.spec s
   Parun.Codec.TurnUpEventSpec.spec s
