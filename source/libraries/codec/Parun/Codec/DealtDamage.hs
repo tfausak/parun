@@ -14,7 +14,11 @@ import qualified Parun.Types.DealtDamage as DealtDamage
 -- whichever codec its parameter takes. `kind` and `by` are 'Fields.defaulted', so
 -- a card watching any damage writes only `recipient`.
 codec :: (Typeable.Typeable recipient) => Codec.Codec recipient -> Codec.Codec (DealtDamage.DealtDamage recipient)
-codec recipientCodec = Fields.object $ do
+codec = Fields.object . fields
+
+-- | The keys alone, which Parun.Codec.DamageTally writes into its own object.
+fields :: Codec.Codec recipient -> Fields.Fields (DealtDamage.DealtDamage recipient) (DealtDamage.DealtDamage recipient)
+fields recipientCodec = do
   recipient <- Fields.required "recipient" recipientCodec DealtDamage.recipient
   kind <- Fields.defaulted "kind" Nothing (Common.maybe DamageKind.codec) DealtDamage.kind
   by <- Fields.defaulted "by" Nothing (Common.maybe CardType.codec) DealtDamage.by

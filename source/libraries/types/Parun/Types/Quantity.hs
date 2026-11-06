@@ -15,6 +15,7 @@ import qualified Parun.Types.ControlWindow as ControlWindow
 import qualified Parun.Types.Count as Count
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.DamageDirection as DamageDirection
+import qualified Parun.Types.DamageTally as DamageTally
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.Devotion as Devotion
@@ -274,10 +275,10 @@ data Quantity
     -- turn the tally names, summed from that turn's GameEvent.LifeGained or
     -- LifeLost log.
     LifeChanged LifeTally.LifeTally
-  | -- | CR 120.1 / 608.2i: how many of the players that reference names were
-    -- dealt damage, or combat damage alone, this turn -- players, not events
+  | -- | CR 120.1 / 608.2i: how many of the players the tally names were dealt
+    -- the damage it names during the turn it names -- players, not events
     -- (rule 702.54a).
-    PlayersDealtDamageThisTurn (DealtDamage.DealtDamage PlayerRef.PlayerRef)
+    PlayersDealtDamage DamageTally.DamageTally
   | -- | CR 120.1 / 608.2i: the total damage, or combat or noncombat damage alone,
     -- dealt this turn to the players that reference names (rule 702.54b).
     DamageDealtToPlayersThisTurn (DealtDamage.DealtDamage PlayerRef.PlayerRef)

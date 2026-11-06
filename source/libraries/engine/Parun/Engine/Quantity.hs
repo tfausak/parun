@@ -40,6 +40,7 @@ import qualified Parun.Types.ControlChanged as ControlChanged
 import qualified Parun.Types.ControlClock as ControlClock
 import qualified Parun.Types.ControlWindow as ControlWindow
 import qualified Parun.Types.Count as Count.Type
+import qualified Parun.Types.DamageTally as DamageTally
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Devotion as Devotion
 import qualified Parun.Types.ExiledPile as ExiledPile
@@ -149,11 +150,11 @@ evaluateFor viewOf context gs announcedOn oid = evaluateAgainst viewOf context g
 evaluateAgainst :: Count.ViewOf -> Filter.Context -> GameState -> ObjectId -> Maybe ObjectId -> Maybe Filter.View -> Quantity -> Maybe Integer
 evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
   let recur = evaluateAgainst viewOf context gs announcedOn mOid mView
-      -- Was this player dealt damage this turn? Game.wasDealtDamageThisTurn is the
+      -- Was this player dealt damage during that turn? Game.wasDealtDamage is the
       -- shared fold, so this count and the Filter.DealtDamageThisTurn atom a player
       -- candidate answers cannot come apart; see Game.damagedPlayer under it for CR
       -- 120.3a's recipient and for CR 120.8's zero.
-      wasDealtDamage kind by = Game.wasDealtDamageThisTurn kind by gs
+      wasDealtDamage which kind by = Game.wasDealtDamage which kind by gs
       -- CR 102.1's reference, resolved by Count.playersFor for every arm but the
       -- fold's own candidate. That one is answered HERE because this is where the
       -- candidate is: Count.evaluate's Scope.OverPlayers arm hands each candidate
@@ -842,8 +843,8 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
           Just pids -> Just (toInteger (Game.lifeChangedAmong (LifeTally.direction tally) (Game.turnLog (LifeTally.turn tally) gs) (`elem` pids)))
           Nothing -> Nothing
         -- CR 120.1 / 608.2i: how many of the players this reference names were dealt
-        -- damage this turn. TalliedThisTurn's arm in footing -- a live fold over
-        -- GameState.events, whose extent Engine.beginTurnOf makes "this turn" -- and
+        -- damage during the turn the tally names. LifeChanged's arm in footing -- a
+        -- live fold over that turn's log (Game.turnLog) -- and
         -- IsMonarch's in arity: the question is asked of each named player separately, so
         -- a reference naming several is answered by counting them rather than by asking
         -- "whose?". Furious Spinesplitter's "for each opponent who" is that count, and
@@ -861,9 +862,14 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         --
         -- The kind narrows the log to CR 510.2's combat damage where a card says
         -- so -- Tymna the Weaver's "opponents that were dealt combat damage".
-        Quantity.PlayersDealtDamageThisTurn tally -> case historyPlayersOf (DealtDamage.recipient tally) of
-          Nothing -> Nothing
-          Just pids -> Just (toInteger (length (filter (wasDealtDamage (DealtDamage.kind tally) (DealtDamage.by tally)) pids)))
+        --
+        -- The turn reaches back to the last one where a card says so -- Command the
+        -- Stage's "an opponent was dealt noncombat damage last turn".
+        Quantity.PlayersDealtDamage tally ->
+          let dealt = DamageTally.dealt tally
+           in case historyPlayersOf (DealtDamage.recipient dealt) of
+                Nothing -> Nothing
+                Just pids -> Just (toInteger (length (filter (wasDealtDamage (DamageTally.turn tally) (DealtDamage.kind dealt) (DealtDamage.by dealt)) pids)))
         -- CR 120.1 / 608.2i: how much damage in total the players this reference names
         -- were dealt this turn -- rule 702.54b's "the total damage your opponents have
         -- been dealt this turn", which Parun.Engine.Event's Bloodthirst arm asks with
@@ -1421,7 +1427,7 @@ objectSlots quantity = case quantity of
   Quantity.AttackersInTheirLastTurn _ -> Set.empty
   Quantity.TalliedThisTurn _ _ -> Set.empty
   Quantity.LifeChanged _ -> Set.empty
-  Quantity.PlayersDealtDamageThisTurn _ -> Set.empty
+  Quantity.PlayersDealtDamage _ -> Set.empty
   Quantity.DamageDealtToPlayersThisTurn _ -> Set.empty
   Quantity.SpellsCast _ -> Set.empty
   Quantity.TimesThisTurn _ -> Set.empty
@@ -1707,7 +1713,7 @@ hasRead wanted quantity = case quantity of
   Quantity.AttackersInTheirLastTurn _ -> False
   Quantity.TalliedThisTurn _ _ -> False
   Quantity.LifeChanged _ -> False
-  Quantity.PlayersDealtDamageThisTurn _ -> False
+  Quantity.PlayersDealtDamage _ -> False
   Quantity.DamageDealtToPlayersThisTurn _ -> False
   Quantity.SpellsCast _ -> False
   Quantity.TimesThisTurn _ -> False
@@ -1803,7 +1809,7 @@ talliesWhatHappened quantity = case quantity of
   Quantity.AttackersInTheirLastTurn _ -> False
   Quantity.TalliedThisTurn _ _ -> False
   Quantity.LifeChanged _ -> True
-  Quantity.PlayersDealtDamageThisTurn _ -> True
+  Quantity.PlayersDealtDamage _ -> True
   Quantity.DamageDealtToPlayersThisTurn _ -> True
   Quantity.SpellsCast _ -> True
   Quantity.TimesThisTurn _ -> False

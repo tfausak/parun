@@ -1035,7 +1035,7 @@ historySpec s registry =
 -- each opponent who was dealt damage this turn." Khabál Ghoul's window over CR
 -- 120.1's damage instead of over CR 700.4's death -- and the two measurements are
 -- built differently on purpose. The Ghoul's is a Scope.InHistory fold over the
--- objects a Filter kept; this is Quantity.PlayersDealtDamageThisTurn, because CR
+-- objects a Filter kept; this is Quantity.PlayersDealtDamage, because CR
 -- 120.3a's recipient is a PLAYER, who has no Filter view, and because what the
 -- card counts is players rather than events.
 --

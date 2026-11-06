@@ -3644,7 +3644,7 @@ movedChange event = case event of
 --
 -- castOf's, discardOf's and enteredBattlefield's sibling, and here for their
 -- import-graph reason: the callers are Parun.Engine.Quantity's
--- PlayersDealtDamageThisTurn arm, Parun.Engine.Projection's fold for
+-- PlayersDealtDamage arm, Parun.Engine.Projection's fold for
 -- Filter.DealtDamageThisTurn, Parun.Engine.Count.dealtDamageTo's for
 -- Filter.DealtDamageTo, and damageInLog's for the turn handoff.
 --
@@ -3767,10 +3767,11 @@ damagedObject :: GameEvent -> Maybe ObjectId
 damagedObject event = damageRecipient event >>= Recipient.objectOf
 
 -- CR 702.187b / 608.2i: did this player discard THIS card this turn?
--- wasDealtDamageThisTurn's shape below over the discard log, and the reader is
+-- wasDealtDamage's shape below over the discard log, and the reader is
 -- Parun.Engine.Cost.candidateCostsGiven's mayhem offer, and
 -- Parun.Engine.PlayerEffect.mayPlayByMayhem's CR 702.187c play. The turn scope is
--- GameState.events itself, that function's reason.
+-- GameState.events itself, which Parun.Engine.Engine.beginTurnOf clears at the
+-- handoff.
 --
 -- The id compared is the one the CR 400.7 funnel minted, which is what
 -- Parun.Engine.Event.discardReturning records: the hand incarnation ceased as the
@@ -3872,19 +3873,18 @@ freerunningDamageThisTurn pid gs =
         _ -> False
    in any freeran (GameState.events gs)
 
--- CR 120.1 / 608.2i: was this PLAYER dealt damage this turn? The log fold
--- damagedPlayer exists for, written once here because two callers ask it --
--- Parun.Engine.Count.playerView, which fills the player candidate's
--- Filter.dealtDamageThisTurn, and Parun.Engine.Quantity's
--- PlayersDealtDamageThisTurn arm, which counts the seats it answers True for.
--- The turn scope is GameState.events itself: Parun.Engine.Engine.beginTurnOf
--- clears the log at the handoff, so "this turn" is what the log holds. A kind
--- narrows the question to that damage alone (CR 510.2's combat damage), and a
--- card type to a source's that had it.
-wasDealtDamageThisTurn :: Maybe DamageKind.DamageKind -> Maybe CardType.CardType -> GameState -> PlayerId -> Bool
-wasDealtDamageThisTurn kind by gs pid =
+-- CR 120.1 / 608.2i: was this PLAYER dealt damage during the turn named? The
+-- log fold damagedPlayer exists for, written once here because two callers ask
+-- it -- Parun.Engine.Count.playerView, which fills the player candidate's
+-- Filter.dealtDamageThisTurn, and Parun.Engine.Quantity's PlayersDealtDamage
+-- arm, which counts the seats it answers True for. The turn's extent is
+-- turnLog's: Parun.Engine.Engine.beginTurnOf moves the log aside at the handoff.
+-- A kind narrows the question to that damage alone (CR 510.2's combat damage),
+-- and a card type to a source's that had it.
+wasDealtDamage :: WhichTurn.WhichTurn -> Maybe DamageKind.DamageKind -> Maybe CardType.CardType -> GameState -> PlayerId -> Bool
+wasDealtDamage which kind by gs pid =
   let counts event = damagedPlayer event == Just pid && eventCounts kind by event
-   in any (counts . LoggedEvent.event) (GameState.events gs)
+   in any (counts . LoggedEvent.event) (turnLog which gs)
 
 -- Parun.Types.DealtDamage's "which damage counts", the one reading of its `kind`
 -- and `by`. Nothing admits every event.
@@ -3899,7 +3899,7 @@ eventCounts kind by event = case event of
   _ -> Maybe.isNothing kind && Maybe.isNothing by
 
 -- CR 120.1 / 608.2i: how much damage was dealt to this PLAYER this turn --
--- wasDealtDamageThisTurn's twin summing amounts where that one answers yes or
+-- wasDealtDamage's twin summing amounts where that one answers yes or
 -- no, over the same damagedPlayer fold and the same CR 120.3a recipient. Rule
 -- 702.54b's "the total damage your opponents have been dealt this turn" is the
 -- reader, through Parun.Engine.Quantity's DamageDealtToPlayersThisTurn arm.
@@ -3920,7 +3920,7 @@ damageDealtToPlayerThisTurn kind by gs pid =
     )
 
 -- CR 120.1 / 608.2i: how much damage was dealt to, or by, this OBJECT this
--- turn -- wasDealtDamageThisTurn's twin over CR 120.1's other three recipients,
+-- turn -- wasDealtDamage's twin over CR 120.1's other three recipients,
 -- summing amounts where that one asks a yes or no. Burning-Eye Zubera's "if 4
 -- or more damage was dealt to it this turn" reads DealtTo and Chandra, Fire of
 -- Kaladesh's "if Chandra has dealt 3 or more damage this turn" DealtBy, through

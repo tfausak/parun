@@ -2487,7 +2487,7 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.AttackersInTheirLastTurn _ -> quantity
   Quantity.Type.TalliedThisTurn _ _ -> quantity
   Quantity.Type.LifeChanged _ -> quantity
-  Quantity.Type.PlayersDealtDamageThisTurn _ -> quantity
+  Quantity.Type.PlayersDealtDamage _ -> quantity
   Quantity.Type.DamageDealtToPlayersThisTurn _ -> quantity
   Quantity.Type.SpellsCast _ -> quantity
   Quantity.Type.TimesThisTurn _ -> quantity

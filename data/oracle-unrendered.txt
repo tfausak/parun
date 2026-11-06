@@ -526,6 +526,7 @@ come-back-wrong
 comeuppance
 command-of-unsummoning
 command-the-dreadhorde
+command-the-stage
 commit-memory
 commune-with-lava
 commune-with-nature

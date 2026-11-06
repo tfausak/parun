@@ -70,7 +70,7 @@
                             "value": "You"
                           },
                           "quantity": {
-                            "type": "PlayersDealtDamageThisTurn",
+                            "type": "PlayersDealtDamage",
                             "value": {
                               "kind": "Combat",
                               "recipient": {
@@ -101,7 +101,7 @@
                         "value": "You"
                       },
                       "perEach": {
-                        "type": "PlayersDealtDamageThisTurn",
+                        "type": "PlayersDealtDamage",
                         "value": {
                           "kind": "Combat",
                           "recipient": {

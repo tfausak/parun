@@ -99,7 +99,7 @@
                         ]
                       },
                       "quantity": {
-                        "type": "PlayersDealtDamageThisTurn",
+                        "type": "PlayersDealtDamage",
                         "value": {
                           "recipient": {
                             "type": "Relative",

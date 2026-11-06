@@ -88,6 +88,7 @@ import qualified Parun.Types.Scope as Scope
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellWasCast as SpellWasCast
 import qualified Parun.Types.Trait as Trait
+import qualified Parun.Types.WhichTurn as WhichTurn
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChange as ZoneChange
 
@@ -193,7 +194,7 @@ evaluate viewOf quantityOf talliesWhatHappened context gs count =
           -- playerView rather than Filter.playerView is a REGRESSION FENCE on this road
           -- and a proof on the other: routing the fold through the board-aware builder
           -- leaves the suite green, no card spelling Filter.DealtDamageThisTurn under a
-          -- count over players -- Quantity.PlayersDealtDamageThisTurn is how a card asks
+          -- count over players -- Quantity.PlayersDealtDamage is how a card asks
           -- that (#1577). The target road, which Parun.DamageSpec's Needle Drop case
           -- covers, is what pays for the builder.
           let kept = fmap ((,) Nothing) (Maybe.mapMaybe (\pid -> keep (bakePerspective viewOf context gs pid predicate) context (Just (playerView gs pid))) pids)
@@ -352,7 +353,7 @@ departedAs gs oid =
 -- with the one field a bare PlayerId cannot answer filled from the board.
 -- Parun.Engine.Projection.View.viewOfCharacteristics fills Filter.dealtDamageThisTurn
 -- for an object off Game.damagedObject; this is its player half, off
--- Game.wasDealtDamageThisTurn, so CR 120.1's four recipients are read back
+-- Game.wasDealtDamage, so CR 120.1's four recipients are read back
 -- through one event reader (#2157).
 --
 -- Here rather than in Parun.Engine.Filter, which holds no game state, and here
@@ -370,7 +371,7 @@ departedAs gs oid =
 playerView :: GameState -> PlayerId -> Filter.View
 playerView gs pid =
   (Filter.playerView pid)
-    { Filter.dealtDamageThisTurn = Game.wasDealtDamageThisTurn Nothing Nothing gs pid,
+    { Filter.dealtDamageThisTurn = Game.wasDealtDamage WhichTurn.ThisTurn Nothing Nothing gs pid,
       -- CR 508.3b: the same division, one record over -- a player IS one of that
       -- rule's three subjects, and Parun.Engine.Filter.playerView holds no combat
       -- record to read the answer from.

@@ -3306,6 +3306,9 @@ namedTokens =
       -- Synthetic Ursine Rite's, whose card-authored name spells its own Bear
       -- subtype inside a longer word -- the CR 612.2 boundary case.
       CardName.MkCardName (Text.pack "Bearer of the Wilds"),
+      -- Command the Stage's "a 2/2 colorless Wizard Soldier creature token named
+      -- Cadet".
+      CardName.MkCardName (Text.pack "Cadet"),
       -- CR 111.10j's Cursed Role (Spiteful Hexmage).
       CardName.MkCardName (Text.pack "Cursed"),
       -- Koma, World-Eater's "3/3 blue Serpent creature tokens named Koma's Coil".
@@ -4367,7 +4370,7 @@ quantityKindFilters quantity = case quantity of
   Quantity.Type.AttackersInTheirLastTurn _ -> []
   Quantity.Type.TalliedThisTurn _ _ -> []
   Quantity.Type.LifeChanged _ -> []
-  Quantity.Type.PlayersDealtDamageThisTurn _ -> []
+  Quantity.Type.PlayersDealtDamage _ -> []
   Quantity.Type.DamageDealtToPlayersThisTurn _ -> []
   Quantity.Type.SpellsCast _ -> []
   Quantity.Type.TimesThisTurn _ -> []

@@ -284,6 +284,7 @@ import qualified Parun.Codec.DamagePreventedSpec
 import qualified Parun.Codec.DamageRSpec
 import qualified Parun.Codec.DamageRecipientSpec
 import qualified Parun.Codec.DamageRewriteSpec
+import qualified Parun.Codec.DamageTallySpec
 import qualified Parun.Codec.DamageTriggerSpec
 import qualified Parun.Codec.DamagedPartySpec
 import qualified Parun.Codec.DaytimeSpec
@@ -1307,6 +1308,7 @@ spec s registry corpus = do
   Parun.Codec.DealtDamageToSpec.spec s
   Parun.Codec.DamageRewriteSpec.spec s
   Parun.Codec.DamageRSpec.spec s
+  Parun.Codec.DamageTallySpec.spec s
   Parun.Codec.DaytimeSpec.spec s
   Parun.Codec.DealDamageSpec.spec s
   Parun.Codec.DeciderSpec.spec s

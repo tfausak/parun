@@ -6,7 +6,7 @@ import qualified Parun.Types.DamageKind as DamageKind
 -- | What was dealt damage, and which damage counts (CR 120.1). PARAMETRIC in
 -- how the recipient is named: a Parun.Types.PlayerRelation in
 -- Parun.Types.PlayerIsDealtDamage's dealt, a Parun.Types.PlayerRef in
--- Parun.Types.Quantity's PlayersDealtDamageThisTurn and
+-- Parun.Types.DamageTally's dealt and Parun.Types.Quantity's
 -- DamageDealtToPlayersThisTurn, a
 -- Parun.Types.ActingPermanent in Parun.Types.PermanentIsDealtDamage's dealt.
 data DealtDamage recipient = MkDealtDamage
