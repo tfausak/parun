@@ -69,6 +69,7 @@ spec s registry = Spec.describe s "GrandMelee" $ do
   Spec.it s "CR 807.4d eight players take turns 0, 4, 1, 5, ..." $ do
     forest <- S.printingOf s registry "Forest"
     Spec.assertEqWith s "CR 807.4d the order" (fmap fst (turnsAfter 9 (melee forest 8))) (seats [4, 1, 5, 2, 6, 3, 7, 4, 0])
+    Spec.assertEqWith s "CR 807.4b each turn its own number" (fmap (GameState.turnNumber . snd) (turnStates 9 (melee forest 8))) [2 .. 10]
 
   -- CR 807.4d over a departed seat: seat 2 concedes during seat 0's turn, so
   -- seat 1, given seat 0's marker, has seats 3, 4 and 5 as its three to the
@@ -77,6 +78,7 @@ spec s registry = Spec.describe s "GrandMelee" $ do
     forest <- S.printingOf s registry "Forest"
     let conceded = S.departs Departure.Type.Conceded (seat 2) (melee forest 9)
     Spec.assertEqWith s "CR 807.4d seat 1 waits for seat 5" (fmap fst (turnsAfter 5 conceded)) (seats [4, 5, 1, 6, 3])
+    Spec.assertEqWith s "CR 807.4b each turn its own number" (fmap (GameState.turnNumber . snd) (turnStates 5 conceded)) [2 .. 6]
 
   -- CR 807.4c / 807.4e / 807.4h: seat 4 concedes before its turn begins, at
   -- seven players, so its marker goes to seat 5 at once and seat 0's, the
@@ -212,10 +214,17 @@ spec s registry = Spec.describe s "GrandMelee" $ do
     Spec.assertEqWith s "Shock is on seat 4's stack" (length (GameState.stack onFour)) 1
     Spec.assertEqWith s "CR 807.5 Shock stays on seat 4's stack" (fmap TurnRegisters.stack parked) (Just (GameState.stack onFour))
     Spec.assertEqWith s "CR 807.5 seat 4's turn runs on" (fmap TurnRegisters.endTurnSignal parked) (Just EndTurnSignal.Running)
+    -- CR 807.4b: seat 4's own Time Stop ends turn 2 before seat 0's turn 1,
+    -- and the turns that begin next are numbered past both.
+    let (fourStop, withFourStop) = S.addHandCard timeStop (seat 4) (S.landsFor island (seat 4) 6 (Engine.workOn 2 main))
+        fourCast = S.runPure S.identityAnswer withFourStop (S.cast (seat 4) fourStop)
+        fourResolved = snd (Engine.runGamePure S.identityAnswer fourCast Engine.priorityLoop)
+    Spec.assertEqWith s "CR 807.4b each turn its own number" (fmap (\((p, _), st) -> (p, GameState.turnNumber st)) (turnStates 2 fourResolved)) [(seat 1, 3), (seat 5, 4)]
 
-  -- CR 807.5b: a spell targets objects on its own stack only. With Shock on
-  -- each marker's stack, seat 5's Counterspell, cast on seat 4's, is offered
-  -- seat 4's Shock alone.
+  -- CR 807.5b: a spell targets objects on its own stack only. Seat 2's Shock
+  -- is on seat 0's marker's stack and seat 4's on seat 4's, so seat 3 has
+  -- priority for both (CR 807.5a) and both controllers are in its range;
+  -- its Counterspell, cast on seat 4's, is offered seat 4's Shock alone.
   Spec.it s "CR 807.5b Counterspell is offered its own stack's spells" $ do
     forest <- S.printingOf s registry "Forest"
     island <- S.printingOf s registry "Island"
@@ -223,12 +232,12 @@ spec s registry = Spec.describe s "GrandMelee" $ do
     shock <- S.printingOf s registry "Shock"
     counterspell <- S.printingOf s registry "Counterspell"
     let main = untilPhase Phase.PrecombatMain (melee forest 8)
-        (zeroShock, withZero) = S.addHandCard shock (seat 0) (S.landsFor mountain (seat 0) 1 main)
-        zeroCast = S.runPure S.identityAnswer withZero (S.cast (seat 0) zeroShock)
+        (zeroShock, withZero) = S.addHandCard shock (seat 2) (S.landsFor mountain (seat 2) 1 main)
+        zeroCast = S.runPure S.identityAnswer withZero (S.cast (seat 2) zeroShock)
         (fourShock, withFour) = S.addHandCard shock (seat 4) (S.landsFor mountain (seat 4) 1 (Engine.workOn 2 zeroCast))
         fourCast = S.runPure S.identityAnswer withFour (S.cast (seat 4) fourShock)
-        (counterId, staged) = S.addHandCard counterspell (seat 5) (S.landsFor island (seat 5) 2 fourCast)
-        offered = State.execState (Engine.runGame recordTargets staged (S.cast (seat 5) counterId)) []
+        (counterId, staged) = S.addHandCard counterspell (seat 3) (S.landsFor island (seat 3) 2 fourCast)
+        offered = State.execState (Engine.runGame recordTargets staged (S.cast (seat 3) counterId)) []
     Spec.assertEqWith s "a Shock is on each stack" (fmap length [GameState.stack zeroCast, GameState.stack fourCast, Game.allStacks staged]) [1, 1, 2]
     Spec.assertEqWith s "CR 807.5b the target menu" offered [Set.fromList (fmap Recipient.ToObject (GameState.stack fourCast))]
 

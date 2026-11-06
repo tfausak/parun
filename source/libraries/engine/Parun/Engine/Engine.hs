@@ -1926,33 +1926,34 @@ registersOf gs =
       TurnRegisters.turnResume = GameState.turnResume gs
     }
 
--- registersOf's inverse: these registers in GameState's fields.
+-- registersOf's inverse: these registers in GameState's fields. Positional,
+-- so a field TurnRegisters gains is a build error here.
 installRegisters :: TurnRegisters.TurnRegisters -> GameState -> GameState
-installRegisters r gs =
+installRegisters (TurnRegisters.MkTurnRegisters activePlayer' phase' remaining' stack' stackedIn' priority' passed' combat' events' scannedThrough' damageScannedThrough' turnNumber' turnAnchor' extraTurnUnderWay' permanentsAsTurnBegan' endTurnSignal' drawsThisTurn' couldAttackThisTurn' activatedThisTurn' activationsThisTurn' castPermissionsUsedThisTurn' rollModifiersUsedThisTurn' turnResume') gs =
   gs
-    { GameState.activePlayer = TurnRegisters.activePlayer r,
-      GameState.phase = TurnRegisters.phase r,
-      GameState.remaining = TurnRegisters.remaining r,
-      GameState.stack = TurnRegisters.stack r,
-      GameState.stackedIn = TurnRegisters.stackedIn r,
-      GameState.priority = TurnRegisters.priority r,
-      GameState.passed = TurnRegisters.passed r,
-      GameState.combat = TurnRegisters.combat r,
-      GameState.events = TurnRegisters.events r,
-      GameState.scannedThrough = TurnRegisters.scannedThrough r,
-      GameState.damageScannedThrough = TurnRegisters.damageScannedThrough r,
-      GameState.turnNumber = TurnRegisters.turnNumber r,
-      GameState.turnAnchor = TurnRegisters.turnAnchor r,
-      GameState.extraTurnUnderWay = TurnRegisters.extraTurnUnderWay r,
-      GameState.permanentsAsTurnBegan = TurnRegisters.permanentsAsTurnBegan r,
-      GameState.endTurnSignal = TurnRegisters.endTurnSignal r,
-      GameState.drawsThisTurn = TurnRegisters.drawsThisTurn r,
-      GameState.couldAttackThisTurn = TurnRegisters.couldAttackThisTurn r,
-      GameState.activatedThisTurn = TurnRegisters.activatedThisTurn r,
-      GameState.activationsThisTurn = TurnRegisters.activationsThisTurn r,
-      GameState.castPermissionsUsedThisTurn = TurnRegisters.castPermissionsUsedThisTurn r,
-      GameState.rollModifiersUsedThisTurn = TurnRegisters.rollModifiersUsedThisTurn r,
-      GameState.turnResume = TurnRegisters.turnResume r
+    { GameState.activePlayer = activePlayer',
+      GameState.phase = phase',
+      GameState.remaining = remaining',
+      GameState.stack = stack',
+      GameState.stackedIn = stackedIn',
+      GameState.priority = priority',
+      GameState.passed = passed',
+      GameState.combat = combat',
+      GameState.events = events',
+      GameState.scannedThrough = scannedThrough',
+      GameState.damageScannedThrough = damageScannedThrough',
+      GameState.turnNumber = turnNumber',
+      GameState.turnAnchor = turnAnchor',
+      GameState.extraTurnUnderWay = extraTurnUnderWay',
+      GameState.permanentsAsTurnBegan = permanentsAsTurnBegan',
+      GameState.endTurnSignal = endTurnSignal',
+      GameState.drawsThisTurn = drawsThisTurn',
+      GameState.couldAttackThisTurn = couldAttackThisTurn',
+      GameState.activatedThisTurn = activatedThisTurn',
+      GameState.activationsThisTurn = activationsThisTurn',
+      GameState.castPermissionsUsedThisTurn = castPermissionsUsedThisTurn',
+      GameState.rollModifiersUsedThisTurn = rollModifiersUsedThisTurn',
+      GameState.turnResume = turnResume'
     }
 
 -- The fields of a turn not yet begun, as closeTurn leaves them, for newTurn.
