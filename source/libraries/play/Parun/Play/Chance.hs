@@ -10,13 +10,14 @@ import qualified Parun.Play.SplitMix as SplitMix
 import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.CoinFace as CoinFace
+import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.SplitMix as SplitMix.Type
 
 -- | Each random prompt drawn from the generator (CR 701.24a's shuffle, CR
 -- 706's die, CR 705's coin); every other prompt answered by
 -- 'Replay.defaultAnswer'.
-chance :: (Monad m) => Answerer.Answerer (State.StateT SplitMix.Type.SplitMix m)
+chance :: (Monad m) => Answerer.Answerer (Asked.Asked GameState.GameState) (State.StateT SplitMix.Type.SplitMix m)
 chance = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.Shuffle ids -> SplitMix.shuffle ids
   Prompt.RandomFirstPlayer order -> SplitMix.pick order

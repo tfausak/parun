@@ -72,8 +72,8 @@ isFaceDownConspiracy oid gs =
 -- Object.chosenNames, which Filter.HasChosenName reads off the source, so CR
 -- 702.106d's linked ability sees this choice and no other.
 --
--- Not implemented: the name is written where every answerer can read it, and a
--- later chooser's answerer sees an earlier player's name (#5418).
+-- The name is in no seat's view (Parun.Engine.Driver.seated), so a later chooser's
+-- answerer cannot read an earlier player's.
 hideAgenda :: PlayerId -> ObjectId -> Game ()
 hideAgenda pid oid = do
   gs <- State.get

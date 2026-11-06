@@ -15,7 +15,6 @@ import qualified Parun.BotSpec as BotSpec
 import qualified Parun.ClientSpec as ClientSpec
 import qualified Parun.Codec.Scenario as Codec.Scenario
 import qualified Parun.JsonCodec.Codec as Codec
-import qualified Parun.Play.Bot as Bot
 import qualified Parun.Play.Game as Game
 import qualified Parun.Play.Record as Record
 import qualified Parun.Registry as Registry
@@ -54,7 +53,7 @@ spec s registry = Spec.describe s "Record" $ do
 
   Spec.it s "a game cut short replays to where it stopped" $ do
     matchup <- BotSpec.bears s registry
-    let seats = Map.fromList [(S.alice, Game.human (lifted (ClientSpec.screen 40 ClientSpec.plays)) (const (Right Nothing))), (S.bob, Bot.bot)]
+    let seats = Map.fromList [(S.alice, Game.human (lifted (ClientSpec.screen 40 ClientSpec.plays)) (const (Right Nothing))), (S.bob, Game.bot)]
         (outcome, (timeline, cut)) = watched 1 seats Map.empty matchup
     replayed <- Scenario.run registry (saved matchup timeline)
     Spec.assertEqWith s "cut" (fmap fst outcome) (Left (Text.pack "end of input"))
@@ -136,11 +135,11 @@ type Base = State.StateT (Seq.Seq Timed.Timed, Maybe GameState.GameState) (State
 
 -- A game seeded 1 between these seats, and every entry its answers recorded,
 -- however it ended.
-recorded :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Game.Play Base)) -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), Seq.Seq Timed.Timed)
+recorded :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Asked.Asked GameState.GameState) (Game.Play Base)) -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), Seq.Seq Timed.Timed)
 recorded seats matchup = fmap fst (watched 1 seats Map.empty matchup)
 
 -- recorded's game at a seed, each seat at its graveyard order in `orders`.
-watched :: Word.Word64 -> Map.Map PlayerId.PlayerId (Answerer.Answerer (Game.Play Base)) -> Map.Map PlayerId.PlayerId GraveyardOrder.GraveyardOrder -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), (Seq.Seq Timed.Timed, Maybe GameState.GameState))
+watched :: Word.Word64 -> Map.Map PlayerId.PlayerId (Answerer.Answerer (Asked.Asked GameState.GameState) (Game.Play Base)) -> Map.Map PlayerId.PlayerId GraveyardOrder.GraveyardOrder -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), (Seq.Seq Timed.Timed, Maybe GameState.GameState))
 watched seed seats orders matchup =
   let played = Game.run [Record.recording labels sink, lastAsked] seats Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix seed) orders matchup
    in State.evalState (State.runStateT played (Seq.empty, Nothing)) ClientSpec.blank
@@ -151,8 +150,8 @@ lastAsked = Observer.MkObserver {Observer.before = Game.underneath . State.modif
 sink :: Timed.Timed -> Game.Play Base ()
 sink entry = Game.underneath (State.modify' (Bifunctor.first (Seq.|> entry)))
 
-bots :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Game.Play Base))
-bots = Map.fromList [(S.alice, Bot.bot), (S.bob, Bot.bot)]
+bots :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Asked.Asked GameState.GameState) (Game.Play Base))
+bots = Map.fromList [(S.alice, Game.bot), (S.bob, Game.bot)]
 
 lifted :: Terminal.Terminal (State.State ClientSpec.Screen) -> Terminal.Terminal Base
 lifted terminal =

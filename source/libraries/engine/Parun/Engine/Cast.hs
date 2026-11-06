@@ -1705,8 +1705,8 @@ zoneCandidates zone pid gs = case zone of
 -- printing of the permission pairs it with a clause that makes the top card
 -- visible (Garruk's Horde reveals it, Bolas's Citadel looks at it), so the offer
 -- is the permission's own. Parun.Engine.Visibility hides the top card from a
--- player no such clause lets see it, but an answerer is still handed the whole
--- state (#5418).
+-- player no such clause lets see it, and so does that seat's view
+-- (Parun.Engine.Driver.seated).
 pileCandidates :: Zone.Zone -> PlayerId -> GameState -> [ObjectId]
 pileCandidates zone owner gs = case zone of
   Zone.Library -> take 1 (Game.zoneMembers zone owner gs)

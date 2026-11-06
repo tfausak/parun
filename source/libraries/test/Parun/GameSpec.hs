@@ -2418,7 +2418,7 @@ data AskTag = MkAskTag
 -- Answers as subgameAnswer does, tagging each question with the game it came
 -- from. The distinguishing fact is whether that game's battlefield holds
 -- `survivor`, a main-game creature that CR 729.2 keeps out of the subgame.
-recordAskedGame :: ObjectId.ObjectId -> Asked.Asked r -> State.State [AskTag] r
+recordAskedGame :: ObjectId.ObjectId -> Asked.Asked GameState.GameState r -> State.State [AskTag] r
 recordAskedGame survivor asked = do
   let holds gs = Set.member survivor (GameState.battlefield gs)
   State.modify'

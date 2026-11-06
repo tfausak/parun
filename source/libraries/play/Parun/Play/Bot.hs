@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 
 -- | The random bot: a seat that picks among what each prompt offers, each
--- option equally likely, and never reads the game.
+-- option equally likely, and never reads its view of the game.
 module Parun.Play.Bot where
 
 import qualified Control.Monad as Monad
@@ -24,6 +24,7 @@ import qualified Parun.Types.Dividing as Dividing
 import qualified Parun.Types.MulliganDecision as MulliganDecision
 import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.PaymentDecision as PaymentDecision
+import qualified Parun.Types.PlayerView as PlayerView
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.SplitMix as SplitMix.Type
 
@@ -32,7 +33,7 @@ import qualified Parun.Types.SplitMix as SplitMix.Type
 --
 -- Not implemented: a random answer to every other prompt, which gets
 -- 'Replay.defaultAnswer' (#5227).
-bot :: (Monad m) => Answerer.Answerer (State.StateT SplitMix.Type.SplitMix m)
+bot :: (Monad m) => Answerer.Answerer (Asked.Asked PlayerView.PlayerView) (State.StateT SplitMix.Type.SplitMix m)
 bot = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.ChooseAction _ _ actions -> maybe (pure Action.Pass) SplitMix.pick (NonEmpty.nonEmpty actions)
   Prompt.DeclareMulligan {} -> SplitMix.pick (MulliganDecision.Keep NonEmpty.:| [MulliganDecision.Mulligan])

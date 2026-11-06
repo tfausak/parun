@@ -870,7 +870,7 @@ spec s registry = Spec.describe s "Parun.Conjure" $ do
         (_, entered) = S.entersWithTrigger fear S.alice withElves
         lifted = Registry.MkRegistry {Registry.fetchCard = Trans.lift . Registry.fetchCard registry, Registry.cards = Trans.lift (Registry.cards registry)}
         synthetic name = Text.pack "Synthetic " `Text.isPrefixOf` CardName.unwrap name
-        answer :: (Monad m) => Asked.Asked r -> State.StateT [[CardName.CardName]] m r
+        answer :: (Monad m) => Asked.Asked GameState.GameState r -> State.StateT [[CardName.CardName]] m r
         answer asked = case Asked.prompt asked of
           Prompt.RandomCard offered -> do
             State.modify' (NonEmpty.toList offered :)
@@ -1089,14 +1089,14 @@ calimsBreath s registry leyline others = do
         Just face -> take 1 (Face.activatedAbilities face)
         Nothing -> []
       fixture = S.fixtureRegistry reference
-      answer :: Asked.Asked r -> State.State Int r
+      answer :: Asked.Asked GameState.GameState r -> State.State Int r
       answer asked = case Asked.prompt asked of
         Prompt.ChooseToPay {} -> do
           State.modify' (+ 1)
           pure PaymentDecision.Pays
         Prompt.ChooseTargets _ _ _ sets -> pure (fmap (Set.filter ((== Just pikerId) . Recipient.objectOf) . snd) sets)
         p -> pure (S.identityAnswer p)
-      asking :: Asked.Asked r -> State.State Int r
+      asking :: Asked.Asked GameState.GameState r -> State.State Int r
       asking = Interpreter.lookingUpCards fixture S.unreachableCorpus answer
       run = do
         (_, activated) <- Engine.runGameAsked asking board (Monad.mapM_ (Activate.activateAbility S.alice calimId) ability)
@@ -1110,7 +1110,7 @@ calimsBreath s registry leyline others = do
 conjureDepthRun :: [Card.Card] -> Numeric.Natural.Natural -> GameState.GameState -> (GameState.GameState, [Numeric.Natural.Natural])
 conjureDepthRun reference depth board =
   let fixture = S.fixtureRegistry reference
-      answer :: Asked.Asked r -> State.State [Numeric.Natural.Natural] r
+      answer :: Asked.Asked GameState.GameState r -> State.State [Numeric.Natural.Natural] r
       answer asked = case Asked.prompt asked of
         Prompt.RandomDepth reach -> do
           State.modify' (reach :)
@@ -1177,13 +1177,13 @@ fearOfChangeRun s registry withPiker lying = do
   let board0 = if withPiker then snd (S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)) else Setup.emptyGame S.bothPlayers
       (_, entered) = S.entersWithTrigger fear S.alice board0
       fixture = S.fixtureRegistry reference
-      answer :: Asked.Asked r -> State.State [[CardName.CardName]] r
+      answer :: Asked.Asked GameState.GameState r -> State.State [[CardName.CardName]] r
       answer asked = case Asked.prompt asked of
         Prompt.RandomCard offered -> do
           State.modify' (NonEmpty.toList offered :)
           pure (Maybe.fromMaybe (NonEmpty.head offered) (List.find (`elem` NonEmpty.toList offered) [goblinPiker, ancientVendetta, giantSpider]))
         p -> pure (S.identityAnswer p)
-      asking :: Asked.Asked r -> State.State [[CardName.CardName]] r
+      asking :: Asked.Asked GameState.GameState r -> State.State [[CardName.CardName]] r
       asking asked = case Asked.prompt asked of
         Prompt.ReferenceCards {}
           | lying -> pure (fmap S.nameOf reference)

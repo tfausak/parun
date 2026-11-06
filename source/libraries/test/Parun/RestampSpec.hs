@@ -261,7 +261,7 @@ ornateBoard s registry names withTayam = do
 -- asked that order, over how many.
 ornateImitations :: Registry.Registry (State.State [(PlayerId.PlayerId, Int)]) -> Maybe [Natural.Natural] -> GameState.GameState -> (GameState.GameState, [(PlayerId.PlayerId, Int)])
 ornateImitations fixture permutation gs =
-  let answer :: Asked.Asked r -> State.State [(PlayerId.PlayerId, Int)] r
+  let answer :: Asked.Asked GameState.GameState r -> State.State [(PlayerId.PlayerId, Int)] r
       answer question = case Asked.prompt question of
         Prompt.ChooseX {} -> pure 6
         Prompt.OrderTimestamps _ pid batch -> do

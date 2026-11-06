@@ -38,8 +38,10 @@ import qualified Parun.Types.SlotName as SlotName
 -- Nothing here says the chooser has SEEN the group. A reveal is public (CR
 -- 701.20a) and a look is not (CR 701.20e): a GameEvent.Looked names its
 -- audience, so an opponent-chooser over a looked-at group chooses among cards
--- its log never showed it, as a pile chooser does over a face-down pile. Not
--- implemented: the prompt names them to it regardless (#5418).
+-- its log never showed it, as a pile chooser does over a face-down pile. The
+-- prompt names them by id alone, and the chooser's view shows none of them
+-- (Parun.Engine.Driver.seated). Not implemented: a fresh id for a card a shuffle
+-- moves, so a chooser shown one of them before can tell it apart (#5223).
 --
 -- The fields are named rather than positional for ChosenCardInHand's reason.
 data ChosenCardFromAmong = MkChosenCardFromAmong

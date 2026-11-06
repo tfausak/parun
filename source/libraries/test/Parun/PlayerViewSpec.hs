@@ -6,6 +6,7 @@
 module Parun.PlayerViewSpec where
 
 import qualified Control.Monad as Monad
+import qualified Control.Monad.Trans.Class as Trans
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
@@ -14,18 +15,25 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
+import qualified Parun.BotSpec as BotSpec
 import qualified Parun.Cards as Cards
 import qualified Parun.Codec.PlayerView as Codec.PlayerView
+import qualified Parun.Engine.Decide as Decide
+import qualified Parun.Engine.Driver as Driver
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.PlayerView as PlayerView
 import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Replay as Replay
 import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.Setup as Setup
+import qualified Parun.Engine.Visibility as Visibility
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Play.Bot as Bot
+import qualified Parun.Play.Chance as Chance
 import qualified Parun.Play.Render as Render
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
@@ -34,6 +42,7 @@ import qualified Parun.Types.AbilityView as AbilityView
 import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Parun.Types.Answer as Answer
+import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
@@ -65,6 +74,7 @@ import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.ObjectView as ObjectView
+import qualified Parun.Types.Observer as Observer
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerControl as PlayerControl
 import qualified Parun.Types.PlayerId as PlayerId
@@ -80,8 +90,10 @@ import qualified Parun.Types.Seat as Seat
 import qualified Parun.Types.SeatView as SeatView
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.SpellWasCast as SpellWasCast
+import qualified Parun.Types.SplitMix as SplitMix
 import qualified Parun.Types.Staged as Staged
 import qualified Parun.Types.Timestamp as Timestamp
+import qualified Parun.Types.Visibility as Visibility.Type
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChange as ZoneChange
 
@@ -100,6 +112,37 @@ spec s registry = Spec.describe s "PlayerView" $ do
     Spec.assertBool s (not (any named (Set.toList theirs))) "no name"
     Spec.assertBool s (not (any idOf hidden)) "no id"
     Spec.assertBool s (all named (Set.toList bobsHand)) "own hand"
+  Spec.it s "CR 400.2 a seat answers from its own view" $ do
+    gs <- started s registry
+    let prompt = Prompt.ChooseDiscard (Decide.deciderFor S.bob gs) S.bob (Game.zoneMembers Zone.Hand S.bob gs) 1
+        recorder :: Answerer.Answerer (Asked.Asked PlayerView.Type.PlayerView) (State.State [PlayerView.Type.PlayerView])
+        recorder = Answerer.MkAnswerer (\question -> State.put [Asked.game question] >> pure (Replay.defaultAnswer (Asked.prompt question)))
+        fallback :: Answerer.Answerer (Asked.Asked GameState.GameState) (State.State [PlayerView.Type.PlayerView])
+        fallback = Answerer.MkAnswerer (\asked -> State.put [] >> pure (Replay.defaultAnswer (Asked.prompt asked)))
+        seen = State.execState (Answerer.unwrap (Driver.seated recorder fallback) (Asked.MkAsked [] gs prompt)) [PlayerView.viewFor S.alice gs]
+    Spec.assertBool s (PlayerView.viewFor S.alice gs /= PlayerView.viewFor S.bob gs) "the two views differ"
+    Spec.assertEqWith s "bob's view" seen [PlayerView.viewFor S.bob gs]
+  -- Non-interference over every question of seeded bot games: each card a seat
+  -- may not see becomes another card, and the seat's view does not change.
+  Spec.it s "CR 400.2 nothing a seat may not see reaches its view, at any question of a bot game" $ do
+    matchup <- BotSpec.bears s registry
+    other <- S.printingOf s registry "Mindslaver"
+    let checking = Observer.MkObserver {Observer.before = \asked -> Trans.lift (State.modify' (<> [leaks other (Asked.game asked)])), Observer.after = \_ _ -> pure ()}
+        seats :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Asked.Asked GameState.GameState) (State.StateT SplitMix.SplitMix (State.State [(Int, [PlayerId.PlayerId])])))
+        seats = Map.fromList [(S.alice, Driver.seated Bot.bot Chance.chance), (S.bob, Driver.seated Bot.bot Chance.chance)]
+        checked seed = State.execState (State.evalStateT (Driver.match [checking] (Driver.bySeat seats Chance.chance) GameSettings.plain Map.empty matchup) (SplitMix.MkSplitMix seed)) []
+        results = checked 1
+    Spec.assertGtWith s "questions checked" (length results) 100
+    Spec.assertEqWith s "views that moved" (concatMap snd results) []
+    Spec.assertGtWith s "cards changed" (sum (fmap fst results)) 0
+  Spec.it s "CR 702.106b a hidden agenda's name reaches no seat but its owner's" $ do
+    action <- S.printingOf s registry "Immediate Action"
+    other <- S.printingOf s registry "Mindslaver"
+    let (oid, placed) = S.addObjectIn Zone.Command action S.alice (Setup.emptyGame S.bothPlayers)
+        named = Map.singleton Acquisition.Own (Map.singleton S.alice (CardName.MkCardName (Text.pack "Grizzly Bears")))
+        gs = placed {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.faceDown FaceDownReason.HiddenAgenda, Object.chosenNames = named}) oid (GameState.objects placed)}
+    Spec.assertEqWith s "bob's view does not move" (snd (leaks other gs)) []
+    Spec.assertGtWith s "the agenda changed for bob" (fst (leaks other gs)) 0
   Spec.it s "an opponent's hand and library show only their sizes" $ do
     gs <- started s registry
     case seatOf S.alice (PlayerView.viewFor S.bob gs) of
@@ -163,12 +206,14 @@ spec s registry = Spec.describe s "PlayerView" $ do
     tracker <- S.printingOf s registry "Ainok Tracker"
     let (oid, placed) = S.addPermanent tracker S.alice (Setup.emptyGame S.bothPlayers)
         gs = placed {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.faceDown FaceDownReason.Morphed}) oid (GameState.objects placed)}
-    faceDownViews s tracker gs PlayerView.Type.battlefield
+    other <- S.printingOf s registry "Mindslaver"
+    faceDownViews s tracker other gs PlayerView.Type.battlefield
   Spec.it s "CR 708.2 / 708.5 a face-down spell shows every seat a nameless 2/2 and its controller the card" $ do
     tracker <- S.printingOf s registry "Ainok Tracker"
     let (oid, placed) = S.addObjectIn Zone.Stack tracker S.alice (Setup.emptyGame S.bothPlayers)
         gs = placed {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.faceDown FaceDownReason.Morphed}) oid (GameState.objects placed)}
-    faceDownViews s tracker gs PlayerView.Type.stack
+    other <- S.printingOf s registry "Mindslaver"
+    faceDownViews s tracker other gs PlayerView.Type.stack
   Spec.it s "CR 406.3 a card exiled face up is seen by both seats" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (_, gs) = S.addObjectIn Zone.Exile piker S.alice (Setup.emptyGame S.bothPlayers)
@@ -183,7 +228,7 @@ spec s registry = Spec.describe s "PlayerView" $ do
         (_, g2) = S.addPermanent mountain S.alice g1
         (spell, g3) = S.addHandCard goblin S.alice g2
         board = g3 {GameState.activePlayer = S.alice, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
-        answer :: Asked.Asked r -> State.State [(PlayerId.PlayerId, Maybe PlayerId.PlayerId, [Text.Text])] r
+        answer :: Asked.Asked GameState.GameState r -> State.State [(PlayerId.PlayerId, Maybe PlayerId.PlayerId, [Text.Text])] r
         answer question = case Asked.prompt question of
           prompt@(Prompt.ChooseOptional _ pid _ _ _ _) -> do
             let gs = Asked.game question
@@ -203,7 +248,7 @@ spec s registry = Spec.describe s "PlayerView" $ do
         (_, g3) = S.addPermanent goblin S.bob g2
         (spell, g4) = S.addHandCard goblin S.alice g3
         board = g4 {GameState.activePlayer = S.alice, GameState.phase = Phase.PrecombatMain}
-        answer :: Asked.Asked r -> State.State [(PlayerId.PlayerId, Maybe PlayerId.PlayerId)] r
+        answer :: Asked.Asked GameState.GameState r -> State.State [(PlayerId.PlayerId, Maybe PlayerId.PlayerId)] r
         answer question = case Asked.prompt question of
           prompt@(Prompt.ChooseTargets _ pid _ _) -> do
             State.modify' (<> [(pid, GameState.priority (Asked.game question))])
@@ -482,10 +527,11 @@ spec s registry = Spec.describe s "PlayerView" $ do
     Spec.assertBool s (Text.pack "Player 1 casts a face-down card." `elem` drawnFor S.bob gs) "drawn"
 
 -- Alice's face-down Ainok Tracker, read off the zone `zoneOf` lists from both
--- seats: the CR 708.2a values to each, the card to alice alone, and no name of
--- it in bob's encoded view or drawing.
-faceDownViews :: (Monad m) => Spec.Spec m n -> Printing.Printing -> GameState.GameState -> (PlayerView.Type.PlayerView -> [ObjectView.ObjectView]) -> m ()
-faceDownViews s tracker gs zoneOf = do
+-- seats: the CR 708.2a values to each, the card to alice alone, no name of it
+-- in bob's encoded view or drawing, and nothing in bob's view as it becomes
+-- `other`.
+faceDownViews :: (Monad m) => Spec.Spec m n -> Printing.Printing -> Printing.Printing -> GameState.GameState -> (PlayerView.Type.PlayerView -> [ObjectView.ObjectView]) -> m ()
+faceDownViews s tracker other gs zoneOf = do
   let viewOf pid = zoneOf (PlayerView.viewFor pid gs)
       shown pid = fmap (\c -> (ProjectedCharacteristics.names c, ProjectedCharacteristics.power c, ProjectedCharacteristics.toughness c)) . ObjectView.characteristics <$> viewOf pid
       card pid = fmap (\c -> (ProjectedCharacteristics.names c, ProjectedCharacteristics.power c)) . ObjectView.face <$> viewOf pid
@@ -500,6 +546,35 @@ faceDownViews s tracker gs zoneOf = do
   Spec.assertBool s (not (Text.unpack (CardName.unwrap name) `List.isInfixOf` rendered)) "no name in bob's encoded view"
   Spec.assertEqWith s "bob's drawing" (fmap (Render.describe (PlayerView.viewFor S.bob gs)) (viewOf S.bob)) [Text.pack "a face-down card 2/2"]
   Spec.assertEqWith s "alice's drawing" (fmap (Render.describe (PlayerView.viewFor S.alice gs)) (viewOf S.alice)) [Text.pack "a face-down card (Ainok Tracker) 2/2"]
+  Spec.assertEqWith s "CR 708.5 bob's view does not move as the card behind it changes" (snd (leaks other gs)) []
+
+-- Each seat whose view moves when every object it may not see (CR 400.2) is
+-- given `other`'s card and other chosen names, with how many objects changed
+-- across the seats.
+leaks :: Printing.Printing -> GameState.GameState -> (Int, [PlayerId.PlayerId])
+leaks other gs =
+  let changed pid = length (filter (hiddenFrom pid) (Map.keys (GameState.objects gs)))
+      hiddenFrom pid oid = Visibility.sees pid oid gs /= Visibility.Type.Visible
+      moved pid = PlayerView.viewFor pid (perturbed other pid gs) /= PlayerView.viewFor pid gs
+      seats = NonEmpty.toList S.bothPlayers
+   in (sum (fmap changed seats), filter moved seats)
+
+-- Every object `pid` may not see, its card `other` and its chosen names
+-- another.
+perturbed :: Printing.Printing -> PlayerId.PlayerId -> GameState.GameState -> GameState.GameState
+perturbed other pid gs =
+  let (printingId, interned) = Game.intern other gs
+      renamed = CardName.MkCardName (Text.pack "Mindslaver")
+      swap oid obj
+        | Visibility.sees pid oid gs == Visibility.Type.Visible = obj
+        | otherwise =
+            obj
+              { Object.source = case Object.source obj of
+                  Source.OfCard _ -> Source.OfCard printingId
+                  source -> source,
+                Object.chosenNames = fmap (fmap (const renamed)) (Object.chosenNames obj)
+              }
+   in interned {GameState.objects = Map.mapWithKey swap (GameState.objects interned)}
 
 -- A game after setup: alice red, bob green, hands drawn.
 started :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m GameState.GameState
