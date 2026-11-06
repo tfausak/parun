@@ -16,7 +16,7 @@ import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.LifeGainR as LifeGainR
 import qualified Parun.Codec.LifeLossR as LifeLossR
 import qualified Parun.Codec.ManaR as ManaR
-import qualified Parun.Codec.PhasePattern as PhasePattern
+import qualified Parun.Codec.PhaseR as PhaseR
 import qualified Parun.Codec.PlaneswalkR as PlaneswalkR
 import qualified Parun.Codec.TokenR as TokenR
 import qualified Parun.Codec.TurnUpR as TurnUpR
@@ -61,7 +61,7 @@ codec cardCodec abilityCodec effectCodec =
       Arm.payload "GameLossR" (GameLossR.codec effectCodec) ReplacementEffect.GameLossR (\x -> case x of ReplacementEffect.GameLossR y -> Just y; _ -> Nothing),
       Arm.payload "PlaneswalkR" (PlaneswalkR.codec effectCodec) ReplacementEffect.PlaneswalkR (\x -> case x of ReplacementEffect.PlaneswalkR y -> Just y; _ -> Nothing),
       Arm.payload "ManaR" ManaR.codec ReplacementEffect.ManaR (\x -> case x of ReplacementEffect.ManaR y -> Just y; _ -> Nothing),
-      Arm.payload "PhaseR" PhasePattern.codec ReplacementEffect.PhaseR (\x -> case x of ReplacementEffect.PhaseR y -> Just y; _ -> Nothing)
+      Arm.payload "PhaseR" (PhaseR.codec effectCodec) ReplacementEffect.PhaseR (\x -> case x of ReplacementEffect.PhaseR y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: ReplacementEffect.ReplacementEffect card ability effect -> String

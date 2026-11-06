@@ -350,6 +350,8 @@ import qualified Parun.Types.PermanentCandidate as PermanentCandidate
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PhasePattern as PhasePattern
+import qualified Parun.Types.PhaseR as PhaseR
+import qualified Parun.Types.PhaseRewrite as PhaseRewrite
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
@@ -1423,6 +1425,11 @@ drawRNames :: (Monoid r) => Asking r -> (effect -> r) -> DrawR.DrawR effect -> r
 drawRNames asking onEffect x = case x of
   -- CR 504.1: the exception reads the turn's log back to the step's beginning.
   DrawR.MkDrawR whose exceptFirst rewrite -> controllerRelationNames asking whose <> (if exceptFirst then history asking HistoryRead.StepBegins else mempty) <> drawRewriteNames asking onEffect rewrite
+
+phaseRewriteNames :: (Monoid r) => (effect -> r) -> PhaseRewrite.PhaseRewrite effect -> r
+phaseRewriteNames onEffect x = case x of
+  PhaseRewrite.Skip -> mempty
+  PhaseRewrite.MaySkipFor effects -> foldMap onEffect effects
 
 drawRewriteNames :: (Monoid r) => Asking r -> (effect -> r) -> DrawRewrite.DrawRewrite effect -> r
 drawRewriteNames asking onEffect x = case x of
@@ -2856,7 +2863,7 @@ replacementEffectNames asking onCard onAbility onEffect x = case x of
     controllerRelationNames asking whose <> case rewrite of
       PlaneswalkRewrite.ArrangeTopTwo -> mempty
       PlaneswalkRewrite.RunEffects effects -> foldMap onEffect effects
-  ReplacementEffect.PhaseR (PhasePattern.MkPhasePattern _whichPhase whose) -> controllerRelationNames asking whose
+  ReplacementEffect.PhaseR (PhaseR.MkPhaseR (PhasePattern.MkPhasePattern _whichPhase whose) rewrite) -> controllerRelationNames asking whose <> phaseRewriteNames onEffect rewrite
 
 requireAttackNames :: (Monoid r) => Asking r -> RequireAttack.RequireAttack -> r
 requireAttackNames asking x = case x of

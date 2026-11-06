@@ -54,6 +54,7 @@ import qualified Parun.Codec.OutsideObject as OutsideObject
 import qualified Parun.Codec.PastActivation as PastActivation
 import qualified Parun.Codec.PendingEntryEffect as PendingEntryEffect
 import qualified Parun.Codec.PendingReplacementEffect as PendingReplacementEffect
+import qualified Parun.Codec.PendingSkipEffect as PendingSkipEffect
 import qualified Parun.Codec.Phase as Phase
 import qualified Parun.Codec.PhasedOut as PhasedOut
 import qualified Parun.Codec.Player as Player
@@ -160,6 +161,7 @@ codec resolve = Fields.object $ do
   laterPayments <- Fields.defaulted "laterPayments" [] (Common.list ActiveLaterPayment.codec) GameState.laterPayments
   pendingPreventionRiders <- Fields.defaulted "pendingPreventionRiders" Seq.empty (Common.seq Prevention.codec) GameState.pendingPreventionRiders
   pendingReplacementEffects <- Fields.defaulted "pendingReplacementEffects" Seq.empty (Common.seq PendingReplacementEffect.codec) GameState.pendingReplacementEffects
+  pendingSkipEffects <- Fields.defaulted "pendingSkipEffects" Seq.empty (Common.seq PendingSkipEffect.codec) GameState.pendingSkipEffects
   contested <- Fields.defaulted "contested" Map.empty (Common.naturalMap ObjectId.codec (Common.maybe ObjectId.codec)) GameState.contested
   ambientAmounts <- Fields.defaulted "ambientAmounts" Map.empty (Common.textMap SlotName.Type.unwrap (Right . SlotName.Type.MkSlotName) Common.natural) GameState.ambientAmounts
   detachedBindings <- Fields.defaulted "detachedBindings" Map.empty (Common.naturalMap ObjectId.codec Binding.codecMap) GameState.detachedBindings
@@ -293,6 +295,7 @@ codec resolve = Fields.object $ do
         GameState.laterPayments = laterPayments,
         GameState.pendingPreventionRiders = pendingPreventionRiders,
         GameState.pendingReplacementEffects = pendingReplacementEffects,
+        GameState.pendingSkipEffects = pendingSkipEffects,
         GameState.contested = contested,
         GameState.ambientAmounts = ambientAmounts,
         GameState.detachedBindings = detachedBindings,

@@ -223,6 +223,8 @@ import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
+import qualified Parun.Types.PhaseR as PhaseR
+import qualified Parun.Types.PhaseRewrite as PhaseRewrite
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
@@ -1736,8 +1738,8 @@ rewriteReplacementEffect pairs effect = case effect of
             AttachRewrite.ChooseQuality quality -> AttachRewrite.ChooseQuality quality
         }
   -- A PhasePattern is a PhaseSelector and a baked seat (CR 614.1b / 500.11), both
-  -- rules categories rather than printed words.
-  ReplacementEffect.PhaseR _ -> effect
+  -- rules categories rather than printed words; the effects a skip runs are not.
+  ReplacementEffect.PhaseR r -> ReplacementEffect.PhaseR r {PhaseR.rewrite = case PhaseR.rewrite r of PhaseRewrite.Skip -> PhaseRewrite.Skip; PhaseRewrite.MaySkipFor effects -> PhaseRewrite.MaySkipFor (fmap (rewriteEffect pairs) effects)}
 
 -- CR 612.1 through a damage REWRITE, rewriteEntryRewrite's twin one event class
 -- over. CR 614.9's printed destination holds a Filter for a word to sit in,

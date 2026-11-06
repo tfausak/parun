@@ -230,11 +230,14 @@ import qualified Parun.Types.PayerAnswer as PayerAnswer
 import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.PendingEntryEffect as PendingEntryEffect
 import qualified Parun.Types.PendingReplacementEffect as PendingReplacementEffect
+import qualified Parun.Types.PendingSkipEffect as PendingSkipEffect
 import Parun.Types.PendingTrigger (PendingTrigger)
 import qualified Parun.Types.PendingTrigger as PendingTrigger
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
+import qualified Parun.Types.PhaseR as PhaseR
+import qualified Parun.Types.PhaseRewrite as PhaseRewrite
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Parun.Types.Player as Player
@@ -5111,11 +5114,6 @@ apply settle batch applied batchPrevented candidate event =
     -- DamageRewrite.PreventAll's sibling arm: a skip has no consequence of its
     -- own to perform before it cancels.
     --
-    -- The obligation the doc above places on every arm -- case on the inner sum
-    -- rather than bind it with `_` -- has nothing to bind here: PhaseR carries a
-    -- pattern and no rewrite, because CR 614.1b leaves a skip only one possible
-    -- outcome. The day a PhaseRewrite exists, this arm owes it a case.
-    --
     -- CR 614.10a's arithmetic -- two skip effects mean two occurrences skipped,
     -- one per instance -- falls out of the floating store's SHAPE rather than
     -- out of care taken here. Two Fatigues prepend two ActiveReplacements, and a
@@ -5133,9 +5131,56 @@ apply settle batch applied batchPrevented candidate event =
     -- Eon Hub's PhaseR reaches the same arm and consumes nothing: it is a
     -- permanent's static ability, so its CandidateId is OfPermanent and `consume`
     -- is a no-op for it. It is the store, not this arm, that tells the two apart.
-    (ReplacementEffect.PhaseR _, ProposedEvent.WouldBeginPhase _ _) -> do
+    (ReplacementEffect.PhaseR (PhaseR.MkPhaseR _ PhaseRewrite.Skip), ProposedEvent.WouldBeginPhase _ _) -> do
       Replacement.consume (ReplacementCandidate.identity candidate)
       pure Nothing
+    -- CR 614.10b: Time Vault's "you may skip that turn instead. If you do, untap
+    -- this artifact". The row's controller decides (CR 109.5), who is the player
+    -- beginning it but for a teammate's row under CR 805.8; declining leaves the
+    -- event standing, DrawRewrite.MaySkipFor's posture. Skipped, the effects wait
+    -- for the next step to actually begin (GameState.pendingSkipEffects), where
+    -- pendingReplacementEffects' drains would run them at once.
+    --
+    -- CR 732.3: a skip whose source has one queued already, at the same turns to
+    -- come, is a repeated state, every seat between having skipped too. The
+    -- active player, or the first involved player in turn order from them, must
+    -- break the loop, so that player declines unasked; another is still asked,
+    -- and a lap of skips changes nothing.
+    (ReplacementEffect.PhaseR (PhaseR.MkPhaseR _ (PhaseRewrite.MaySkipFor effects)), ProposedEvent.WouldBeginPhase _ pid) -> do
+      gs <- State.get
+      let decider = Maybe.fromMaybe pid (ReplacementCandidate.controller candidate)
+          queued = GameState.pendingSkipEffects gs
+          involved = foldMap (Set.singleton . PendingReplacementEffect.controller . PendingSkipEffect.pending) queued
+          fromActive = let (before, after) = List.break (== GameState.activePlayer gs) (GameState.turnOrder gs) in after <> before
+          breaker = List.find (`Set.member` involved) fromActive
+          position = (GameState.extraTurns gs, GameState.turnMarkers gs)
+          repeats = any (\q -> PendingReplacementEffect.source (PendingSkipEffect.pending q) == ReplacementCandidate.source candidate && (PendingSkipEffect.extraTurns q, PendingSkipEffect.turnMarkers q) == position) queued
+      answer <-
+        if repeats && breaker == Just decider
+          then pure OptionalDecision.Declines
+          else Game.choose (Prompt.ChooseSubstitute (Decide.deciderFor decider gs) decider (ReplacementCandidate.source candidate))
+      case answer of
+        OptionalDecision.Declines -> pure (Just event)
+        OptionalDecision.Exercises -> do
+          Replacement.consume (ReplacementCandidate.identity candidate)
+          State.modify' $ \g ->
+            g
+              { GameState.pendingSkipEffects =
+                  GameState.pendingSkipEffects g
+                    Seq.|> PendingSkipEffect.MkPendingSkipEffect
+                      { PendingSkipEffect.pending =
+                          PendingReplacementEffect.MkPendingReplacementEffect
+                            { PendingReplacementEffect.effects = effects,
+                              -- "this artifact" (Time Vault), Replacement.printedRider's binding.
+                              PendingReplacementEffect.targets = Map.insert Binding.triggerSource (Set.singleton (Recipient.ToObject (ReplacementCandidate.source candidate))) (fmap (Set.map Recipient.ToObject) (ReplacementCandidate.slots candidate)),
+                              PendingReplacementEffect.controller = decider,
+                              PendingReplacementEffect.source = ReplacementCandidate.source candidate
+                            },
+                        PendingSkipEffect.extraTurns = fst position,
+                        PendingSkipEffect.turnMarkers = snd position
+                      }
+              }
+          pure Nothing
     -- Unreachable: `applies` admits PhaseR only against WouldBeginPhase.
     (ReplacementEffect.PhaseR _, _) -> pure (Just event)
     -- CR 614.1e: "as [this permanent] is turned face up, put N counters on it" --
@@ -6799,7 +6844,7 @@ resolveTokens pid lots = do
 -- Answers a Bool rather than the settled event, unlike resolveDestruction, whose
 -- `Just` had to carry an identity because a rewrite can redirect which object is
 -- destroyed. Nothing can rewrite a WouldBeginPhase: PhaseR is the only effect the
--- class admits and it only ever cancels.
+-- class admits and it only ever cancels or leaves the event standing.
 --
 -- The typed door Parun.Engine.Engine uses, so Engine never cases on a
 -- ProposedEvent.

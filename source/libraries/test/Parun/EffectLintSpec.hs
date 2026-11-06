@@ -183,6 +183,8 @@ import qualified Parun.Types.PayGate as PayGate
 import qualified Parun.Types.PayObligation as PayObligation
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PhasePattern as PhasePattern
+import qualified Parun.Types.PhaseR as PhaseR
+import qualified Parun.Types.PhaseRewrite as PhaseRewrite
 import qualified Parun.Types.PlayerCounters as PlayerCounters
 import qualified Parun.Types.PlayerEffect as PlayerEffect
 import qualified Parun.Types.PlayerId as PlayerId
@@ -679,7 +681,7 @@ isTokenR replacement = case replacement of
 -- pattern-carrying replacement must break this build rather than silently pass.
 phasePatternOffends :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool
 phasePatternOffends replacement = case replacement of
-  ReplacementEffect.PhaseR phasePattern -> case PhasePattern.whosePhase phasePattern of
+  ReplacementEffect.PhaseR r -> case PhasePattern.whosePhase (PhaseR.phases r) of
     ControllerRelation.Among _ -> True
     ControllerRelation.InSlot _ -> True
     ControllerRelation.Related _ -> False
@@ -893,16 +895,17 @@ isPhaseR replacement = case replacement of
   ReplacementEffect.PhaseR _ -> True
   _ -> False
 
--- CR 500.11 / 614.10a: a turn skip is spent by the turn it takes. A PhaseR over
--- a whole turn, static or floating, has no count of its own (a card writes a
--- SkipPhase, whose `count` and `uses` are that count), and an Unlimited
--- SkipPhase of a whole turn is never spent.
+-- CR 500.11 / 614.10a: a turn skip is spent by the turn it takes. A mandatory
+-- PhaseR over a whole turn, static or floating, has no count of its own (a card
+-- writes a SkipPhase, whose `count` and `uses` are that count), and an Unlimited
+-- SkipPhase of a whole turn is never spent. An optional one (Time Vault) ends
+-- when its controller declines, which CR 732.3 forces of a loop.
 turnSkipOffends :: Face.Face Card.Type.Card -> Bool
 turnSkipOffends card =
   any isTurnPhaseR (cardReplacementEffects card) || any unspentTurnSkip (cardAuthoredEffects card)
   where
     isTurnPhaseR replacement = case replacement of
-      ReplacementEffect.PhaseR phasePattern -> PhasePattern.whichPhase phasePattern == SkipWindow.WholeTurn
+      ReplacementEffect.PhaseR (PhaseR.MkPhaseR phasePattern PhaseRewrite.Skip) -> PhasePattern.whichPhase phasePattern == SkipWindow.WholeTurn
       _ -> False
 
 -- | A SkipPhase naming a whole turn and never spent.
@@ -3320,15 +3323,15 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     let card = S.combinedFace eonHub
         bake replacement = case replacement of
           ReplacementEffect.PhaseR phasePattern ->
-            ReplacementEffect.PhaseR phasePattern {PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (PlayerId.MkPlayerId 1))}
+            ReplacementEffect.PhaseR phasePattern {PhaseR.phases = (PhaseR.phases phasePattern) {PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (PlayerId.MkPlayerId 1))}}
           other -> other
         baked = card {Face.replacementEffects = fmap (\pr -> pr {PrintedReplacement.effect = bake (PrintedReplacement.effect pr)}) (Face.replacementEffects card)}
     Spec.assertBool s (not (any phasePatternOffends (cardReplacementEffects card))) "the real Eon Hub is symmetric and accepted"
     Spec.assertBool s (any phasePatternOffends (cardReplacementEffects baked)) "and the same card naming a seat is rejected"
     Spec.assertBool s (any engineOnlyOffends (cardReplacementEffects baked)) "and whosePhase is among the relations Resolve.overRelations reaches"
   -- CR 500.11 / 614.10a: Engine.walkToNextTurn and takeMarkedTurn look again
-  -- after every skipped turn, so a turn skip that is never spent would loop
-  -- them forever. See turnSkipOffends.
+  -- after every skipped turn, so a mandatory turn skip that is never spent would
+  -- loop them forever. See turnSkipOffends.
   Spec.it s "no card skips a turn without limit" $ do
     ps <- S.allPrintings s corpus
     let offenders = filter (anyFace turnSkipOffends . Printing.card) ps
@@ -3345,7 +3348,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     let skips = Maybe.mapMaybe turnSkip (cardAuthoredEffects (S.combinedFace meditate))
         unlimited = fmap (\e -> Effect.SkipPhase e {SkipPhase.uses = Uses.Unlimited}) skips
         wholeTurn replacement = case replacement of
-          ReplacementEffect.PhaseR phasePattern -> ReplacementEffect.PhaseR phasePattern {PhasePattern.whichPhase = SkipWindow.WholeTurn}
+          ReplacementEffect.PhaseR phasePattern -> ReplacementEffect.PhaseR phasePattern {PhaseR.phases = (PhaseR.phases phasePattern) {PhasePattern.whichPhase = SkipWindow.WholeTurn}}
           other -> other
         hub = S.combinedFace eonHub
         baked = hub {Face.replacementEffects = fmap (\pr -> pr {PrintedReplacement.effect = wholeTurn (PrintedReplacement.effect pr)}) (Face.replacementEffects hub)}
@@ -3353,6 +3356,8 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertBool s (all unspentTurnSkip unlimited) "and the same skip made Unlimited is rejected"
     Spec.assertBool s (not (turnSkipOffends hub)) "the real Eon Hub is accepted"
     Spec.assertBool s (turnSkipOffends baked) "and its static skip over a whole turn is rejected"
+    timeVault <- S.printingOf s registry "Time Vault"
+    Spec.assertBool s (not (turnSkipOffends (S.combinedFace timeVault))) "Time Vault's optional static skip over a whole turn is accepted"
   -- The same lint one event class over, for the OTHER fields the codec accepts and
   -- only the engine writes: CR 615.7's shielded recipient and its remaining amount,
   -- plus CR 122.1c's minted pair. See engineOnlyOffends.

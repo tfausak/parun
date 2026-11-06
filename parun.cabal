@@ -1186,6 +1186,8 @@ library codec
     Parun.Codec.PendingEntryEffectSpec
     Parun.Codec.PendingReplacementEffect
     Parun.Codec.PendingReplacementEffectSpec
+    Parun.Codec.PendingSkipEffect
+    Parun.Codec.PendingSkipEffectSpec
     Parun.Codec.PerCreature
     Parun.Codec.PermanentActed
     Parun.Codec.PermanentAction
@@ -1213,6 +1215,8 @@ library codec
     Parun.Codec.PhasedOutSpec
     Parun.Codec.PhasePattern
     Parun.Codec.PhasePatternSpec
+    Parun.Codec.PhaseR
+    Parun.Codec.PhaseRewrite
     Parun.Codec.PhaseSelector
     Parun.Codec.PhaseSelectorSpec
     Parun.Codec.PhaseSpec
@@ -3071,6 +3075,7 @@ library types
     Parun.Types.PayOffer
     Parun.Types.PendingEntryEffect
     Parun.Types.PendingReplacementEffect
+    Parun.Types.PendingSkipEffect
     Parun.Types.PendingTrigger
     Parun.Types.PerCreature
     Parun.Types.PermanentActed
@@ -3087,6 +3092,8 @@ library types
     Parun.Types.Phase
     Parun.Types.PhasedOut
     Parun.Types.PhasePattern
+    Parun.Types.PhaseR
+    Parun.Types.PhaseRewrite
     Parun.Types.PhaseSelector
     Parun.Types.PhyrexianPayment
     Parun.Types.Pile

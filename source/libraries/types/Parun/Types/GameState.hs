@@ -53,6 +53,7 @@ import qualified Parun.Types.OutsideObject as OutsideObject
 import qualified Parun.Types.PastActivation as PastActivation
 import qualified Parun.Types.PendingEntryEffect as PendingEntryEffect
 import qualified Parun.Types.PendingReplacementEffect as PendingReplacementEffect
+import qualified Parun.Types.PendingSkipEffect as PendingSkipEffect
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhasedOut as PhasedOut
 import qualified Parun.Types.Player as Player
@@ -248,6 +249,10 @@ data GameState = MkGameState
     -- (Resolve.applyEffectWith), and each draw of a sequence, an instruction's
     -- or a replacement's (Event.drawSeries).
     pendingReplacementEffects :: Seq.Seq PendingReplacementEffect.PendingReplacementEffect,
+    -- | CR 614.10b: the actions a skip put first in the next step, phase or turn
+    -- to actually occur (PhaseRewrite.MaySkipFor), drained by
+    -- Parun.Engine.Engine.runStepThatBegan as that step begins.
+    pendingSkipEffects :: Seq.Seq PendingSkipEffect.PendingSkipEffect,
     -- | CR 616.1 and Lich's Mirror's ruling: the objects a state-based action
     -- check moves, keyed to the source of the replacement whose effects run in
     -- place of a loss in that check, or to Nothing once kept for the check. A

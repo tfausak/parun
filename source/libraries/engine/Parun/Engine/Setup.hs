@@ -272,6 +272,7 @@ blankGame settings order active =
       GameState.laterPayments = [],
       GameState.pendingPreventionRiders = Seq.empty,
       GameState.pendingReplacementEffects = Seq.empty,
+      GameState.pendingSkipEffects = Seq.empty,
       GameState.contested = Map.empty,
       GameState.ambientAmounts = Map.empty,
       GameState.detachedBindings = Map.empty,
