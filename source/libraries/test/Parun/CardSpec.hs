@@ -4949,6 +4949,7 @@ playerEffectFilters playerEffect = case playerEffect of
   -- CR 725 names no quality either: the designation has no parts (Jared
   -- Carthalion, True Heir).
   PlayerEffect.CantBecomeMonarch -> []
+  PlayerEffect.LegendRuleDoesntApply -> []
   PlayerEffect.CantSetSchemesInMotion -> []
   PlayerEffect.EntriesTrigger e -> [EntriesTrigger.entrants e]
   PlayerEffect.AdditionalTriggers bearers -> [bearers]
