@@ -115,6 +115,8 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerStaticAbility as PlayerStaticAbility
 import qualified Parun.Types.PowerToughnessSticker as PowerToughnessSticker
 import qualified Parun.Types.PrintedReplacement as PrintedReplacement
+import qualified Parun.Types.Printing as Printing
+import qualified Parun.Types.PrintingId as PrintingId
 import Parun.Types.ProjectedCharacteristics (ProjectedCharacteristics)
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Quantity as Quantity.Type
@@ -2360,9 +2362,9 @@ anyConditional gs =
       conditional oid = case abilityFaceOfId oid gs of
         Nothing -> False
         Just face -> any carriesCondition (Face.staticAbilities face)
-      conditionalStating zone oid = case Game.lookupObject oid gs of
+      conditionalStating zone stating oid = case Game.lookupObject oid gs of
         Nothing -> False
-        Just obj | not (mayStateZone (staticStatesZone zone) gs obj) -> False
+        Just obj | not (mayStateZone stating obj) -> False
         Just obj -> case abilityFaceOf oid obj gs of
           Nothing -> False
           Just face -> any (\sa -> carriesCondition sa && statesZone zone sa) (Face.staticAbilities face)
@@ -2379,9 +2381,9 @@ anyConditional gs =
         -- state the zone is one gatherGiven's fromStatingCard walks cannot keep
         -- however the clause answers. Without the narrowing an ordinary Kird Ape
         -- in hand would buy a second whole-board walk on every projection.
-        || anyZoneCard GameState.hand (conditionalStating Zone.Hand) gs
-        || anyZoneCard GameState.library (conditionalStating Zone.Library) gs
-        || any (conditionalStating Zone.Exile) (Set.toList (GameState.exile gs))
+        || anyZoneCard GameState.hand (conditionalStating Zone.Hand (staticStating Zone.Hand gs)) gs
+        || anyZoneCard GameState.library (conditionalStating Zone.Library (staticStating Zone.Library gs)) gs
+        || any (conditionalStating Zone.Exile (staticStating Zone.Exile gs)) (Set.toList (GameState.exile gs))
 
 -- CR 611.3a: does this static ability carry an "as long as" clause, or grant a
 -- static ability that does? The granted one is gathered too (withStaticGrants),
@@ -2645,21 +2647,21 @@ gatherGiven stripped waited functioning seed gs =
       -- card -- a per-library-card ceiling held both until measuring bytes was
       -- judged too compiler-specific to keep (gap #578). See #1935, which
       -- measured the walk at 26% of the suite before them.
-      fromStatingCard zone cardId = case Game.lookupObject cardId gs of
+      fromStatingCard zone stating cardId = case Game.lookupObject cardId gs of
         Nothing -> []
         Just cardObj | Object.exiledFaceDown cardObj -> []
-        Just cardObj | not (mayStateZone (staticStatesZone zone) gs cardObj) -> []
+        Just cardObj | not (mayStateZone stating cardObj) -> []
         Just cardObj -> case abilityFaceOf cardId cardObj gs of
           Nothing -> []
           Just face ->
             concatMap (uncurry (gatherStatic (functioning cardId) cardId (Object.timestamp cardObj) [] (const False))) (filter (\(_, sa) -> statesZone zone sa) (zip [0 :: Natural ..] (Face.staticAbilities face)))
-      hands = foldZoneCards GameState.hand (fromStatingCard Zone.Hand) gs
-      libraries = foldZoneCards GameState.library (fromStatingCard Zone.Library) gs
+      hands = foldZoneCards GameState.hand (fromStatingCard Zone.Hand (staticStating Zone.Hand gs)) gs
+      libraries = foldZoneCards GameState.library (fromStatingCard Zone.Library (staticStating Zone.Library gs)) gs
       -- Grist, the Hunger Tide's CR 113.6c clause names every zone but the
       -- battlefield, so a Grist card in exile is a 1/1 Insect creature card --
       -- Parun.ProjectionSpec's "CR 113.6c a Grist card in exile is a creature card
       -- Bioplasm's attack trigger reads" proves it.
-      exiles = concatMap (fromStatingCard Zone.Exile) (Set.toList (GameState.exile gs))
+      exiles = concatMap (fromStatingCard Zone.Exile (staticStating Zone.Exile gs)) (Set.toList (GameState.exile gs))
       counters = counterGathered gs
       designations = designationGathered gs
       bestows = bestowGathered gs
@@ -2787,30 +2789,42 @@ statesZone zone = Set.member zone . StaticAbility.functionsFrom
 -- carries an ability that no printed face carries. A True answer decides
 -- nothing; a False answer means the exact test below cannot keep anything.
 --
--- Here because it is CHEAP where the exact test is not: a field read and a fold
--- over the printed faces, against BUILDING the face the object shows --
+-- Here because it is CHEAP where the exact test is not: a field read and a set
+-- membership, against BUILDING the face the object shows --
 -- Game.resolveFaceFor's layout case, a NonEmpty, and Card.foldSplit's merge.
 -- gatherGiven's stating walks read it once per card in every hand, every
 -- library and exile on every projection, so that difference is the walk; see
--- #1935.
+-- #1935. The fold over the printed faces is statingPrintings', once per
+-- printing rather than once per card, so a walk binds its set once and asks it
+-- of every card; on a board where no printing states the zone the set is empty
+-- and the question costs nothing (#6465).
 --
 -- A FACE-DOWN object is one case it cannot narrow, and it does not try: CR
 -- 708.2's substituted face comes from the ability that turned the object down
 -- rather than from its card, so this answers True and leaves the work to the
 -- exact test in gatherGiven. An object carrying a COPY STAMP is the other: its
 -- abilities are the stamp's (abilityFaceOf), which no printed face bounds.
-mayStateZone :: (Face.Face Card.Type.Card -> Bool) -> GameState -> Object.Object -> Bool
-mayStateZone states gs obj = case Object.facing obj of
+mayStateZone :: Set PrintingId.PrintingId -> Object.Object -> Bool
+mayStateZone stating obj = case Object.facing obj of
   Facing.FaceDown _ -> True
   Facing.FaceUp | Maybe.isJust (Game.copyStampOf obj) -> True
-  Facing.FaceUp -> case Game.cardOfSource gs (Just (Object.source obj)) of
-    Nothing -> False
-    Just card -> any states (Card.Type.faces card)
+  Facing.FaceUp -> maybe False (`Set.member` stating) (Game.printingIdOfSource (Object.source obj))
+
+-- The printings any of whose faces answers `states`: mayStateZone's set.
+-- Game.printingIdOfSource names the printing Game.cardOfSource reads, so a
+-- member is exactly a card whose printed faces could state the zone.
+statingPrintings :: (Face.Face Card.Type.Card -> Bool) -> GameState -> Set PrintingId.PrintingId
+statingPrintings states = Map.keysSet . Map.filter (any states . Card.Type.faces . Printing.card) . GameState.printings
 
 -- Does any static ability of this face state `zone`? mayStateZone's question
 -- for the static walks.
 staticStatesZone :: Zone.Zone -> Face.Face card -> Bool
 staticStatesZone zone = any (statesZone zone) . Face.staticAbilities
+
+-- The printings with a static ability stating `zone`: mayStateZone's set for
+-- the static walks.
+staticStating :: Zone.Zone -> GameState -> Set PrintingId.PrintingId
+staticStating zone = statingPrintings (staticStatesZone zone)
 
 -- Fold over every card in one per-player zone, across every player, WITHOUT
 -- materializing the ids: gatherGiven walks the two hidden zones on every
@@ -6148,10 +6162,10 @@ replacementsAffecting gs =
       -- no row to state anything. Object.exiledFaceDown is CR 406.3's status,
       -- and False on every card in the four other zones this walk reaches --
       -- gatherGiven's fromStatingCard takes the same guard for the same rule.
-      statedFrom zone oid = case Game.lookupObject oid gs of
+      statedFrom zone stating oid = case Game.lookupObject oid gs of
         Nothing -> []
         Just obj | Object.exiledFaceDown obj -> []
-        Just obj | not (mayStateZone (any (statesZoneOfRow zone) . Face.replacementEffects) gs obj) -> []
+        Just obj | not (mayStateZone stating obj) -> []
         Just obj -> case abilityFaceOf oid obj gs of
           Nothing -> []
           Just face ->
@@ -6227,13 +6241,14 @@ replacementsAffecting gs =
       graveyardGrantInForce = mintingGrantInForce Keyword.graveyardReplacementsOf gs
       stated =
         concatMap fromSpellRow (Game.allStacks gs)
-          <> concatMap (statedFrom Zone.Graveyard) (graveyardCards gs)
+          <> concatMap (statedFrom Zone.Graveyard (rowStating Zone.Graveyard)) (graveyardCards gs)
           <> concatMap mintedInGraveyard (graveyardCards gs)
-          <> foldZoneCards GameState.hand (statedFrom Zone.Hand) gs
+          <> foldZoneCards GameState.hand (statedFrom Zone.Hand (rowStating Zone.Hand)) gs
           <> foldZoneCards GameState.hand mintedInHand gs
-          <> foldZoneCards GameState.library (statedFrom Zone.Library) gs
-          <> concatMap (statedFrom Zone.Exile) (Set.toList (GameState.exile gs))
-          <> concatMap (statedFrom Zone.Command) statingCommand
+          <> foldZoneCards GameState.library (statedFrom Zone.Library (rowStating Zone.Library)) gs
+          <> concatMap (statedFrom Zone.Exile (rowStating Zone.Exile)) (Set.toList (GameState.exile gs))
+          <> concatMap (statedFrom Zone.Command (rowStating Zone.Command)) statingCommand
+      rowStating zone = statingPrintings (any (statesZoneOfRow zone) . Face.replacementEffects) gs
       -- The short-circuit guards the two walks that PROJECT, and nothing else:
       -- `stated` reads ability faces, behind mayStateZone everywhere but the
       -- stack, so it costs what gatherGiven's stating walks cost and answers []
@@ -6368,18 +6383,18 @@ elsewhereGrants p gs =
       grants zone oid = case abilityFaceOfId oid gs of
         Nothing -> False
         Just face -> any (\sa -> functionsFromZone zone sa && writes sa) (Face.staticAbilities face)
-      grantsStating zone oid = case Game.lookupObject oid gs of
+      grantsStating zone stating oid = case Game.lookupObject oid gs of
         Nothing -> False
-        Just obj | not (mayStateZone (staticStatesZone zone) gs obj) -> False
+        Just obj | not (mayStateZone stating obj) -> False
         Just obj -> case abilityFaceOf oid obj gs of
           Nothing -> False
           Just face -> any (\sa -> statesZone zone sa && writes sa) (Face.staticAbilities face)
    in any (grants Zone.Command) (Set.toList (GameState.command gs))
         || any (grants Zone.Stack) (Game.allStacks gs)
         || any (grants Zone.Graveyard) (graveyardCards gs)
-        || anyZoneCard GameState.hand (grantsStating Zone.Hand) gs
-        || anyZoneCard GameState.library (grantsStating Zone.Library) gs
-        || any (grantsStating Zone.Exile) (Set.toList (GameState.exile gs))
+        || anyZoneCard GameState.hand (grantsStating Zone.Hand (staticStating Zone.Hand gs)) gs
+        || anyZoneCard GameState.library (grantsStating Zone.Library (staticStating Zone.Library gs)) gs
+        || any (grantsStating Zone.Exile (staticStating Zone.Exile gs)) (Set.toList (GameState.exile gs))
 
 -- Does a granted ability write a modification satisfying `p` once its new host
 -- holds it? Only a STATIC one writes anything (CR 113.3d); the gates asking
