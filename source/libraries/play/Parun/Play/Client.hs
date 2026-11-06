@@ -537,7 +537,7 @@ autoSource view offer = do
           else Nothing
   pure (fst source, Set.intersection wanted (makes source))
 
--- | CR 601.2g: what of a ChooseManaSource offer's cost the payer's pool leaves
+-- | CR 601.2g-h: what of a ChooseManaSource offer's cost the payer's pool leaves
 -- owed: each colored symbol the pool cannot pay, the generic mana the rest of
 -- the pool does not cover. Nothing when the cost holds a symbol other than
 -- generic or one type of mana.
