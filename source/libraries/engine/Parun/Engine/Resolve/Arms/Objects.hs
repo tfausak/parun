@@ -1175,7 +1175,7 @@ preventAllDamage resolving source controller legal chosen (PreventAllDamage.MkPr
           _ -> State.modify' $ \g0 -> List.foldl' (Common.installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind DamageRewrite.PreventAll Uses.Unlimited rider printedSource (whatRecipient, whoRecipient)) g0 (fmap (\recipient -> (recipient, sourceChoice)) rows)
 
 nextDamageInstance :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> NextDamageInstance.NextDamageInstance (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
-nextDamageInstance resolving source controller legal chosen (NextDamageInstance.MkNextDamageInstance duration ref sourceFilter riderEffects outcome) = do
+nextDamageInstance resolving source controller legal chosen (NextDamageInstance.MkNextDamageInstance duration kind ref sourceFilter riderEffects outcome) = do
   -- CR 615.8: install a shield over ONE instance of damage from the chosen
   -- source. Preventing it, the rewrite is PreventAll -- "regardless of how much damage
   -- that is", which is the whole event and never CR 615.7's arithmetic -- and
@@ -1187,6 +1187,10 @@ nextDamageInstance resolving source controller legal chosen (NextDamageInstance.
   -- spent by Event.apply, which runs only where the shield actually prevented
   -- the damage, so a shield that prevented none -- CR 615.12's unpreventable
   -- damage, a source whose properties stopped matching -- is not used up.
+  -- Forcefield's floor is applied to an instance already at or under it, and
+  -- spends its use only when it shrank the instance (Event.apply's
+  -- PreventAllBut arm), proved by the scenario
+  -- forcefield-is-not-used-up-by-a-hit-it-prevents-none-of.
   --
   -- ONE ROW PER NAMED RECIPIENT, PreventNextDamage's split, and a fold rather
   -- than a single row because an ObjectRef may name several. Every printing of
@@ -1201,6 +1205,9 @@ nextDamageInstance resolving source controller legal chosen (NextDamageInstance.
       rider = Common.preventionRider chosen controller source riderEffects
       rewrite = case outcome of
         NextDamageOutcome.Prevented -> DamageRewrite.PreventAll
+        -- CR 615.10's floor on the one instance: Forcefield's "prevent all but 1
+        -- of that damage". Uses.Once still makes it the NEXT instance.
+        NextDamageOutcome.PreventedAllBut surviving -> DamageRewrite.PreventAllBut surviving
         NextDamageOutcome.AlsoToSourceController -> DamageRewrite.AlsoToSourceController
   -- No recipient is CR 608.2b's gone target, so there is nothing to shield and
   -- CR 609.7a's choice -- a choice existing only to be baked into a row -- is
@@ -1214,7 +1221,7 @@ nextDamageInstance resolving source controller legal chosen (NextDamageInstance.
       -- installed -- stricter than printed rather than weaker, which a row
       -- watching every source would be.
       Nothing -> pure ()
-      Just _ -> State.modify' $ \g0 -> List.foldl' (Common.installDamageRow resolving legal (Filter.slotObjects context) controller source duration Nothing rewrite Uses.Once rider (Filter.Type.And []) (Nothing, Nothing)) g0 (fmap (\recipient -> (Just recipient, sourceChoice)) recipients)
+      Just _ -> State.modify' $ \g0 -> List.foldl' (Common.installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind rewrite Uses.Once rider (Filter.Type.And []) (Nothing, Nothing)) g0 (fmap (\recipient -> (Just recipient, sourceChoice)) recipients)
 
 redirectDamage :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> RedirectDamage.RedirectDamage -> Game ()
 redirectDamage resolving source controller legal (RedirectDamage.MkRedirectDamage duration kind amount srcRef whatRecipient whoRecipient destRef sourceFilter uses whatSource) = do

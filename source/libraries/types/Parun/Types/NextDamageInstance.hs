@@ -1,6 +1,7 @@
 module Parun.Types.NextDamageInstance where
 
 import qualified Data.Sequence as Seq
+import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
@@ -15,6 +16,9 @@ import qualified Parun.Types.ObjectRef as ObjectRef
 -- Parametric in the effect for Parun.Types.PreventNextDamage's reason.
 data NextDamageInstance effect = MkNextDamageInstance
   { duration :: Duration.Duration,
+    -- | PRINTED, as Parun.Types.PreventNextDamage's @kind@ is: Forcefield says
+    -- "would deal COMBAT damage". Nothing takes combat and noncombat alike.
+    kind :: Maybe DamageKind.DamageKind,
     -- | The recipients this RESOLUTION names -- Deflecting Palm's "to you",
     -- Honorable Passage's "to any target" -- one CR 615.8 shield each.
     --

@@ -1,0 +1,17 @@
+{
+  "description": "CR 615.8: Forcefield watches only the chosen creature's combat damage, so Soul's Fire from it is dealt whole and the shield waits for combat",
+  "note": "Bob's Hill Giant is unblocked and chosen. Soul's Fire has it deal 3 to alice (17); Fists of the Anvil makes it 7, and its combat damage is cut to 1: 16. A shield taking noncombat damage too gives 19, then 12.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant", "ready": true}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}, {"card": "Mountain", "label": "m3"}, {"card": "Mountain", "label": "m4"}, {"card": "Mountain", "label": "m5"}], "hand": [{"card": "Soul's Fire", "label": "fire"}, {"card": "Fists of the Anvil", "label": "fists"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Forcefield", "label": "ff"}, {"card": "Plains", "label": "plains"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Activate": {"object": "$ff", "ability": 0, "mana": ["$plains"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Cast": {"object": "$fire", "mana": ["$m1", "$m2", "$m3", null], "targetsBySlot": {"dealer": ["$giant"], "victim": ["$alice"]}}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "check": {"Life": {"player": "alice", "life": 17}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Cast": {"object": "$fists", "mana": ["$m4", "$m5"], "targets": ["$giant"]}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 16}}}
+  ]
+}

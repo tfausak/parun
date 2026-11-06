@@ -387,7 +387,7 @@ ownQuantities effect = case effect of
   Effect.LaterPayment (LaterPayment.MkLaterPayment duration _ _) -> durationQuantities duration
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity _) -> quantity : durationQuantities duration
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ _) -> durationQuantities duration
-  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance duration _ _ _ _) -> durationQuantities duration
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance duration _ _ _ _ _) -> durationQuantities duration
   Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ _ _ _ _ _ _) -> Maybe.maybeToList amount <> durationQuantities duration
   Effect.TurnFaceDown (TurnFaceDown.MkTurnFaceDown _ listed) ->
     fmap (\(Power.MkPower quantity) -> quantity) (Maybe.maybeToList (FaceDownCharacteristics.power listed))
@@ -1645,7 +1645,7 @@ effectObjectRefs effect =
         Effect.LaterPayment {} -> []
         Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ ref _ _ _ _ _) -> read_ (Maybe.maybeToList ref)
         Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ ref _ _ _ _ _ _) -> read_ (Maybe.maybeToList ref)
-        Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ ref _ _ _) -> read_ [ref]
+        Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ ref _ _ _) -> read_ [ref]
         Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ _ srcRef _ _ destRef _ _ _) -> read_ (Maybe.maybeToList srcRef <> [destRef])
         -- A READ and not an ask: CR 708.2's turning-over takes no choice of its own, and
         -- this arm never reaches the Game monad, so a ChosenPermanents ref written
@@ -3435,11 +3435,15 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- A rider on Effect.NextDamageInstance runs only if the instance is prevented.
   Spec.it s "no card hangs CR 615.5's additional effect off a next instance it does not prevent" $ do
     ps <- S.allPrintings s corpus
-    let offends effect = case effect of
-          Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ riders outcome) -> not (null riders) && outcome /= NextDamageOutcome.Prevented
+    let prevents outcome = case outcome of
+          NextDamageOutcome.Prevented -> True
+          NextDamageOutcome.PreventedAllBut _ -> True
+          NextDamageOutcome.AlsoToSourceController -> False
+        offends effect = case effect of
+          Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ _ riders outcome) -> not (null riders) && not (prevents outcome)
           _ -> False
         reachesRiderless effect = case effect of
-          Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ _ outcome) -> outcome /= NextDamageOutcome.Prevented
+          Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ _ _ outcome) -> not (prevents outcome)
           _ -> False
     -- Guards against a vacuous sweep: Eye for an Eye is the card that lets the
     -- instance happen.

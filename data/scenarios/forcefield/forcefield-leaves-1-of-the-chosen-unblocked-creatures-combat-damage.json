@@ -1,0 +1,15 @@
+{
+  "description": "CR 615.8 / 609.7a whole card: Forcefield lets 1 of the chosen unblocked creature's combat damage through, and offers no blocked trampler",
+  "note": "Bob's Hill Giant (3) and Grizzly Bears (2) are unblocked; his Crash of Rhinos (8, trample) is blocked by alice's Grizzly Bears and tramples 6 over. The Rhinos are refused (the 2004-10-04 ruling); alice names the Giant and takes 1 + 2 + 6: 11. No shield gives 9, a whole prevention 12.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}, {"card": "Crash of Rhinos", "label": "rhinos", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Forcefield", "label": "ff"}, {"card": "Plains", "label": "plains"}, {"card": "Grizzly Bears", "label": "wall", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$giant", "$bears", "$rhinos"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$wall": ["$rhinos"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Activate": {"object": "$ff", "ability": 0, "mana": ["$plains"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseDamageSource", "with": "$rhinos"}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Answer": {"prompt": "ChooseDamageSource", "with": "$giant"}}},
+    {"turn": 1, "step": "CombatDamage", "player": "bob", "source": "$rhinos", "do": {"AssignDamage": {"$wall": 2, "$alice": 6}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 11}}}
+  ]
+}

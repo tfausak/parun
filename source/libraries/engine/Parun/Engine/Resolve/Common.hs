@@ -1457,7 +1457,8 @@ preventionRider chosen controller source riderEffects =
 -- Effect.NextDamageInstance and Effect.RedirectDamage, which differ only
 -- in the DamageRewrite and the use count -- CR 615.7's countdown, CR 615.1's
 -- unbounded shield, that same shield with CR 614.3's single use beside it (CR
--- 615.8) or its replacement (Eye for an Eye), or CR 614.9's redirection.
+-- 615.8), its floor (Forcefield) or its replacement (Eye for an Eye), or CR
+-- 614.9's redirection.
 --
 -- One shield PER RECIPIENT the caller's ObjectRef NAMES, which is why the callers
 -- fold this over that set: those recipients were fixed by the resolution (CR

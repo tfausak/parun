@@ -31,7 +31,9 @@
                       "duration": {
                         "type": "UntilEndOfTurn"
                       },
-                      "outcome": "AlsoToSourceController",
+                      "outcome": {
+                        "type": "AlsoToSourceController"
+                      },
                       "ref": {
                         "type": "InSlot",
                         "value": "you"

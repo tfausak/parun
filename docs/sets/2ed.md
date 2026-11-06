@@ -11,11 +11,7 @@ Every expressible Unlimited Edition card has been added to `data/cards/`.
 
 ## Needs a capability
 
-Each card is tracked by its issue and is added when that issue lands. Hardest
-first.
-
-- #6371: Forcefield. A next-instance shield can't be confined to combat
-  damage or prevent all but 1.
+Nothing: every Unlimited Edition card but Chaos Orb is in the pool.
 
 ## Out of scope
 

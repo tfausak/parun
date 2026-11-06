@@ -97,9 +97,9 @@ data DamageRewrite effect
     -- permanent's counters are divided among simultaneous damage").
     PreventRemovingCounters (CounterKind.CounterKind Keyword.Keyword)
   | PreventNext Natural.Natural
-  | -- | CR 615.10: a static prevention that leaves this much of each applicable
-    -- damage event standing and prevents the rest -- Temple Altisaur's "prevent
-    -- all but 1 of that damage".
+  | -- | CR 615.10: a prevention that leaves this much of each applicable damage
+    -- event standing and prevents the rest -- Temple Altisaur's "prevent all but
+    -- 1 of that damage", and Forcefield's one instance with Uses.Once beside it.
     --
     -- A FLOOR on what survives, and thereby the opposite of PreventNext's and
     -- PreventUpTo's ceiling on what is stopped: the rule's shield "will apply
