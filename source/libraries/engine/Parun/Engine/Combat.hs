@@ -3187,6 +3187,9 @@ declareBlockers perform = do
   let attacking = Map.keys (Combat.attackers (GameState.combat start))
   Monad.unless (null attacking) $ do
     let declarers = ListUtils.nubOrd (fmap (Game.primaryOf start) (Defender.defendingPlayers start))
+    -- CR 101.4 / Camouflage: every defending player divides before any pile is
+    -- assigned or any blocker declared (pileBlocksFor).
+    asked <- pileBlocksFor declarers
     Monad.forM_ declarers $ \pid ->
       -- CR 802.4a: those creatures can block only creatures attacking that
       -- player, a planeswalker that player controls, or a battle that player
@@ -3203,10 +3206,8 @@ declareBlockers perform = do
       -- an attacker on them.
       case concatMap (`attackersOn` start) (sideOf pid start) of
         [] -> pure ()
-        theirs -> do
-          asked <- pileBlocksFor pid theirs
-          attemptBlockDeclaration perform pid asked theirs Set.empty
-          State.modify' (setPileBlocks Nothing)
+        theirs -> attemptBlockDeclaration perform pid (Map.lookup pid asked) theirs Set.empty
+    State.modify' (setPileBlocks Nothing)
     -- CR 509.1h's other half, performed once CR 509.1g has assigned the blockers:
     -- every attacking creature the declaration named no blockers for became an
     -- UNBLOCKED creature. AttackTrigger.Unblocked is the reader.
@@ -3237,28 +3238,33 @@ declareBlockers perform = do
             Just defending -> Event.recordEvent (GameEvent.AttackerUnblocked (AttackerUnblocked.MkAttackerUnblocked oid defending)) h
        in List.foldl' record g unblocked
 
--- CR 509.1 / 700.3 / Camouflage: where an effect makes `pid`'s blockers from
--- piles, each defending player on `pid`'s side divides the creatures they
--- control into one pile per creature in `attacking`, and those piles are
--- assigned to those attackers at random, which asks no player (Game.drawDistinct).
--- Combat.pileBlocks records the assignment for
--- blockScopeGiven and blockCeilingGiven, which turn it into the declaration's
--- bounds. Answers who then settles that declaration where a choice is left
+-- CR 509.1 / 700.3 / Camouflage: where an effect makes a declarer's blockers
+-- from piles, each defending player on that declarer's side divides the
+-- creatures they control into one pile per creature attacking them (CR
+-- 805.10e: "for whom that player is the defending player"), and those piles
+-- are assigned to those attackers at random, which asks no player
+-- (Game.drawDistinct). CR 101.4: the division is each player's simultaneous
+-- choice, so every player divides, in APNAP order, before any pile is assigned
+-- or blocker declared (CR 802.4). Combat.pileBlocks records every assignment
+-- for blockScopeGiven and blockCeilingGiven, which turn it into each
+-- declaration's bounds; the blockers are disjoint across players. Answers, for
+-- each such declarer, who then settles its declaration where a choice is left
 -- (CR 509.1c's costs, or a restriction leaving several ways to obey the
--- piles): whoever divided `pid`'s piles.
-pileBlocksFor :: PlayerId -> [ObjectId] -> Game (Maybe PlayerId)
-pileBlocksFor pid attacking = do
+-- piles): whoever divided its piles.
+pileBlocksFor :: [PlayerId] -> Game (Map PlayerId PlayerId)
+pileBlocksFor declarers = do
   start <- State.get
-  case PlayerEffect.declarationRow PlayerEffect.Type.BlocksFromPiles pid start of
-    Nothing -> pure Nothing
-    Just _ -> do
-      assigned <- Monad.forM (sideOf pid start) $ \p -> do
-        chooser <- pileChooser p
-        piles <- dividePiles chooser p attacking
-        order <- Game.drawDistinct Prompt.RandomObject (List.genericLength attacking) attacking
-        pure (Map.unionsWith (<>) [Map.fromSet (const (Set.singleton attacker)) pile | (pile, attacker) <- zip piles order])
-      State.modify' (setPileBlocks (Just (Map.unionsWith (<>) assigned)))
-      Just <$> pileChooser pid
+  let piled = filter (\pid -> Maybe.isJust (PlayerEffect.declarationRow PlayerEffect.Type.BlocksFromPiles pid start)) declarers
+  divided <- Monad.forM (concatMap (`sideOf` start) piled) $ \p -> do
+    let attacking = attackersOn p start
+    chooser <- pileChooser p
+    piles <- dividePiles chooser p attacking
+    pure (piles, attacking)
+  assigned <- Monad.forM divided $ \(piles, attacking) -> do
+    order <- Game.drawDistinct Prompt.RandomObject (List.genericLength attacking) attacking
+    pure (Map.unionsWith (<>) [Map.fromSet (const (Set.singleton attacker)) pile | (pile, attacker) <- zip piles order])
+  Monad.unless (null piled) $ State.modify' (setPileBlocks (Just (Map.unionsWith (<>) assigned)))
+  Map.fromList <$> traverse (\pid -> (,) pid <$> pileChooser pid) piled
 
 -- CR 613.11 / 509.1a: who divides `p`'s creatures into piles -- `p`, as
 -- Camouflage says, unless a later row hands `p`'s choice of blockers to its
@@ -3277,9 +3283,9 @@ pileChooser p = do
 -- CR 700.3 / Camouflage: `chooser` divides the creatures `p` controls into one
 -- pile per creature in `attacking`, any of them empty (CR 700.3d), a creature
 -- going into no more piles than the creatures CR 509.1a lets it block. Not
--- asked where `p` controls no creature. Filtered, not trusted, as bands are: a
--- pile past the count is dropped, and so is a creature that is not `p`'s or
--- has filled its piles.
+-- asked where `p` controls no creature or nothing attacks `p`. Filtered, not
+-- trusted, as bands are: a pile past the count is dropped, and so is a
+-- creature that is not `p`'s or has filled its piles.
 dividePiles :: PlayerId -> PlayerId -> [ObjectId] -> Game [Set ObjectId]
 dividePiles chooser p attacking = do
   gs <- State.get
@@ -3291,14 +3297,14 @@ dividePiles chooser p attacking = do
       keep (kept, used) pile =
         let admitted = Set.filter (\oid -> List.elem oid creatures && withinLimit (arity oid) (Map.findWithDefault 0 oid used + 1)) pile
          in (kept <> [admitted], Set.foldl' (\m oid -> Map.insertWith (+) oid 1 m) used admitted)
-  if null creatures
+  if null creatures || null attacking
     then pure []
     else do
       answer <- Game.choose (Prompt.DividePiles (Decide.deciderFor chooser gs) p creatures count)
       pure (fst (List.foldl' keep ([], Map.empty :: Map ObjectId Int) (List.genericTake count answer)))
 
--- CR 509.1 / Camouflage: Combat.pileBlocks, set for one player's declaration
--- and cleared after it.
+-- CR 509.1 / Camouflage: Combat.pileBlocks, set before the defending players'
+-- declarations and cleared after them.
 setPileBlocks :: Maybe (Map ObjectId (Set ObjectId)) -> GameState -> GameState
 setPileBlocks piles g = g {GameState.combat = (GameState.combat g) {Combat.pileBlocks = piles}}
 

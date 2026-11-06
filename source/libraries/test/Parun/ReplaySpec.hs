@@ -456,6 +456,14 @@ combatReplaySpec s =
           Spec.assertEqWith s "round trip" (Replay.decode p (Replay.encode p answer)) (Just answer)
           Spec.assertEqWith s "an attack is not an answer to it" (Replay.decode p (Response.DeclaredAttackers [oid])) Nothing
           Spec.assertEqWith s "no bands" (Replay.defaultAnswer p) []
+        -- CR 700.3 / Camouflage: a list of piles, which a transcript of bands
+        -- must not answer.
+        Spec.it s "DividePiles records and replays its piles, rejects bands, and defaults to none" $ do
+          let p = Prompt.DividePiles decider S.bob [oid, ObjectId.MkObjectId 8] 2
+              answer = [Set.singleton oid, Set.singleton (ObjectId.MkObjectId 8)]
+          Spec.assertEqWith s "round trip" (Replay.decode p (Replay.encode p answer)) (Just answer)
+          Spec.assertEqWith s "bands are not an answer to it" (Replay.decode p (Response.DeclaredBands answer)) Nothing
+          Spec.assertEqWith s "no piles" (Replay.defaultAnswer p) []
         -- CR 508.1g: a transcript that runs short pays no optional cost, so the
         -- attacker keeps its next untap step.
         Spec.it s "defaultAnswer declines the exert" $

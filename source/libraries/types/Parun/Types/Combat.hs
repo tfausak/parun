@@ -345,8 +345,8 @@ data Combat = MkCombat
     -- | CR 509.1 / 700.3 / Camouflage: while a defending player's blockers are
     -- made from piles, each creature put in a pile mapped to the attackers its
     -- piles were assigned. Nothing while blockers are declared as usual. Written
-    -- and cleared by Parun.Engine.Combat.declareBlockers around one player's
-    -- declaration, and read by Parun.Engine.Combat.blockScopeGiven.
+    -- and cleared by Parun.Engine.Combat.declareBlockers around the defending
+    -- players' declarations, and read by Parun.Engine.Combat.blockScopeGiven.
     pileBlocks :: Maybe (Map.Map ObjectId.ObjectId (Set.Set ObjectId.ObjectId))
   }
   deriving (Eq, Ord, Show)
