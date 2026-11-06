@@ -2583,7 +2583,8 @@ canPayCommittingGiven subject capacity spending sources pcs pid committed commit
 -- creature claims itself, so without the test a board of n sources would be 2^n
 -- boards below; see #1725. It does not bound the case where they genuinely meet --
 -- a Springleaf Drum beside n mana creatures widens all n -- whose unpayable costs
--- payableResolutionsGiven's relaxation refuses before that search.
+-- payableResolutionsGiven's relaxation refuses before that search, and whose
+-- payable ones the most-activations-first order below reaches early.
 --
 -- The COLLAPSE is where several yields become one option, and it is exact rather
 -- than a shortcut. Where a yield adds at most one mana, its option is at most one
@@ -2742,11 +2743,16 @@ sourceOptions clauses admitting contends demanded needs supplies =
             -- its alternatives adds mana, so a board taking more activations
             -- than there are mana to demand leaves one unused, and dropping it
             -- frees its claim. Nor more than its alternatives' own claims allow.
+            --
+            -- The most activations FIRST: the walk below stops at the first board
+            -- that pays, and the boards taking the most mana are the likeliest,
+            -- so a Springleaf Drum beside twenty Llanowar Elves pays {20} on its
+            -- second board rather than near its 2^21st; see #6413.
             ceiling_ = if exclusive then minimum [times, demanded, sum (fmap snd alternatives)] else times
             counts =
               if not eats && (null claims || not contended) && life == 0 && energy == 0
                 then [ceiling_]
-                else [0 .. ceiling_]
+                else reverse [0 .. ceiling_]
             -- CR 107.4e's hybrid and CR 107.4f's Phyrexian inside a mana ability's
             -- OWN cost, resolved the way the cost being paid is: one option per
             -- resolution, so the board picks. ManaSpending.AsProduced because this
