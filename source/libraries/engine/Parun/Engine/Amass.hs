@@ -55,13 +55,13 @@ import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.Modification as Modification
 import Parun.Types.ObjectId (ObjectId)
 import Parun.Types.PlayerId (PlayerId)
-import qualified Parun.Types.PlayerQuantity as PlayerQuantity
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Power as Power
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Subtype as Subtype.Type
+import qualified Parun.Types.Surveil as Surveil
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Toughness as Toughness
 import qualified Parun.Types.TypeLine as TypeLine
@@ -171,7 +171,7 @@ jaceToken =
           (TypeLine.MkTypeLine Set.empty (Set.singleton CardType.Planeswalker) (Set.singleton Subtype.Type.Jace))
           (Set.singleton Color.Blue)
           Nothing
-          [ loyaltyAbility 1 (Effect.Surveil (PlayerQuantity.MkPlayerQuantity you (Quantity.Literal 1))),
+          [ loyaltyAbility 1 (Effect.Surveil (Surveil.MkSurveil you (Quantity.Literal 1) Nothing)),
             loyaltyAbility 3 (Effect.Draw (Draw.MkDraw you (Quantity.Literal 1) Nothing))
           ]
       you = PlayerRef.Relative PlayerRelation.You
