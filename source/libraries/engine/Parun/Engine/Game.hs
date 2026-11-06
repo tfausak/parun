@@ -292,6 +292,11 @@ stickerSheetOf ref gs = do
   slot <- Natural.toInt (StickerRef.sheet ref)
   Seq.lookup slot (Player.stickerSheets player)
 
+-- | CR 123.1: what each of these stickers says, oldest first, skipping any its
+-- sheet does not print.
+stickerContents :: Seq.Seq StickerPlacement.StickerPlacement -> GameState -> Seq.Seq StickerContent.StickerContent
+stickerContents placements gs = Seq.fromList (Maybe.mapMaybe (\p -> stickerContent (StickerPlacement.sticker p) gs) (Foldable.toList placements))
+
 -- | CR 123.2 / 123.6-123.9: what a sticker says, read off its sheet.
 stickerContent :: StickerRef.StickerRef -> GameState -> Maybe StickerContent.StickerContent
 stickerContent ref gs = do

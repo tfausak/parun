@@ -3,6 +3,7 @@
 module Parun.Codec.LastKnown where
 
 import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Parun.Codec.Acquisition as Acquisition
 import qualified Parun.Codec.AttackTarget as AttackTarget
@@ -21,6 +22,7 @@ import qualified Parun.Codec.PlayerChoice as PlayerChoice
 import qualified Parun.Codec.PlayerId as PlayerId
 import qualified Parun.Codec.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Parun.Codec.Source as Source
+import qualified Parun.Codec.StickerPlacement as StickerPlacement
 import qualified Parun.Codec.Subtype as Subtype
 import qualified Parun.Codec.TriggeredAbility as TriggeredAbility
 import qualified Parun.Codec.Zone as Zone
@@ -40,6 +42,7 @@ codec = Fields.object $ do
   owner <- Fields.required "owner" PlayerId.codec LastKnown.owner
   source <- Fields.required "source" Source.codec LastKnown.source
   counters <- Fields.required "counters" (Common.multiset (CounterKind.codec Keyword.codec)) LastKnown.counters
+  stickers <- Fields.defaulted "stickers" Seq.empty (Common.seq StickerPlacement.codec) LastKnown.stickers
   copiable <- Fields.required "copiable" ProjectedCharacteristics.codec LastKnown.copiable
   attached <- Fields.required "attached" (Common.set ObjectId.codec) LastKnown.attached
   host <- Fields.defaulted "host" Nothing (Common.maybe ObjectId.codec) LastKnown.host
@@ -70,6 +73,7 @@ codec = Fields.object $ do
         LastKnown.owner = owner,
         LastKnown.source = source,
         LastKnown.counters = counters,
+        LastKnown.stickers = stickers,
         LastKnown.copiable = copiable,
         LastKnown.attached = attached,
         LastKnown.host = host,
