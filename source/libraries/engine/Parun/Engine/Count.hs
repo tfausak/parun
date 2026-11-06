@@ -241,7 +241,8 @@ evaluate viewOf quantityOf talliesWhatHappened context gs count =
         -- POSITION before the Filter is asked -- the zone arm above answers "any
         -- matching card" instead. Order-insensitive like every Aggregation, so no
         -- APNAP walk. An empty library has no top card, so Vampire Nocturnus'
-        -- "is black" counts nothing.
+        -- "is black" counts nothing; nor does one whose new top card CR 401.5
+        -- holds back (Game.atPosition).
         Scope.InPosition position (InZone.MkInZone zone ref) -> do
           pids <- playersFor viewOf context gs ref
           let ids = foldMap (\pid -> Game.atPosition position (Filter.source context) zone pid gs) pids

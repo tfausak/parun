@@ -280,6 +280,24 @@ Entries are ordered by the first rule each cites.
   shorter name takes the word at its end".
 - **Issue**: #4901.
 
+## Whether a library's held-back top card is its top card
+
+- **Question**: CR 401.5 holds back a library's new top card while a spell is
+  cast, an ability activated or a special action taken: it isn't revealed and
+  can't be looked at. Does Vampire Nocturnus' "the top card of your library is
+  black" read it meanwhile?
+- **Rules**: CR 401.5, 601.2i; Vampire Nocturnus' ruling, the new top card
+  "won't be revealed until you finish doing so"; adjacent, Conspicuous Snoop's
+  ruling of 2020-06-23; CR of 2026-09-25.
+- **Decision**: No. Until the window closes the library has no top card to any
+  Scope position read, as Snoop has no ability of it.
+- **Rejected**: the live top card, which would let a payment read power or
+  flying off a card nobody may see, and Snoop's ruling refuses the like.
+- **Site**: `Parun.Engine.Game.atPosition` through `Game.shownTop`, proved by
+  `Parun.CastSpec`'s "Vampire Nocturnus reads no top card the cast itself
+  exposed".
+- **Issue**: #6408.
+
 ## Whether a reversed cast turns a face-down card back down
 
 - **Question**: CR 406.3a turns a face-down exiled card up "just before" the
