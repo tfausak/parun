@@ -267,18 +267,22 @@ loadIndependentDeck registry = do
 -- the board a mana-payability question is asked about, with no game played to
 -- reach it.
 onBattlefield :: NonEmpty.NonEmpty PlayerId -> [Printing.Printing] -> GameState
-onBattlefield players printings =
+onBattlefield players printings = inZones players printings []
+
+-- onBattlefield, plus `buried` in the first player's graveyard.
+inZones :: NonEmpty.NonEmpty PlayerId -> [Printing.Printing] -> [Printing.Printing] -> GameState
+inZones players printings buried =
   let pid = NonEmpty.head players
-      place gs printing =
+      place zone gs printing =
         let (printingId, interned) = Game.intern printing gs
             (oid, created) = Engine.runGamePure Script.passing interned (Setup.createCard pid printingId)
             settled =
               created
-                { GameState.objects = Map.adjust (\object -> object {Object.zone = Zone.Battlefield, Object.sickness = Sickness.Settled pid}) oid (GameState.objects created),
+                { GameState.objects = Map.adjust (\object -> object {Object.zone = zone, Object.sickness = Sickness.Settled pid}) oid (GameState.objects created),
                   GameState.library = Map.adjust (Seq.filter (/= oid)) pid (GameState.library created)
                 }
-         in Game.insertIntoZone Zone.Battlefield LibraryPosition.Bottom pid oid settled
-      board = Foldable.foldl' place (Setup.emptyGame players) printings
+         in Game.insertIntoZone zone LibraryPosition.Bottom pid oid settled
+      board = Foldable.foldl' (place Zone.Graveyard) (Foldable.foldl' (place Zone.Battlefield) (Setup.emptyGame players) printings) buried
    in board {GameState.phase = Phase.PrecombatMain, GameState.remaining = Seq.empty}
 
 -- Mana.canPay's answer for one cost on one board. Parameterized for the reason
@@ -296,6 +300,18 @@ legalActionCount tapper n =
       gs = onBattlefield players (List.genericReplicate n tapper)
    in length (Action.legalActions (NonEmpty.head players) gs {GameState.priority = Just (NonEmpty.head players)})
 {-# NOINLINE legalActionCount #-}
+
+-- legalActionCount over `n` of each of `printings` on the battlefield and `n` of
+-- each of `buried` in the first player's graveyard: one board per shape #6432
+-- names.
+legalActionCountOf :: [Printing.Printing] -> [Printing.Printing] -> Natural -> Int
+legalActionCountOf printings buried n =
+  let players = playersFrom 0
+      times :: [Printing.Printing] -> [Printing.Printing]
+      times = concatMap (List.genericReplicate n)
+      gs = inZones players (times printings) (times buried)
+   in length (Action.legalActions (NonEmpty.head players) gs {GameState.priority = Just (NonEmpty.head players)})
+{-# NOINLINE legalActionCountOf #-}
 
 -- Every shape #595 names that keeps a source plural, on one board: Treasonous
 -- Ogre pays life, Springleaf Drum's tap claim contends with every Llanowar Elves,
@@ -345,6 +361,10 @@ main = do
   drum <- loadDrumBoard registry
   sorcerer <- fetchOrThrow registry "Apprentice Sorcerer"
   looter <- fetchOrThrow registry "Merfolk Looter"
+  elves <- fetchOrThrow registry "Llanowar Elves"
+  ants <- fetchOrThrow registry "Carrion Ants"
+  vampire <- fetchOrThrow registry "Bloodthrone Vampire"
+  hearse <- fetchOrThrow registry "Unlicensed Hearse"
   Bench.defaultMain
     [ Bench.bench "goldfish 2p" $ Bench.whnf (goldfish deck) 0,
       Bench.bench "casting 2p" $ Bench.whnf (casting deck) 0,
@@ -371,5 +391,20 @@ main = do
       -- The two lines above' paired control: the same boards, the ability
       -- targeting nothing (Merfolk Looter).
       Bench.bench "legal actions 40 untargeted" $ Bench.whnf (legalActionCount looter) 40,
-      Bench.bench "legal actions 80 untargeted" $ Bench.whnf (legalActionCount looter) 80
+      Bench.bench "legal actions 80 untargeted" $ Bench.whnf (legalActionCount looter) 80,
+      -- #6432's four shapes, each at 40 and 80. Mana sources: every Elf's mana
+      -- ability, asked by both mana-source sweeps.
+      Bench.bench "legal actions 40 mana sources" $ Bench.whnf (legalActionCountOf [elves] []) 40,
+      Bench.bench "legal actions 80 mana sources" $ Bench.whnf (legalActionCountOf [elves] []) 80,
+      -- A cost with mana: Carrion Ants' {1}, beside a Mountain apiece.
+      Bench.bench "legal actions 40 mana cost" $ Bench.whnf (legalActionCountOf [ants, mountain] []) 40,
+      Bench.bench "legal actions 80 mana cost" $ Bench.whnf (legalActionCountOf [ants, mountain] []) 80,
+      -- A cost sacrificing another permanent: Bloodthrone Vampire's.
+      Bench.bench "legal actions 40 sacrifice" $ Bench.whnf (legalActionCountOf [vampire] []) 40,
+      Bench.bench "legal actions 80 sacrifice" $ Bench.whnf (legalActionCountOf [vampire] []) 80,
+      -- A cost tapping other permanents: Unlicensed Hearse's crew 2, which no
+      -- 0-power Hearse can pay, beside its "from a single graveyard" slots
+      -- over as many graveyard cards.
+      Bench.bench "legal actions 40 crew" $ Bench.whnf (legalActionCountOf [hearse] [mountain]) 40,
+      Bench.bench "legal actions 80 crew" $ Bench.whnf (legalActionCountOf [hearse] [mountain]) 80
     ]

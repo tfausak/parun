@@ -24,6 +24,7 @@ import qualified Parun.Engine.Expiry as Expiry
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword
+import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Players as Players
@@ -580,11 +581,11 @@ readsAnnouncedX pid oid cost gs =
 payableCostAt :: Maybe (Seq.Seq ModeIndex.ModeIndex) -> Natural -> [ManaCost.ManaCost] -> ManaSpending -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
 payableCostAt modes x extra spending pid oid gs =
   let pcs = Projection.projectAll gs
-   in payableCostAtGiven modes pcs (Cost.supplyManaSourcesGiven (Projection.controlGrants gs) pcs pid gs) x extra spending pid oid gs
+   in payableCostAtGiven modes pcs (Cost.supplyManaSourcesGiven (Cost.manaActivationsGiven (PlayerEffect.applying pid gs)) (Projection.controlGrants gs) pcs pid gs) x extra spending pid oid gs
 
 -- `payableCost` with the board's projection and CR 601.2g supply sweep handed
 -- in, so an enumeration over a hand builds the projection once (#435).
-payableCostGiven :: Map.Map ObjectId PC.ProjectedCharacteristics -> [ObjectId] -> [ManaCost.ManaCost] -> ManaSpending -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
+payableCostGiven :: Map.Map ObjectId PC.ProjectedCharacteristics -> Mana.Sources -> [ManaCost.ManaCost] -> ManaSpending -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
 payableCostGiven pcs sources extra spending pid oid gs cost = any (\x -> payableCostAtGiven Nothing pcs sources x extra spending pid oid gs cost) (gateXs pid oid gs cost)
 
 -- `payableCostAt` with the projection and sweep handed in.
@@ -598,7 +599,7 @@ payableCostGiven pcs sources extra spending pid oid gs cost = any (\x -> payable
 -- names, bound on the spell as castProposed binds the announced one: the cast is
 -- legal if SOME announcement complies (CR 601.2), and a reduction reading the
 -- count makes its least value its dearest.
-payableCostAtGiven :: Maybe (Seq.Seq ModeIndex.ModeIndex) -> Map.Map ObjectId PC.ProjectedCharacteristics -> [ObjectId] -> Natural -> [ManaCost.ManaCost] -> ManaSpending -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
+payableCostAtGiven :: Maybe (Seq.Seq ModeIndex.ModeIndex) -> Map.Map ObjectId PC.ProjectedCharacteristics -> Mana.Sources -> Natural -> [ManaCost.ManaCost] -> ManaSpending -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
 payableCostAtGiven modes pcs sources x extra spending pid oid gs cost =
   any
     ((\counts -> payableCountedAtGiven modes pcs sources x extra spending pid oid (bindAnnounced counts oid gs) (Cost.substituteCounts counts cost)) . Map.fromList)
@@ -628,7 +629,7 @@ bindAnnounced counts oid gs
   | otherwise = gs {GameState.objects = Map.adjust (\o -> o {Object.bindings = Map.union (Binding.fromAnnounced counts) (Object.bindings o)}) oid (GameState.objects gs)}
 
 -- `payableCostAtGiven` once every count beside X is announced.
-payableCountedAtGiven :: Maybe (Seq.Seq ModeIndex.ModeIndex) -> Map.Map ObjectId PC.ProjectedCharacteristics -> [ObjectId] -> Natural -> [ManaCost.ManaCost] -> ManaSpending -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
+payableCountedAtGiven :: Maybe (Seq.Seq ModeIndex.ModeIndex) -> Map.Map ObjectId PC.ProjectedCharacteristics -> Mana.Sources -> Natural -> [ManaCost.ManaCost] -> ManaSpending -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
 payableCountedAtGiven modes pcs sources x extra spending pid oid gs cost =
   let substituted = Cost.substituteX x cost
       assisted = Cost.assistable (PaymentSubject.Casting oid) pid oid gs
@@ -1983,7 +1984,7 @@ castableGiven :: Maybe ([Projection.ControlGrant], Map.Map ObjectId PC.Projected
 castableGiven shared pid oid name facing gs =
   let proposed = asProposed oid name facing gs
       payable extra spending board cost = case shared of
-        Just (grants, pcs) -> payableCostGiven pcs (Cost.supplyManaSourcesGiven grants pcs pid board) extra spending pid oid board cost
+        Just (grants, pcs) -> payableCostGiven pcs (Cost.supplyManaSourcesGiven (Cost.manaActivationsGiven (PlayerEffect.applying pid board)) grants pcs pid board) extra spending pid oid board cost
         Nothing -> payableCost Nothing extra spending pid oid board cost
       -- CR 601.3, CR 601.2c and CR 601.2b, asked TOGETHER and per candidate,
       -- because CR 702.103d makes them one question: a candidate is one this

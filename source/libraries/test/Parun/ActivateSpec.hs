@@ -32,6 +32,7 @@ import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.ManaAbility as ManaAbility
 import qualified Parun.Engine.Mint as Mint
+import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Setup as Setup
@@ -3488,7 +3489,7 @@ hoistMixedBoard printings n =
 threadedGate :: PlayerId.PlayerId -> ObjectId.ObjectId -> ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> GameState.GameState -> Bool
 threadedGate pid oid ability gs =
   let board = Snapshot.whole gs
-   in Activatable.activatableGiven (Target.poolsOf board gs) (Cost.supplyManaSourcesGiven (Snapshot.grants board) (Snapshot.projected board) pid gs) pid oid ability gs
+   in Activatable.activatableGiven (Target.poolsOf board gs) (Cost.supplyManaSourcesGiven (Cost.manaActivationsGiven (PlayerEffect.applying pid gs)) (Snapshot.grants board) (Snapshot.projected board) pid gs) pid oid ability gs
 
 -- Action.legalActions' two ACTIVATION lists rebuilt out of the plain per-call
 -- wrappers, which hoist nothing: Activatable.activatable projects each object for
