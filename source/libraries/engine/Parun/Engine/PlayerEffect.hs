@@ -4113,16 +4113,21 @@ spendManaAsThough pid gs = filter (Maybe.isNothing . SpendManaAsThough.casting) 
 -- a-printed-spellbook-is-offered-whole-and-the-card-randomness-named-is-the-one
 -- proves it.
 spendManaAsThoughFor :: PlayerId -> PaymentSubject.PaymentSubject -> GameState -> [SpendManaAsThough.SpendManaAsThough]
-spendManaAsThoughFor pid subject gs = case subject of
+spendManaAsThoughFor pid subject gs = spendManaAsThoughForGiven (spendManaAsThough pid gs) pid subject gs
+
+-- The same clauses given `spendManaAsThough pid gs`'s own answer, which every
+-- subject but a cast is.
+spendManaAsThoughForGiven :: [SpendManaAsThough.SpendManaAsThough] -> PlayerId -> PaymentSubject.PaymentSubject -> GameState -> [SpendManaAsThough.SpendManaAsThough]
+spendManaAsThoughForGiven general pid subject gs = case subject of
   PaymentSubject.Casting oid ->
     let view = Projection.viewOfObject oid gs
         namesSpell context = maybe True (Filter.matches context view) . SpendManaAsThough.casting
      in [clause | (source, clause) <- spendManaAsThoughRows pid gs, namesSpell (contextFor (Just pid) source gs) clause]
           <> filter (namesSpell (Filter.contextIn gs (Just pid) Nothing)) (PC.grantedSpendManaAsThough (Projection.project oid gs))
-  PaymentSubject.Activating {} -> spendManaAsThough pid gs
-  PaymentSubject.Unlocking {} -> spendManaAsThough pid gs
-  PaymentSubject.TurningFaceUp {} -> spendManaAsThough pid gs
-  PaymentSubject.ForNeither -> spendManaAsThough pid gs
+  PaymentSubject.Activating {} -> general
+  PaymentSubject.Unlocking {} -> general
+  PaymentSubject.TurningFaceUp {} -> general
+  PaymentSubject.ForNeither -> general
 
 -- CR 701.6a / 613.11: can this spell or ability on the stack be countered
 -- (Spider-Punk, Prowling Serpopard)? The typed question

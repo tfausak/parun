@@ -1709,7 +1709,8 @@ spendableAmong subject pid gs = List.partition (admitsUnder subject pid gs)
 -- below.
 --
 -- An activation's SUBJECT can narrow the units too, ahead of any of that:
--- PaymentSubject.Activating's mana types (ActivationRestriction.SpendOnly).
+-- PaymentSubject.Activating's mana types (ActivationRestriction.SpendOnly),
+-- `subjectAllows` below.
 admitsUnder :: PaymentSubject.PaymentSubject -> PlayerId -> GameState -> ManaUnit -> Bool
 admitsUnder subject pid gs =
   let paidFor = case subject of
@@ -1724,14 +1725,8 @@ admitsUnder subject pid gs =
         PaymentSubject.Activating _ stamp _ -> any (\designator -> any (Keyword.Engine.designates designator) stamp) (ManaRestriction.keywordActivations restriction)
         _ -> False
       asked = fmap (\(half, oid) -> (half, Filter.contextIn gs (Just pid) Nothing, Projection.viewOfObject oid gs)) paidFor
-      -- The ability's own narrowing of what may pay for it (Throne of
-      -- Eldraine's "Spend only mana of the chosen color"), asked of every unit
-      -- before CR 106.6's question about the unit's own restriction.
-      typeAllowed unit = case subject of
-        PaymentSubject.Activating _ _ (Just types) -> Set.member (ManaUnit.manaType unit) types
-        _ -> True
    in \unit ->
-        typeAllowed unit && case ManaUnit.restriction unit of
+        subjectAllows subject (ManaUnit.manaType unit) && case ManaUnit.restriction unit of
           Nothing -> True
           Just restriction ->
             let named =
@@ -1743,6 +1738,19 @@ admitsUnder subject pid gs =
              in -- A prohibition (Hydraulic Helper) admits exactly the payments a
                 -- permission would refuse, ForNeither among them.
                 if ManaRestriction.prohibits restriction then not named else named
+
+-- The ability's own narrowing of what may pay for it (Throne of Eldraine's
+-- "Spend only mana of the chosen color"), asked of every unit before CR 106.6's
+-- question about its restriction, and the whole of admitsUnder's answer for a
+-- unit carrying none.
+subjectAllows :: PaymentSubject.PaymentSubject -> ManaType -> Bool
+subjectAllows subject manaType = maybe True (Set.member manaType) (narrowingOf subject)
+
+-- The types an activation's subject narrows its payment to, if any.
+narrowingOf :: PaymentSubject.PaymentSubject -> Maybe (Set.Set ManaType)
+narrowingOf subject = case subject of
+  PaymentSubject.Activating _ _ types -> types
+  _ -> Nothing
 
 -- CR 601.2a before CR 601.2g: a source activated DURING this payment makes its
 -- mana once the card being cast has already left exile, so the card it last
@@ -2544,7 +2552,7 @@ canPay capacity pid = canPayCommitting PaymentSubject.ForNeither capacity ManaSp
 canPayCommitting :: PaymentSubject.PaymentSubject -> Capacity -> ManaSpending -> PlayerId -> Natural -> Natural -> [Claim] -> ManaCost -> GameState -> Bool
 canPayCommitting subject capacity spending pid committed committedEnergy claimed cost gs =
   let pcs = Projection.projectAll gs
-   in canPayCommittingGiven subject capacity spending (manaSourcesGiven Set.empty (supplyCapacity capacity) (Projection.controlGrants gs) pcs pid gs) pcs pid committed committedEnergy claimed cost gs
+   in canPayCommittingGiven subject spending (supplySourcesGiven capacity (Projection.controlGrants gs) pcs pid gs) pcs pid committed committedEnergy claimed cost gs
 
 -- The same question given a board already walked -- see payableResolutionsGiven
 -- for what `sources` and `pcs` are and why handing them in changes no answer.
@@ -2554,10 +2562,10 @@ canPayCommitting subject capacity spending pid committed committedEnergy claimed
 -- option only adds claims, life and energy to what that board spends, so no
 -- board passes where it fails. Parun.ManaSpec's "a cost demanding no mana"
 -- group pins it to the walk's answer.
-canPayCommittingGiven :: PaymentSubject.PaymentSubject -> Capacity -> ManaSpending -> [ObjectId] -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> Natural -> Natural -> [Claim] -> ManaCost -> GameState -> Bool
-canPayCommittingGiven subject capacity spending sources pcs pid committed committedEnergy claimed cost gs
+canPayCommittingGiven :: PaymentSubject.PaymentSubject -> ManaSpending -> Sources -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> Natural -> Natural -> [Claim] -> ManaCost -> GameState -> Bool
+canPayCommittingGiven subject spending sources pcs pid committed committedEnergy claimed cost gs
   | any demandsNothing (resolutions spending cost) = activatingNothing pid committed committedEnergy claimed gs
-  | otherwise = not (null (payableResolutionsGiven subject capacity spending sources pcs pid committed committedEnergy claimed cost gs))
+  | otherwise = not (null (payableResolutionsGiven subject spending sources pcs pid committed committedEnergy claimed cost gs))
   where
     demandsNothing (demands, generic, life) = null demands && generic == 0 && life == 0
 
@@ -3026,7 +3034,43 @@ boundedMultisets k xs = case (k, xs) of
 payableResolutions :: PaymentSubject.PaymentSubject -> Capacity -> ManaSpending -> PlayerId -> Natural -> Natural -> [Claim] -> ManaCost -> GameState -> [([Demand], Natural, Natural)]
 payableResolutions subject capacity spending pid committed committedEnergy claimed cost gs =
   let pcs = Projection.projectAll gs
-   in payableResolutionsGiven subject capacity spending (manaSourcesGiven Set.empty (supplyCapacity capacity) (Projection.controlGrants gs) pcs pid gs) pcs pid committed committedEnergy claimed cost gs
+   in payableResolutionsGiven subject spending (supplySourcesGiven capacity (Projection.controlGrants gs) pcs pid gs) pcs pid committed committedEnergy claimed cost gs
+
+-- A supply sweep's sources, with what every payment walk over them measures
+-- the same: the per-source supplies (manaSuppliesGiven at no announced X) and
+-- the player effects CR 609.4b, CR 602.2's grants, CR 116.2c and CR 119.4
+-- read. None depends on the cost or the subject, so a caller asking of many
+-- costs on one board builds this once (#6432). Every field is lazy, so a
+-- question that never walks the sources measures none of them.
+data Sources = MkSources
+  { -- manaSourcesGiven's answer under `supplyCapacity sourceCapacity`.
+    sourceIds :: [ObjectId],
+    -- The capacity the list was swept under, which re-measures a source at a
+    -- nonzero announced X.
+    sourceCapacity :: Capacity,
+    -- Each of `sourceIds`' supplies at X = 0, in the same order.
+    sourceSupplies :: [[(Activations.Activations, Yield, ManaCost, Activations.Activations)]],
+    sourceBorrowed :: ObjectId -> [Maybe ManaRestriction.ManaRestriction],
+    sourceClauses :: [SpendManaAsThough.SpendManaAsThough],
+    sourceLifeForMana :: [(ObjectId, Natural, ManaType)],
+    sourceLifePayable :: Natural -> Bool
+  }
+
+-- The supply sweep of `pid`'s board under `capacity`, and what Sources measures
+-- of it. `grants` and `pcs` MUST be `gs`'s own, as for manaSourcesGiven.
+supplySourcesGiven :: Capacity -> [Projection.ControlGrant] -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> GameState -> Sources
+supplySourcesGiven capacity grants pcs pid gs =
+  let ids = manaSourcesGiven Set.empty (supplyCapacity capacity) grants pcs pid gs
+      borrowed = PlayerEffect.tapForManaGrants pid gs
+   in MkSources
+        { sourceIds = ids,
+          sourceCapacity = capacity,
+          sourceSupplies = fmap (\oid -> manaSuppliesGiven 0 capacity pcs pid (borrowed oid) oid gs) ids,
+          sourceBorrowed = borrowed,
+          sourceClauses = PlayerEffect.spendManaAsThough pid gs,
+          sourceLifeForMana = PlayerEffect.lifeForMana pid gs,
+          sourceLifePayable = Event.lifePayable pid gs
+        }
 
 -- The same list given a board the CALLER has already walked, which is the half
 -- Action.legalActions' enumeration wants: the wrapper above takes one
@@ -3034,18 +3078,13 @@ payableResolutions subject capacity spending pid committed committedEnergy claim
 -- there is a loop over the battlefield, so an activation cost measured through
 -- the wrapper costs a whole-board sweep per permanent (#716).
 --
--- `sources` is manaSourcesGiven's answer for this player, handed in rather than
+-- `board` is supplySourcesGiven's answer for this player, handed in rather than
 -- taken, because that sweep is itself a walk of everything the player controls
 -- asking manaRoutesOfGiven of each -- identical for every ability of every
 -- permanent in one enumeration, and so one more per-permanent O(N) walk when it
--- is taken here (#1073).
---
--- IT MUST HOLD every source `supplyCapacity capacity` admits, which is what
--- Parun.Engine.Cost.supplyManaSourcesGiven builds. Nothing in the type says so,
--- and the two plain wrappers above are what a caller with no list of its own
--- uses. A source listed here whose every route the supply capacity refuses
--- contributes no group and so nothing, which is why a wider list is harmless
--- and a narrower one understates.
+-- is taken here (#1073) -- and so is measuring each source's supplies (#6432).
+-- It carries the capacity its list was swept under, so the supplies and the
+-- list cannot be measured under two.
 --
 -- The SAME board manaSources is judged against serves the per-source yields
 -- too, rather than a fresh projection per source on top of the sweep (#200);
@@ -3070,9 +3109,11 @@ payableResolutions subject capacity spending pid committed committedEnergy claim
 -- additional cost, not both
 -- (#1134). It is the whole cost's claims and not the remainder's, which is
 -- exact: `Cost.canPay` asks this before any part of the cost is paid.
-payableResolutionsGiven :: PaymentSubject.PaymentSubject -> Capacity -> ManaSpending -> [ObjectId] -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> Natural -> Natural -> [Claim] -> ManaCost -> GameState -> [([Demand], Natural, Natural)]
-payableResolutionsGiven subject capacity spending sources pcs pid committed committedEnergy claimed cost gs =
-  let -- EVERY payment a board can hold, and not just the one this walk is for:
+payableResolutionsGiven :: PaymentSubject.PaymentSubject -> ManaSpending -> Sources -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> Natural -> Natural -> [Claim] -> ManaCost -> GameState -> [([Demand], Natural, Natural)]
+payableResolutionsGiven subject spending board pcs pid committed committedEnergy claimed cost gs =
+  let sources = sourceIds board
+      capacity = sourceCapacity board
+      -- EVERY payment a board can hold, and not just the one this walk is for:
       -- the outer cost's, plus each source's own activation cost, which CR
       -- 605.3a lets the player pay inside the outer one's mana window and CR
       -- 602.2b makes an activation like any other. Asking CR 106.6 of the outer
@@ -3090,26 +3131,34 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
       -- so is no mana ability (CR 605.1a).
       subjects = Set.toList (Set.fromList (subject : fmap (\oid -> PaymentSubject.Activating oid Nothing Nothing) sources))
       admittedBy = fmap (\each -> (each, admitsUnder each pid gs)) subjects
-      admitting unit = Set.fromList (fmap fst (filter (\(_, ok) -> ok unit) admittedBy))
+      -- A unit carrying no CR 106.6 restriction is admitted by every payment
+      -- whose ability does not narrow its types (subjectAllows), and those are
+      -- one shared set rather than one walk of every payment per unit: the
+      -- sources' own subjects narrow nothing, so the walk was one per unit per
+      -- source (#6432).
+      (narrowed, unnarrowedList) = List.partition (Maybe.isJust . narrowingOf) subjects
+      unnarrowed = Set.fromList unnarrowedList
+      admitting unit = case ManaUnit.restriction unit of
+        Nothing -> foldr Set.insert unnarrowed (filter (`subjectAllows` ManaUnit.manaType unit) narrowed)
+        Just _ -> Set.fromList (fmap fst (filter (\(_, ok) -> ok unit) admittedBy))
       -- CR 609.4b, resolved ONCE for this whole question and applied to both
       -- halves of the board: a rewrite reaching the pool but not the untapped
       -- sources (or the other way round) would make this disagree with `spend`
       -- about what is payable, and the symptom is an action the engine offers and
       -- then cannot pay.
-      clauses = PlayerEffect.spendManaAsThough pid gs
+      clauses = sourceClauses board
       -- The clauses speaking about the cost being paid and no other (Vizier of the
       -- Menagerie's creature spells, Tome of the Infinite's own): CR 602.2b's
       -- activation of a mana ability in this payment's window is a payment of its
       -- own (`Parun.Engine.Cost.pay`'s subject there), so they serve the cost's
       -- position alone. data/scenarios'
       -- vizier-of-the-menagerie-does-not-pay-a-mana-ability-s-own-cost is the proof.
-      costClauses = PlayerEffect.spendManaAsThoughFor pid subject gs
+      costClauses = PlayerEffect.spendManaAsThoughForGiven clauses pid subject gs
       servesCost
         | costClauses == clauses = serves
         | otherwise = serves . rewriteSupply costClauses
       pooled = fmap (rewriteSupply clauses . supplyOf admitting) (unitsOf (Game.poolOf pid gs))
-      borrowed = PlayerEffect.tapForManaGrants pid gs
-      suppliesAt limit oid = manaSuppliesGiven limit capacity pcs pid (borrowed oid) oid gs
+      suppliesAt limit oid = manaSuppliesGiven limit capacity pcs pid (sourceBorrowed board oid) oid gs
       -- CR 601.2b / 602.2b: a route announcing its own X (Wizard's Rockets)
       -- is priced at every X up to D * 2^(m - 1), where D is what the cost and
       -- every other mana-eating group demand at most and m how many such
@@ -3119,7 +3168,7 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
       -- least X every unit serves a demand placed after it, and the last
       -- such activation has at most D to serve, the one before it D plus the
       -- last's X, and so on.
-      fixedPer = fmap (suppliesAt 0) sources
+      fixedPer = sourceSupplies board
       announced (_, yield, _, _) = Maybe.isJust (yieldX yield)
       xActivations = sum [Activations.times activations | supplies <- fixedPer, activations <- ListUtils.nubOrd [activations | supply@(activations, _, _, _) <- supplies, announced supply]]
       xCeiling = demandBoundOf fixedPer * 2 ^ (max 1 xActivations - 1)
@@ -3172,9 +3221,9 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
       -- both loops it; lifting one takeWhile changes nothing.
       lifeForManaOptions =
         [ [ (oid, MkSourceOption {optionSupplies = List.genericReplicate k (rewriteSupply clauses (supplyOf admitting (lifeForManaUnit mana))), optionDemands = [], optionClaims = [], optionLife = k * life, optionEnergy = 0, optionDoublings = []})
-          | k <- takeWhile (Event.lifePayable pid gs . (* life)) [0 .. demandBound]
+          | k <- takeWhile (affordable . (* life)) [0 .. demandBound]
           ]
-        | (oid, life, mana) <- PlayerEffect.lifeForMana pid gs
+        | (oid, life, mana) <- sourceLifeForMana board
         ]
       options = lifeForManaOptions <> concat (zipWith (\oid supplies -> fmap (fmap ((,) oid)) (sourceOptions clauses (admitting . producedDuring subject) (Claim.contends contested) demandBound typedNeeds supplies)) sources suppliesPer)
       -- One option taken from each group, appended to the pool: `sequenceA` over
@@ -3250,7 +3299,7 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
       within taken = and (Map.intersectionWith (<=) taken room)
       weighed = fmap (fmap (\(_, option) -> (option, takesOf (optionClaims option)))) options
       -- CR 119.4's floor, asked of every board: the player effects walked once.
-      affordable = Event.lifePayable pid gs
+      affordable = sourceLifePayable board
       payable (demands, generic, life) =
         let fits (supplies, eaten, costPosition, subjectAt, spent, doublings) =
               if null doublings

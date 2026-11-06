@@ -75,6 +75,7 @@ import qualified Parun.Types.AbilityKind as AbilityKind
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
+import qualified Parun.Types.ActivationProhibition as ActivationProhibition.Type
 import qualified Parun.Types.Activations as Activations
 import qualified Parun.Types.AlternativeCost as AlternativeCost
 import qualified Parun.Types.AppliedReduction as AppliedReduction
@@ -182,6 +183,7 @@ import qualified Parun.Types.TapForTotalPower as TapForTotalPower
 import qualified Parun.Types.TapPermanents as TapPermanents
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TappedForMana as TappedForMana
+import qualified Parun.Types.TextWord as TextWord
 import qualified Parun.Types.Threshold as Threshold
 import qualified Parun.Types.TurnWindow as TurnWindow
 import qualified Parun.Types.TypeLine as TypeLine
@@ -3106,7 +3108,16 @@ manaActivations measure pcs pid oid cost restrictions ability gs = manaActivatio
 -- Each row carries the SOURCE that printed it, which the gather under this needs
 -- and no reader here reads: see Parun.Engine.PlayerEffect.matchesObjectFrom.
 manaActivationsGiven :: [(RowSource, PlayerEffect.Type.PlayerEffect)] -> Mana.Capacity
-manaActivationsGiven effects measure pcs pid oid printedCost restrictions ability gs =
+manaActivationsGiven effects measure pcs pid oid cost restrictions ability gs =
+  manaActivationsOn (Projection.controlGrants gs) (ActivationProhibition.gathered gs) effects measure pcs pid oid cost restrictions ability gs
+
+-- The same capacity given the board walks a mana-source sweep would otherwise
+-- take per route: `grants` MUST be `Projection.controlGrants gs`'s answer and
+-- `rows` `ActivationProhibition.gathered gs`'s, for the board this is called
+-- with, as `effects` must be. Partially applied for the same reason, so a sweep
+-- over every permanent shares one walk of each (#6432).
+manaActivationsOn :: [Projection.ControlGrant] -> [(ObjectId, [(TextWord.TextWord, TextWord.TextWord)], ActivationProhibition.Type.ActivationProhibition)] -> [(RowSource, PlayerEffect.Type.PlayerEffect)] -> Mana.Capacity
+manaActivationsOn grants rows effects measure pcs pid oid printedCost restrictions ability gs =
   let adjustments = manaActivationAdjustmentsGiven effects pid (ActivatedAbility.keyword =<< ability) (ActivatedAbility.name =<< ability) oid gs
       -- The COMPONENT half of CR 601.2f, applied here so every conjunct below
       -- measures the components an effect added as well as the printed ones. The
@@ -3127,7 +3138,7 @@ manaActivationsGiven effects measure pcs pid oid printedCost restrictions abilit
    in if payable
         && all (\component -> canPayComponent Map.empty pid oid component gs) (Cost.components cost)
         && jointlyPayable Map.empty pid oid (Cost.components cost) gs
-        && sicknessOkGiven (Projection.controlGrants gs) pcs pid oid cost gs
+        && sicknessOkGiven grants pcs pid oid cost gs
         -- CR 701.35a's "its activated abilities can't be activated", which reaches a
         -- mana ability too. Here rather than in Mana.manaSourcesGiven, because this
         -- is what BOTH of CR 605.3a's windows consult -- sickness's position above.
@@ -3140,7 +3151,7 @@ manaActivationsGiven effects measure pcs pid oid printedCost restrictions abilit
         -- reaching this function. A row naming NonManaAbility is therefore no
         -- answer here, which is exactly what Realmbreaker's Grasp's "unless
         -- they're mana abilities" says.
-        && not (ActivationProhibition.prohibited AbilityKind.ManaAbility printedCost oid gs)
+        && not (ActivationProhibition.prohibitedGiven pcs grants rows AbilityKind.ManaAbility printedCost oid gs)
         -- CR 602.5's player-axis prohibition (Sen Triplets), read here for
         -- detain's reason: the sentence carves no mana ability out where CR
         -- 702.61b does, so both of CR 605.3a's windows owe it. The stamp is what
@@ -3520,7 +3531,8 @@ lifeTotalOf pid gs = case Map.lookup pid (GameState.players gs) of
 canPaySomeCompletion :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PaymentSubject.PaymentSubject -> ManaSpending.ManaSpending -> PlayerId -> ObjectId -> (ManaCost.ManaCost -> [ManaCost.ManaCost]) -> (ManaCost.ManaCost -> [(ManaCost.ManaCost, [(Keyword.Substitute, Natural)])]) -> Cost Keyword.Type.Keyword -> GameState -> Bool
 canPaySomeCompletion slots subject spending pid oid total_ substitute cost gs =
   let pcs = Projection.projectAll gs
-   in canPaySomeCompletionGiven slots subject spending (supplyManaSourcesGiven (Projection.controlGrants gs) pcs pid gs) pcs pid oid total_ substitute cost gs
+      grants = Projection.controlGrants gs
+   in canPaySomeCompletionGiven slots subject spending (supplyManaSourcesGiven (manaActivationsOn grants (ActivationProhibition.gathered gs) (PlayerEffect.applying pid gs)) grants pcs pid gs) pcs pid oid total_ substitute cost gs
 
 -- CR 116.2c / 119.4: the life `pid` may pay for mana right now, off the same list
 -- at priority (Action.legalActions) and in a payment (`payManaWindowThen`).
@@ -3555,8 +3567,10 @@ payLifeForMana perform pid life manaType = do
 -- Action.legalActions' ActivateManaAbility offers are this list and nothing
 -- else. It is NOT the list a payability GATE is judged against; that one is
 -- supplyManaSourcesGiven below, and NEITHER contains the other -- see there.
-activationManaSourcesGiven :: [Projection.ControlGrant] -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> GameState -> [ObjectId]
-activationManaSourcesGiven grants pcs pid gs = Mana.manaSourcesGiven Set.empty (manaActivationsGiven (PlayerEffect.applying pid gs)) grants pcs pid gs
+--
+-- `capacity` as for supplyManaSourcesGiven below.
+activationManaSourcesGiven :: Mana.Capacity -> [Projection.ControlGrant] -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> GameState -> [ObjectId]
+activationManaSourcesGiven = Mana.manaSourcesGiven Set.empty
 
 -- The mana sources a payability GATE is judged against -- the same sweep under
 -- Mana.supplyCapacity, which is the invariant Mana.payableResolutionsGiven
@@ -3574,8 +3588,11 @@ activationManaSourcesGiven grants pcs pid gs = Mana.manaSourcesGiven Set.empty (
 --     both gates below are: every caller is gating an action CR 601.2a or CR
 --     602.2a puts on the stack BEFORE its cost is paid, which closes CR 307.5's
 --     window. Grinning Ignus in that window is an offer that is no supply.
-supplyManaSourcesGiven :: [Projection.ControlGrant] -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> GameState -> [ObjectId]
-supplyManaSourcesGiven grants pcs pid gs = Mana.manaSourcesGiven Set.empty (Mana.supplyCapacity (stackedManaActivations (PlayerEffect.applying pid gs))) grants pcs pid gs
+--
+-- `capacity` is the board's CR 605.3a capacity, `manaActivationsGiven` or the
+-- hoisted `manaActivationsOn`, which this narrows.
+supplyManaSourcesGiven :: Mana.Capacity -> [Projection.ControlGrant] -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> GameState -> Mana.Sources
+supplyManaSourcesGiven capacity = Mana.supplySourcesGiven (stackedManaActivations capacity)
 
 -- `manaActivationsGiven` narrowed to the routes a payment made AFTER its object
 -- reached the stack may take -- which is every cast (CR 601.2a) and every
@@ -3600,13 +3617,13 @@ supplyManaSourcesGiven grants pcs pid gs = Mana.manaSourcesGiven Set.empty (Mana
 -- run with the object already on the stack, so ActivationRestriction.restrictionsOk
 -- reads the real stack there and refuses the same routes. The gate and the
 -- payment agree because this function states exactly the move between them.
-stackedManaActivations :: [(RowSource, PlayerEffect.Type.PlayerEffect)] -> Mana.Capacity
-stackedManaActivations effects = midPayment (stackedAt effects)
+stackedManaActivations :: Mana.Capacity -> Mana.Capacity
+stackedManaActivations capacity = midPayment stackedAt
   where
-    stackedAt given measure pcs pid oid cost restrictions ability gs =
+    stackedAt measure pcs pid oid cost restrictions ability gs =
       if any ActivationRestriction.needsEmptyStack restrictions
         then Mana.noActivations
-        else manaActivationsGiven given measure pcs pid oid cost restrictions ability gs
+        else capacity measure pcs pid oid cost restrictions ability gs
 
 -- CR 602.5e inside CR 605.3a's payment windows: a route whose rider keeps it to
 -- the priority window (ActivationRestriction.refusedMidPayment) is no route
@@ -3622,11 +3639,12 @@ midPayment capacity measure pcs pid oid cost restrictions ability gs =
 
 -- The same question given a board the CALLER has already walked; handing the
 -- board in changes no answer. Build `sources` with supplyManaSourcesGiven
--- above and nothing else. ONLY the mana half gets the pre-walked board -- the
--- COMPONENTS are still asked through canPayComponent, whose Sacrifice,
--- TapForTotalPower and CollectEvidence arms make per-object walks of their own
--- (#6432).
-canPaySomeCompletionGiven :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PaymentSubject.PaymentSubject -> ManaSpending.ManaSpending -> [ObjectId] -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> ObjectId -> (ManaCost.ManaCost -> [ManaCost.ManaCost]) -> (ManaCost.ManaCost -> [(ManaCost.ManaCost, [(Keyword.Substitute, Natural)])]) -> Cost Keyword.Type.Keyword -> GameState -> Bool
+-- above, under `stackedManaActivations`, which both callers owe: each gates an
+-- action CR 601.2a or CR 602.2a puts on the stack before its cost is paid.
+-- ONLY the mana half gets the pre-walked board -- the COMPONENTS are still
+-- asked through canPayComponent, whose Sacrifice, TapForTotalPower and
+-- CollectEvidence arms make per-object walks of their own (#6451).
+canPaySomeCompletionGiven :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PaymentSubject.PaymentSubject -> ManaSpending.ManaSpending -> Mana.Sources -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> ObjectId -> (ManaCost.ManaCost -> [ManaCost.ManaCost]) -> (ManaCost.ManaCost -> [(ManaCost.ManaCost, [(Keyword.Substitute, Natural)])]) -> Cost Keyword.Type.Keyword -> GameState -> Bool
 canPaySomeCompletionGiven slots subject spending sources pcs pid oid total_ substitute cost gs = case Cost.mana cost of
   Nothing -> False
   Just (ManaCost.MkManaCost symbols) ->
@@ -3645,36 +3663,12 @@ canPaySomeCompletionGiven slots subject spending sources pcs pid oid total_ subs
         claimsWith extra = if null extra then claimed else claimsOf slots pid oid (componentsWith extra) gs
         ownComponentsOk = componentsPayable slots pid oid (Cost.components cost) gs
         componentsOkWith extra = if null extra then ownComponentsOk else componentsPayable slots pid oid (componentsWith extra) gs
-        -- One player-effect gather for the whole question, shared by every
-        -- source Mana.manaSuppliesGiven measures under it.
-        --
-        -- `stackedManaActivations` and NOT `manaActivationsGiven`: both callers
-        -- gate an action CR 601.2a or CR 602.2a puts on the stack before its cost
-        -- is paid. It must also MATCH what `sources` was built under
-        -- (supplyManaSourcesGiven) -- a source listed there whose every route this
-        -- capacity refuses offers nothing, and Mana.payableResolutionsGiven's
-        -- product turns one of those into no board at all.
-        --
-        -- A FENCE on this half and not proven behaviour: the source list is
-        -- narrowed the same way, so the one permanent this refuses is already off
-        -- it, and unstacking THIS capacity alone leaves the suite green. What
-        -- would observe it is a permanent with TWO mana routes, only one carrying
-        -- the rider -- a source on the free route, which this must still refuse
-        -- the ridden one of -- and the rider has to be one
-        -- ActivationRestriction.needsEmptyStack answers True for. In `data/cards/`
-        -- those two sets do not meet: Grinning Ignus, Lavinia and Synthetic Ember
-        -- Spring carry the pool's three refusable riders on a mana ability and each
-        -- has one route, while Muraganda Raceway and Phyrexian Tower have two
-        -- routes and no rider. Nimbus Maze is both and still not
-        -- it: two of its three routes carry CR 602.5's board condition, which
-        -- needsEmptyStack admits.
-        hoisted = stackedManaActivations (PlayerEffect.applying pid gs)
         payable (completed, life) =
           any
             ( any
                 ( \(residual, extra) ->
                     componentsOkWith extra
-                      && Mana.canPayCommittingGiven subject hoisted spending sources pcs pid (outside + life) outsideEnergy (claimsWith extra) residual gs
+                      && Mana.canPayCommittingGiven subject spending sources pcs pid (outside + life) outsideEnergy (claimsWith extra) residual gs
                 )
                 . substitute
             )

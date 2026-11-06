@@ -16,6 +16,7 @@ import qualified Parun.Engine.Detain as Detain
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword
 import qualified Parun.Engine.Loyalty as Loyalty
+import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.ManaAbility as ManaAbility
 import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.Plane as Plane
@@ -461,12 +462,12 @@ payableCost aimable = payableCostAt aimable 0
 payableCostAt :: [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> Natural -> Maybe Keyword -> Maybe AbilityName.AbilityName -> Maybe (Set.Set ManaType.ManaType) -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
 payableCostAt aimable x stamp named spendable pid srcId gs =
   let pcs = Projection.projectAll gs
-   in payableCostAtGiven (PlayerEffect.applying pid gs) aimable (Cost.supplyManaSourcesGiven (Projection.controlGrants gs) pcs pid gs) pcs x stamp named spendable pid srcId gs
+   in payableCostAtGiven (PlayerEffect.applying pid gs) aimable (Cost.supplyManaSourcesGiven (Cost.manaActivationsGiven (PlayerEffect.applying pid gs)) (Projection.controlGrants gs) pcs pid gs) pcs x stamp named spendable pid srcId gs
 
 -- The same predicate on a board the caller already walked -- see
 -- Cost.canPaySomeCompletionGiven. `effects` MUST be `PlayerEffect.applying pid
 -- gs`'s own answer, which a per-ability loop takes once.
-payableCostAtGiven :: [(RowSource, PlayerEffect.Type.PlayerEffect)] -> [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> [ObjectId] -> Map.Map ObjectId PC.ProjectedCharacteristics -> Natural -> Maybe Keyword -> Maybe AbilityName.AbilityName -> Maybe (Set.Set ManaType.ManaType) -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
+payableCostAtGiven :: [(RowSource, PlayerEffect.Type.PlayerEffect)] -> [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> Mana.Sources -> Map.Map ObjectId PC.ProjectedCharacteristics -> Natural -> Maybe Keyword -> Maybe AbilityName.AbilityName -> Maybe (Set.Set ManaType.ManaType) -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
 payableCostAtGiven effects aimable sources pcs x stamp named spendable pid srcId gs cost =
   aimingSomewhere effects (\adjustments -> Cost.plusComponents adjustments (Cost.substituteX x cost)) aimable stamp named (Loyalty.loyaltyKindOf cost) pid srcId gs (\slots adjustments -> let totalled = Cost.plusComponents adjustments (Cost.substituteX x cost) in Cost.canPaySomeCompletionGiven slots (PaymentSubject.Activating srcId stamp spendable) ManaSpending.AsProduced sources pcs pid srcId (Cost.totalManas adjustments) (Cost.waterbendSubstitutions (Cost.Type.components totalled) slots pid srcId gs) totalled gs)
 
@@ -674,9 +675,9 @@ costsFor pid ability gs =
 activatable :: PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> Bool
 activatable pid srcId ability gs =
   let board = Snapshot.onDemand gs
-   in activatableGiven (Target.poolsOf board gs) (Cost.supplyManaSourcesGiven (Snapshot.grants board) (Snapshot.projected board) pid gs) pid srcId ability gs
+   in activatableGiven (Target.poolsOf board gs) (Cost.supplyManaSourcesGiven (Cost.manaActivationsGiven (PlayerEffect.applying pid gs)) (Snapshot.grants board) (Snapshot.projected board) pid gs) pid srcId ability gs
 
-activatableGiven :: Target.Pools -> [ObjectId] -> PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> Bool
+activatableGiven :: Target.Pools -> Mana.Sources -> PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> Bool
 activatableGiven pools sources pid srcId ability gs =
   let Snapshot.MkSnapshot pcs grants = Target.board pools
       modal = ActivatedAbility.modal ability

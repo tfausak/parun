@@ -2695,14 +2695,14 @@ demandsNoManaSpec s registry = Spec.describe s "a cost demanding no mana" $ do
     let (elfId, g1) = S.addPermanent elves S.alice (Setup.emptyGame S.bothPlayers)
         gs = Foldable.foldl' (\board printing -> snd (S.addPermanent printing S.alice board)) g1 ([ogre, ogre, drum, altar, star] <> replicate 3 elves)
         pcs = Projection.projectAll gs
-        sources = Mana.manaSourcesGiven Set.empty (Mana.supplyCapacity Cost.manaActivations) (Projection.controlGrants gs) pcs S.alice gs
+        sources = Mana.supplySourcesGiven Cost.manaActivations (Projection.controlGrants gs) pcs S.alice gs
         tapping = Claim.Type.MkClaim {Claim.Type.axis = ClaimAxis.Tapping, Claim.Type.pool = Set.singleton elfId, Claim.Type.count = 1, Claim.Type.threshold = Nothing}
         ask life energy claims symbols =
           let cost = ManaCost.MkManaCost symbols
-           in ( Mana.canPayCommittingGiven PaymentSubject.ForNeither Cost.manaActivations ManaSpending.AsProduced sources pcs S.alice life energy claims cost gs,
-                not (null (Mana.payableResolutionsGiven PaymentSubject.ForNeither Cost.manaActivations ManaSpending.AsProduced sources pcs S.alice life energy claims cost gs))
+           in ( Mana.canPayCommittingGiven PaymentSubject.ForNeither ManaSpending.AsProduced sources pcs S.alice life energy claims cost gs,
+                not (null (Mana.payableResolutionsGiven PaymentSubject.ForNeither ManaSpending.AsProduced sources pcs S.alice life energy claims cost gs))
               )
-    Spec.assertBool s (not (null sources)) "the board offers sources for the walk to take"
+    Spec.assertBool s (not (null (Mana.sourceIds sources))) "the board offers sources for the walk to take"
     Spec.assertEqWith s "nothing committed pays" (ask 0 0 [] []) (True, True)
     Spec.assertEqWith s "and so does a {0}" (ask 0 0 [] [ManaSymbol.Generic 0]) (True, True)
     Spec.assertEqWith s "CR 119.4 twenty life pays at twenty" (ask 20 0 [] []) (True, True)

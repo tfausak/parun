@@ -315,10 +315,10 @@ legalActions pid gs =
       -- whole chain -- until measuring bytes was judged too compiler-specific
       -- to keep. A regression here fails nothing (gap #578).
       --
-      -- Not implemented: an O(1) per-permanent non-mana path. A cost with
-      -- mana, or one sacrificing or tapping other permanents, is still O(N) per
-      -- permanent, and so are the whole legal sets a mode whose slots read each
-      -- other builds (#6432).
+      -- Not implemented: an O(1) per-permanent non-mana path. A cost
+      -- sacrificing or tapping other permanents is still O(N) per permanent, so
+      -- is each source's supply measure under a cost with mana, and so are the
+      -- whole legal sets a mode whose slots read each other builds (#6451).
       grants = Projection.controlGrants gs
       pcs = Projection.projectAll gs
       -- ONE mana-source sweep of each kind for the whole enumeration. Each is a
@@ -340,8 +340,15 @@ legalActions pid gs =
       -- taking the offer list would drop the demand-carrying options
       -- Mana.payableResolutionsGiven weighs and count a source its own payment
       -- could not reach.
-      manaSources = Cost.activationManaSourcesGiven grants pcs pid gs
-      supplySources = Cost.supplyManaSourcesGiven grants pcs pid gs
+      --
+      -- Both sweeps measure every source under ONE capacity, which takes the
+      -- player rows and the CR 602.5 prohibition rows out of `pools` rather
+      -- than walking the board per source (#6432). The supply sweep carries
+      -- each source's supplies with it (Mana.Sources), measured once for every
+      -- ability whose cost has mana.
+      capacity = Cost.manaActivationsOn grants (Target.activationProhibitionRows pools) (Target.playerRowsOf pools pid gs)
+      manaSources = Cost.activationManaSourcesGiven capacity grants pcs pid gs
+      supplySources = Cost.supplyManaSourcesGiven capacity grants pcs pid gs
       -- ONE set of base target pools for the whole enumeration, for the same
       -- reason: CR 115's candidate set for a Pool is a function of `gs` alone
       -- (Target.Pools), so building one per slot per ability walked the

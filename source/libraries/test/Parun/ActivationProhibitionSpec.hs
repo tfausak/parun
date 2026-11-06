@@ -89,6 +89,7 @@ spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "ActivationProhibition" $ do
   arrestSpec s registry
   manaAbilitySpec s registry
+  supplySpec s registry
   unenchantedSpec s registry
   storedSpec s registry
 
@@ -125,6 +126,25 @@ manaAbilitySpec s registry = Spec.describe s "ManaAbility" $ do
       "both Elves are still mana sources"
       (Set.fromList (activatableIds (Action.legalActions S.bob gs)))
       (Set.fromList [victim, twin])
+
+-- The same window read as a SUPPLY rather than an offer: Carrion Ants' "{1}:
+-- Carrion Ants gets +1/+1 until end of turn", with one Llanowar Elves to pay
+-- it. Arrest on the Elves leaves the Ants' {1} unpayable (CR 118.3), and the
+-- paired board without the Aura pays it. Action.legalActions measures every
+-- source once for the whole enumeration (Mana.Sources), so this is what holds
+-- that hoisted capacity to CR 101.2's prohibition.
+supplySpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+supplySpec s registry = Spec.describe s "Supply" $ do
+  Spec.it s "CR 605.3a/118.3 whole cards: an Arrested Llanowar Elves pays no Carrion Ants' {1}, and without Arrest it does" $ do
+    ants <- S.printingOf s registry "Carrion Ants"
+    elves <- S.printingOf s registry "Llanowar Elves"
+    arrest <- S.printingOf s registry "Arrest"
+    let (antsId, g1) = S.addPermanent ants S.bob (Setup.emptyGame S.bothPlayers)
+        (elfId, g2) = S.addPermanent elves S.bob g1
+        (arrestId, g3) = S.addPermanent arrest S.alice g2
+        offered gs = elem antsId (activatableIds (Action.legalActions S.bob gs))
+    Spec.assertBool s (offered g2) "the untouched Elves pays the Ants' {1}"
+    Spec.assertBool s (not (offered (S.attach arrestId elfId g3))) "and the Arrested one pays nothing"
 
 -- The controls: with no Aura on the board both twins act, so nothing above can
 -- be passing because bob could never have activated anything.
