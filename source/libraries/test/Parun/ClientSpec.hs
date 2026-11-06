@@ -28,6 +28,7 @@ import qualified Parun.Engine.Game as Game.Engine
 import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.PlayerView as PlayerView
 import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Engine.Replay as Replay
 import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
@@ -145,7 +146,7 @@ spec s registry = Spec.describe s "Client" $ do
     bears <- S.printingOf s registry "Grizzly Bears"
     let (board, _) = S.handOne bears (List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) gs lands)
         turn = GameState.turnNumber board
-        seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 (castsOnce "Grizzly Bears")) (const (Right Nothing)))) Bot.bot
+        seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 (castsOnce "Grizzly Bears")) (const (Right Nothing)))) botOrDefault
         run = Driver.drive [] seats 40 (pure . (> turn) . GameState.turnNumber) board
         (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
         -- Since alice last answered: the auto payment ends her questions.
@@ -179,7 +180,7 @@ spec s registry = Spec.describe s "Client" $ do
     let board = snd (S.addHandCard giant S.alice gs)
         turn = GameState.turnNumber board
         person = Game.human (screen 200 discardsGiant) (const (Right Nothing))
-        seats = Driver.bySeat (Map.fromList [(S.alice, person), (S.bob, person)]) Bot.bot
+        seats = Driver.bySeat (Map.fromList [(S.alice, person), (S.bob, person)]) botOrDefault
         run = Driver.drive [] seats 200 (pure . (> turn + 1) . GameState.turnNumber) board
         shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank))
         discarding = Text.isPrefixOf (Text.pack "Choose 1 card to discard")
@@ -199,7 +200,7 @@ spec s registry = Spec.describe s "Client" $ do
     let stock pid n g = List.foldl' (\g' _ -> snd (S.addLibraryCard mountain pid g')) g (replicate n ())
         board = (snd (S.addHandCard shahrazad S.alice (S.landsFor plains S.alice 2 (stock S.bob 8 (stock S.alice 9 (Setup.emptyGame (S.alice NonEmpty.:| [S.bob]))))))) {GameState.turnNumber = 3}
         person = Game.human (screen 400 (castsOnce "Shahrazad")) (const (Right Nothing))
-        seats = Driver.bySeat (Map.fromList [(S.alice, person), (S.bob, person)]) Bot.bot
+        seats = Driver.bySeat (Map.fromList [(S.alice, person), (S.bob, person)]) botOrDefault
         run = Driver.drive [] seats 40 (pure . (> 3) . GameState.turnNumber) board
         (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
         shown = reverse (written sc)
@@ -219,7 +220,7 @@ spec s registry = Spec.describe s "Client" $ do
     mountains <- mapM (S.printingOf s registry) ["Mountain", "Mountain", "Mountain", "Mountain"]
     let board = List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) gs (mindslaver : mountains)
         turn = GameState.turnNumber board
-        seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 slavesBob) (const (Right Nothing)))) Bot.bot
+        seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 slavesBob) (const (Right Nothing)))) botOrDefault
         run = Driver.drive [] seats 200 (pure . (> turn) . GameState.turnNumber) board
         shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice, Hotseat.autoPass = False})) blank))
         stacks = filter (Text.isPrefixOf (Text.pack "Stack, top first: "))
@@ -239,7 +240,7 @@ spec s registry = Spec.describe s "Client" $ do
     let (giantId, withGiant) = S.addPermanent giant S.bob gs
         board = snd (S.addHandCard auction S.alice (List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) withGiant mountains))
         person = Game.human (screen 400 bids) (const (Right Nothing))
-        seats = Driver.bySeat (Map.fromList [(S.alice, person), (S.bob, person)]) Bot.bot
+        seats = Driver.bySeat (Map.fromList [(S.alice, person), (S.bob, person)]) botOrDefault
         run = Driver.drive [] seats 400 (pure . (== Just S.alice) . Projection.controllerOf giantId) board
         (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
         shown = reverse (written sc)
@@ -257,7 +258,7 @@ spec s registry = Spec.describe s "Client" $ do
     let board = snd (S.addHandCard giant S.alice (List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) gs (mindslaver : mountains)))
         turn = GameState.turnNumber board
         person = Game.human (screen 400 slavesBob) (const (Right Nothing))
-        seats = Driver.bySeat (Map.fromList [(S.alice, person), (S.bob, person)]) Bot.bot
+        seats = Driver.bySeat (Map.fromList [(S.alice, person), (S.bob, person)]) botOrDefault
         run = Driver.drive [] seats 400 (pure . (> turn + 3) . GameState.turnNumber) board
         shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank))
         facingBob = facedBy (Text.pack "Pass to Player 2") shown
@@ -648,10 +649,15 @@ screen budget typist =
       Terminal.clear = State.modify' (\sc -> sc {written = Text.pack "<clear>" : written sc})
     }
 
+-- The bot for each seat no person holds; every other prompt gets its default
+-- answer.
+botOrDefault :: (Monad m) => Answerer.Answerer (Asked.Asked GameState.GameState) (State.StateT SplitMix.SplitMix m)
+botOrDefault = Driver.seated Bot.bot (Answerer.MkAnswerer (pure . Replay.defaultAnswer . Asked.prompt))
+
 -- Alice at the terminal, the bot as bob.
 against :: (Screen -> Maybe Text.Text) -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), [Text.Text])
 against typist matchup =
-  let seats = Map.fromList [(S.alice, Game.human (screen 3000 typist) (const (Right Nothing))), (S.bob, Bot.bot)]
+  let seats = Map.fromList [(S.alice, Game.human (screen 3000 typist) (const (Right Nothing))), (S.bob, Game.bot)]
       (outcome, sc) = State.runState (Game.run [] seats Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) Map.empty matchup) blank
    in (outcome, reverse (written sc))
 
@@ -731,7 +737,7 @@ autoCast s registry spell names = do
       (lands, withLands) = List.foldl' place ([], gs) printings
       board = snd (S.addHandCard card S.alice withLands)
       bears = S.countOnBattlefieldByName (CardName.MkCardName (Text.pack spell)) S.alice
-      seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 (castsOnce spell)) (const (Right Nothing)))) Bot.bot
+      seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 (castsOnce spell)) (const (Right Nothing)))) botOrDefault
       run = Driver.drive [] seats 20 (pure . (> bears board) . bears) board
       (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
       -- A game that stopped is read as the board it started from.

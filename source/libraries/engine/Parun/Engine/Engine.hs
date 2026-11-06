@@ -150,10 +150,10 @@ import qualified Parun.Types.Zone as Zone
 -- The PRIMITIVE form, and the only one that sees which game asked -- an Asked
 -- carries the asking game's state and the games it is nested inside (CR 729.1a),
 -- which CR 723.4's visibility split needs.
-runGameAsked :: (Monad m) => (forall r. Asked.Asked r -> m r) -> GameState -> Game a -> m (a, GameState)
+runGameAsked :: (Monad m) => (forall r. Asked.Asked GameState.GameState r -> m r) -> GameState -> Game a -> m (a, GameState)
 runGameAsked answer gs game = Program.foldProgramM answer (State.runStateT game gs)
 
-runGameAskedPure :: (forall r. Asked.Asked r -> r) -> GameState -> Game a -> (a, GameState)
+runGameAskedPure :: (forall r. Asked.Asked GameState.GameState r -> r) -> GameState -> Game a -> (a, GameState)
 runGameAskedPure answer gs game = Program.foldProgram answer (State.runStateT game gs)
 
 -- The seam for an answerer that does not care which game it is in.

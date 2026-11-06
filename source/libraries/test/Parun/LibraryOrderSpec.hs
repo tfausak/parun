@@ -590,7 +590,7 @@ runScry answer ballId gs = case Activatable.abilitiesFor ballId gs of
 -- Eager Construct's answerer: every seat takes the may and bottoms what it
 -- looked at, and each ChooseScry logs its seat with every library as the ASKING
 -- game held it.
-constructAnswer :: Asked.Asked r -> State.State [(PlayerId.PlayerId, [[ObjectId.ObjectId]])] r
+constructAnswer :: Asked.Asked GameState.GameState r -> State.State [(PlayerId.PlayerId, [[ObjectId.ObjectId]])] r
 constructAnswer a = case Asked.prompt a of
   Prompt.ChooseOptional {} -> pure OptionalDecision.Exercises
   Prompt.ChooseScry _ pid looked -> do

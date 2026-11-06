@@ -20,6 +20,7 @@ import qualified Parun.Play.Client as Client
 import qualified Parun.Play.Protocol as Protocol
 import qualified Parun.Play.SplitMix as SplitMix.Play
 import qualified Parun.Types.Answerer as Answerer
+import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.Deck as Deck
@@ -38,18 +39,23 @@ import qualified Parun.Types.Terminal as Terminal
 type Play m = State.StateT SplitMix.SplitMix (Client.Client m)
 
 -- | A person at the terminal, reading cards' printed text from the card data.
-human :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> Answerer.Answerer (Play m)
+human :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> Answerer.Answerer (Asked.Asked GameState.GameState) (Play m)
 human terminal lookUp = Protocol.over (Trans.lift . Client.respond terminal lookUp) Chance.chance
+
+-- | The random bot, answering each prompt from its seat's view of the game
+-- (Driver.seated); chance answers the rest.
+bot :: (Monad m) => Answerer.Answerer (Asked.Asked GameState.GameState) (Play m)
+bot = Driver.seated Bot.bot Chance.chance
 
 -- | A program speaking the protocol: each request line out, its reply line
 -- back, Nothing at the end of input.
-wired :: (Monad m) => (Text.Text -> m (Maybe Text.Text)) -> Answerer.Answerer (Play m)
+wired :: (Monad m) => (Text.Text -> m (Maybe Text.Text)) -> Answerer.Answerer (Asked.Asked GameState.GameState) (Play m)
 wired exchange = Protocol.over (\line -> Trans.lift (Client.lift2 (exchange line) >>= maybe (Client.stop (Text.pack "end of input")) pure)) Chance.chance
 
 -- | A plain two-player game, from setup to its result; the head of the
 -- matchup plays first, and each seat starts at its graveyard order in
 -- `orders` (Driver.match). Left is why play stopped before the end.
-run :: (Monad m) => [Observer.Observer (Play m)] -> Map.Map PlayerId.PlayerId (Answerer.Answerer (Play m)) -> Hotseat.Hotseat -> SplitMix.SplitMix -> Map.Map PlayerId.PlayerId GraveyardOrder.GraveyardOrder -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> m (Either Text.Text (Result.Result, GameState.GameState))
+run :: (Monad m) => [Observer.Observer (Play m)] -> Map.Map PlayerId.PlayerId (Answerer.Answerer (Asked.Asked GameState.GameState) (Play m)) -> Hotseat.Hotseat -> SplitMix.SplitMix -> Map.Map PlayerId.PlayerId GraveyardOrder.GraveyardOrder -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> m (Either Text.Text (Result.Result, GameState.GameState))
 run observers seats hotseat generator orders matchup =
   Except.runExceptT (State.evalStateT (State.evalStateT (Driver.match observers (Driver.bySeat seats Chance.chance) GameSettings.plain orders matchup) generator) hotseat)
 

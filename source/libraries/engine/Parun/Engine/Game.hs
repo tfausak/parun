@@ -230,8 +230,9 @@ beingCast gs candidate = case lookupObject candidate gs of
 -- characteristics. Asked of the zone too, so a card that leaves the hand
 -- leaves the mark behind with its old id (CR 400.7).
 --
--- Parun.Engine.Visibility.sees answers CR 708.5's who-may-look. Not
--- implemented: a prompt still names the card to its owner (#5418).
+-- Parun.Engine.Visibility.sees answers CR 708.5's who-may-look. A prompt names
+-- the card by id alone, and its owner's view shows it only as sees allows
+-- (Parun.Engine.Driver.seated).
 keptFaceDown :: ObjectId -> GameState -> Bool
 keptFaceDown oid gs =
   maybe False (Map.member oid) (GameState.keptFaceDown gs)
@@ -1657,8 +1658,8 @@ halvesOf = faceUpCopiable halvesCardOf
 --
 -- The object still HAS its card (Object.source), and faceUpFaceOf below is how
 -- CR 702.37e reads the morph cost off it. Parun.Engine.Visibility.sees answers
--- CR 708.5's who-may-look. Not implemented: an answerer is still handed the
--- printing, which nothing hides from a reader that goes looking (#5418).
+-- CR 708.5's who-may-look, and a seat's answerer gets the printing only
+-- through that (Parun.Engine.Driver.seated).
 faceOf :: ObjectId -> GameState -> Maybe (Face Card)
 faceOf oid gs = faceOfObject gs =<< lookupLayerOne oid gs
 
