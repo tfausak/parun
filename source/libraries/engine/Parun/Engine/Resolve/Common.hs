@@ -729,7 +729,8 @@ askedChooser resolving source controller legal ref = do
 -- they take CR 701.3c's stamps in APNAP order, each seat choosing its own, asked
 -- before the fold that mints them, as turnPermanentsOver asks -- and only of the
 -- movers the move will restamp, since Event.attach refuses the rest (CR 701.3b).
--- No board observes the order (gap #4214).
+-- data/scenarios/restamp's "orders Auras attached together" pair (Glamer
+-- Spinners) proves the order.
 attachTogether :: [ObjectId] -> Recipient -> Game ()
 attachTogether movers recipient = do
   gs <- State.get

@@ -108,8 +108,9 @@ orderFor pid start arrivals = case arrivals of
 -- Proved by Parun.RestampSpec's Replenish boards (Humility and Opalescence), on
 -- Parun.Engine.Resolve's MoveToZone road, and its Rite of Replication board on
 -- the token road, which Event.together settles for Effect.CreateCopy.
--- Parun.Engine.MoveDuration.returnDue reaches it too, and no board observes
--- that (gap #4214).
+-- Parun.Engine.MoveDuration.returnDue reaches it through
+-- Event.changeZonesTogether, proved by data/scenarios/restamp's "orders
+-- permanents returning together" pair (Glorious Protector).
 --
 -- Inside a CR 608.2f action (Event.together) the batch is only noted, and the
 -- action's whole batch is settled once as it ends: everything it put onto the

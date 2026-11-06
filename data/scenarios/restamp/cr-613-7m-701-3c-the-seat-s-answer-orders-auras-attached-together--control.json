@@ -1,0 +1,176 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "p1"
+          },
+          {
+            "card": "Plains",
+            "label": "p2"
+          },
+          {
+            "card": "Plains",
+            "label": "p3"
+          },
+          {
+            "card": "Plains",
+            "label": "p4"
+          },
+          {
+            "card": "Plains",
+            "label": "p5"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "host"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          },
+          {
+            "attached": "host",
+            "card": "Kenrith's Transformation",
+            "label": "kenrith"
+          },
+          {
+            "attached": "host",
+            "card": "Eaten by Piranhas",
+            "label": "piranhas"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Glamer Spinners",
+            "label": "spinners"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 613.7m 701.3c the seat's answer orders Auras attached together (control)",
+  "note": "The other answer to the same board: alice stamps Kenrith's Transformation later, and the Bears are a 3/3 Elk.",
+  "timeline": [
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "$bears",
+          "power": 2,
+          "toughness": 2
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$p1",
+            "$p2",
+            "$p3",
+            "$p4",
+            "$p5"
+          ],
+          "object": "$spinners"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseTargets": {
+          "target": [
+            "$host"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChoosePermanent",
+          "with": "$bears"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "OrderTimestamps": [
+          "$piranhas",
+          "$kenrith"
+        ]
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "$bears",
+          "power": 3,
+          "toughness": 3
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Subtypes": {
+          "object": "$bears",
+          "subtypes": [
+            "Elk"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "$bears",
+          "object": "$piranhas",
+          "of": "AttachedTo"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
