@@ -1,12 +1,8 @@
 {
-  "description": "CR 113.6e / 613.1f: a Serra Avenger that perpetually lost all abilities to Patriar's Humiliation, bounced, is cast on its caster's first turn",
-  "note": "The loss follows the card to the hand, where its casting restriction would otherwise function. The control humiliates a Grizzly Bears instead.",
   "board": {
     "active": "alice",
-    "step": "PrecombatMain",
     "seats": [
       {
-        "name": "alice",
         "battlefield": [
           {
             "card": "Plains",
@@ -49,10 +45,10 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "alice"
       },
       {
-        "name": "bob",
         "library": [
           {
             "card": "Island"
@@ -63,120 +59,124 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "bob"
       }
-    ]
+    ],
+    "step": "PrecombatMain"
   },
+  "description": "CR 113.6e / 613.1f: a Serra Avenger that perpetually lost all abilities to Patriar's Humiliation, bounced, is cast on its caster's first turn",
+  "note": "The loss follows the card to the hand, where its casting restriction would otherwise function. The control humiliates a Grizzly Bears instead.",
   "timeline": [
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Cast": {
-          "object": "$humiliation",
-          "targets": [
-            "$avenger"
-          ],
           "mana": [
             "$p1",
             null
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": "Pass"
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "bob",
-      "do": "Pass"
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "Cast": {
-          "object": "$unsummon",
+          ],
+          "object": "$humiliation",
           "targets": [
             "$avenger"
-          ],
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
           "mana": [
             "$i1",
             null
+          ],
+          "object": "$unsummon",
+          "targets": [
+            "$avenger"
           ]
         }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
+      },
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
+      "do": "Pass",
+      "player": "alice",
       "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
       "player": "bob",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Count": {
-          "player": "alice",
-          "zone": "Hand",
           "card": "Serra Avenger",
-          "count": 1
+          "count": 1,
+          "player": "alice",
+          "zone": "Hand"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Cast": {
-          "object": "Serra Avenger",
           "mana": [
             "$p2",
             "$p3"
-          ]
+          ],
+          "object": "Serra Avenger"
         }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
+      },
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
+      "do": "Pass",
+      "player": "alice",
       "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
       "player": "bob",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Count": {
-          "player": "alice",
-          "zone": "Battlefield",
           "card": "Serra Avenger",
-          "count": 1
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     }
   ]
 }
