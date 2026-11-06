@@ -244,6 +244,8 @@ library codec
     Parun.Codec.AttackerUnblockedSpec
     Parun.Codec.AttackingPlayers
     Parun.Codec.AttackingPlayersSpec
+    Parun.Codec.AttackLimitScope
+    Parun.Codec.AttackLimitScopeSpec
     Parun.Codec.AttackLimitUnless
     Parun.Codec.AttackLimitUnlessSpec
     Parun.Codec.AttackOption
@@ -1551,6 +1553,7 @@ library codec
     Parun.Codec.SuperlativeSpec
     Parun.Codec.Supertype
     Parun.Codec.SupertypeSpec
+    Parun.Codec.Surveil
     Parun.Codec.Suspend
     Parun.Codec.SuspendCounters
     Parun.Codec.SuspendCountersSpec
@@ -2549,6 +2552,7 @@ library types
     Parun.Types.AttackerTrigger
     Parun.Types.AttackerUnblocked
     Parun.Types.AttackingPlayers
+    Parun.Types.AttackLimitScope
     Parun.Types.AttackLimitUnless
     Parun.Types.AttackOption
     Parun.Types.AttackPermission
@@ -3303,6 +3307,7 @@ library types
     Parun.Types.SubtypesAre
     Parun.Types.Superlative
     Parun.Types.Supertype
+    Parun.Types.Surveil
     Parun.Types.Suspend
     Parun.Types.SuspendCounters
     Parun.Types.TakeExtraTurn

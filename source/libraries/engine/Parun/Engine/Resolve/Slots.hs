@@ -262,6 +262,7 @@ import qualified Parun.Types.Source as Source
 import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.StaticRead as StaticRead
+import qualified Parun.Types.Surveil as Surveil
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TargetSlot as TargetSlot
@@ -1021,7 +1022,7 @@ effectPlayerRefs effect = case effect of
   Effect.LookAt (LookAt.MkLookAt _ _ looker) -> [looker]
   Effect.Guess guess -> [Guess.guesser guess]
   Effect.Scry (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
-  Effect.Surveil (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
+  Effect.Surveil (Surveil.MkSurveil ref _ _) -> [ref]
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
   Effect.Clash {} -> []
   Effect.AsYouCascade {} -> []
@@ -1394,7 +1395,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- proposition's.
   Effect.Guess guess -> filterSlotsOf (Guess.proposition guess)
   Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
-  Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
+  Effect.Surveil (Surveil.MkSurveil _ quantity _) -> quantitySlots quantity
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
   Effect.Clash {} -> Map.empty
   Effect.AsYouCascade {} -> Map.empty
@@ -2241,7 +2242,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.LookAt {} -> True
   Effect.Guess {} -> True
   Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
-  Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
+  Effect.Surveil (Surveil.MkSurveil _ quantity _) -> Quantity.slotsAreExhaustive quantity
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
   Effect.Clash {} -> True
   Effect.AsYouCascade {} -> True
@@ -2544,7 +2545,7 @@ hasRead wanted =
         Effect.LookAt {} -> False
         Effect.Guess {} -> False
         Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.hasRead wanted quantity
-        Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.hasRead wanted quantity
+        Effect.Surveil (Surveil.MkSurveil _ quantity _) -> Quantity.hasRead wanted quantity
         Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.hasRead wanted quantity
         Effect.Clash {} -> False
         Effect.AsYouCascade {} -> False
@@ -2752,7 +2753,8 @@ boundSlots effect = case effect of
   Effect.LookAt (LookAt.MkLookAt _ slot _) -> Set.singleton slot
   Effect.Guess guess -> Set.fromList [Guess.slot guess, Guess.right guess]
   Effect.Scry {} -> Set.empty
-  Effect.Surveil {} -> Set.empty
+  -- Mill's reason: the incarnations the graveyard moves minted (CR 400.7).
+  Effect.Surveil (Surveil.MkSurveil _ _ mSlot) -> foldMap Set.singleton mSlot
   Effect.Fateseal {} -> Set.empty
   Effect.Clash slot -> Set.singleton slot
   Effect.AsYouCascade {} -> Set.empty

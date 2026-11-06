@@ -4159,6 +4159,9 @@ filterReads f = case f of
   -- CR 718.2a: a copiable value, which only layer 1 writes and no Aspect names,
   -- HasName's reason.
   Filter.Type.IsPrototyped -> Set.empty
+  -- CR 722.3c / 109.3: how a spell was cast is no characteristic, WasCastFrom's
+  -- reason.
+  Filter.Type.IsPreparedSpell -> Set.empty
   -- Reads nothing: CR 701.54b keeps the ring-bearer designation off the copiable
   -- values, so no Modification writes Object.ringBearerFor.
   Filter.Type.IsRingBearer -> Set.empty
@@ -4347,6 +4350,7 @@ filterReadsPeers f = case f of
   Filter.Type.TagWasSpent _ -> False
   Filter.Type.Paid _ -> False
   Filter.Type.IsPrototyped -> False
+  Filter.Type.IsPreparedSpell -> False
   Filter.Type.IsRingBearer -> False
   Filter.Type.IsPaired -> False
   Filter.Type.IsPairedWithSource -> False
@@ -4695,6 +4699,8 @@ aggregationReads a = case a of
   -- measureReads' reason: no Modification writes a mana cost.
   Aggregation.Distinct DistinctOf.ManaValues -> Set.empty
   Aggregation.Distinct DistinctOf.ManaCosts -> Set.empty
+  Aggregation.Distinct DistinctOf.Powers -> Set.singleton PowerA
+  Aggregation.Distinct DistinctOf.PlaneswalkerTypes -> Set.singleton Subtypes
   Aggregation.MostSharing trait -> traitReads trait
   -- CR 201.1's names have no Aspect, HasName's reason in filterReads.
   Aggregation.DistinctNames -> Set.empty

@@ -285,6 +285,7 @@ import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Parun.Types.StaticAbility as StaticAbility
 import qualified Parun.Types.Subtype as Subtype.Type
+import qualified Parun.Types.Surveil as Surveil
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TapForMana as TapForMana
@@ -599,6 +600,7 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.CantBeTargetedBy scope quality -> PlayerEffect.CantBeTargetedBy scope (fmap (Filter.rewrite pairs) quality)
   PlayerEffect.CantSearchLibraries _ -> effect
   PlayerEffect.CantBecomeMonarch -> effect
+  PlayerEffect.LegendRuleDoesntApply -> effect
   PlayerEffect.CantSetSchemesInMotion -> effect
   PlayerEffect.EntriesTrigger e -> PlayerEffect.EntriesTrigger e {EntriesTrigger.entrants = Filter.rewrite pairs (EntriesTrigger.entrants e)}
   PlayerEffect.AdditionalTriggers bearers -> PlayerEffect.AdditionalTriggers (Filter.rewrite pairs bearers)
@@ -795,7 +797,7 @@ rewriteEffect pairs effect = case effect of
   Effect.Reveal (Reveal.MkReveal ref slot) -> Effect.Reveal (Reveal.MkReveal (rewriteObjectRef pairs ref) slot)
   Effect.LookAt (LookAt.MkLookAt ref slot looker) -> Effect.LookAt (LookAt.MkLookAt (rewriteObjectRef pairs ref) slot looker)
   Effect.Scry x -> Effect.Scry (rewritePlayerQuantity pairs x)
-  Effect.Surveil x -> Effect.Surveil (rewritePlayerQuantity pairs x)
+  Effect.Surveil x -> Effect.Surveil x {Surveil.quantity = rewriteQuantity pairs (Surveil.quantity x)}
   Effect.Fateseal x -> Effect.Fateseal (rewritePlayerQuantity pairs x)
   Effect.Clash {} -> effect
   Effect.AsYouCascade {} -> effect

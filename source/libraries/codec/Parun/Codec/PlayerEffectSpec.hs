@@ -377,6 +377,13 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       PlayerEffect.CantBecomeMonarch
       " {\"type\":\"CantBecomeMonarch\"} "
+  -- CR 704.5j / Hall of Echoes.
+  Spec.it s "LegendRuleDoesntApply" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      PlayerEffect.LegendRuleDoesntApply
+      " {\"type\":\"LegendRuleDoesntApply\"} "
   -- CR 701.32 / All in Good Time.
   Spec.it s "CantSetSchemesInMotion" $
     Common.assertCodec

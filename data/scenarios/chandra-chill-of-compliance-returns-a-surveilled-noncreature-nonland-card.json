@@ -1,0 +1,54 @@
+{
+  "description": "CR 701.25a / 608.2c Chandra, Chill of Compliance's +1 returns a surveilled noncreature, nonland card to hand and leaves a creature or a land in the graveyard",
+  "note": "Each player's Chandra bins one card: alice's Lightning Bolt comes back, bob's Grizzly Bears and alice's later Forest stay. The card each surveil looks at is placed below the card that turn's draw takes.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Chandra, Chill of Compliance", "label": "chandra", "counters": [{"key": {"type": "Loyalty"}, "value": 3}]}
+        ],
+        "library": [
+          {"card": "Lightning Bolt", "label": "bolt"},
+          {"card": "Island"},
+          {"card": "Forest", "label": "forest"},
+          {"card": "Island"},
+          {"card": "Island"},
+          {"card": "Island"}
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {"card": "Chandra, Chill of Compliance", "label": "bobchandra", "counters": [{"key": {"type": "Loyalty"}, "value": 3}]}
+        ],
+        "library": [
+          {"card": "Island"},
+          {"card": "Grizzly Bears", "label": "bears"},
+          {"card": "Island"},
+          {"card": "Island"},
+          {"card": "Island"}
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$chandra", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseSurveil", "with": [["$bolt"], []]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Lightning Bolt", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Lightning Bolt", "count": 0}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Activate": {"object": "$bobchandra", "ability": 0}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Answer": {"prompt": "ChooseSurveil", "with": [["$bears"], []]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Grizzly Bears", "count": 0}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$chandra", "ability": 0}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseSurveil", "with": [["$forest"], []]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Forest", "count": 1}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Forest", "count": 0}}}
+  ]
+}

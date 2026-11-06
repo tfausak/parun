@@ -569,6 +569,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.TagWasSpent _ -> predicate
         Filter.Type.Paid _ -> predicate
         Filter.Type.IsPrototyped -> predicate
+        Filter.Type.IsPreparedSpell -> predicate
 
 -- A baked answer as a Filter. `And []` is the trivial predicate by
 -- Parun.Types.Filter's own note, so its negation is the trivially false one --
@@ -644,6 +645,9 @@ aggregate quantityOf aggregation members = case aggregation of
   Aggregation.Distinct DistinctOf.ManaValues -> Just (toInteger (Set.size (Set.fromList (Maybe.mapMaybe (Filter.manaValue . snd) members))))
   -- CR 202.1b: a member with no mana cost adds nothing; {0} is a cost.
   Aggregation.Distinct DistinctOf.ManaCosts -> Just (toInteger (Set.size (Set.fromList (Maybe.mapMaybe (fmap manaCostKey . Filter.manaCost . snd) members))))
+  Aggregation.Distinct DistinctOf.Powers -> Just (toInteger (Set.size (Set.fromList (Maybe.mapMaybe (Filter.power . snd) members))))
+  -- CR 205.3j: a member's creature or other subtypes add nothing.
+  Aggregation.Distinct DistinctOf.PlaneswalkerTypes -> Just (toInteger (Set.size (Set.filter Subtype.isPlaneswalkerType (Set.unions (fmap (Filter.subtypes . snd) members)))))
   -- The size of the largest group of members holding one value in common --
   -- not "pairwise sharing", which is not transitive (a Human Cleric, a Human
   -- Rogue and an Elf Rogue are no three sharing a type). A member joins a group
@@ -1571,6 +1575,8 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       -- object's own flag is a field of an OBJECT, which lastKnownView adds. A
       -- regression fence: no card asks it of a snapshot.
       Filter.prototyped = PC.prototyped snapshot,
+      -- CR 722.3c's record is a field of an OBJECT -- `tributePaid` above.
+      Filter.preparedSpell = False,
       -- CR 400.7d's mana record is a field of an OBJECT, which a
       -- ProjectedCharacteristics does not carry -- `designations` above, same
       -- sentence -- so a past event reports none.

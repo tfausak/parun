@@ -10,7 +10,7 @@ import qualified Parun.Types.PlayerQuantity as PlayerQuantity
 
 -- | A bare object keyed by the record's field names. The tag that picks it is
 -- written by whichever Parun.Codec.Effect arm carries it, which is what keeps
--- seven arms sharing one payload codec without sharing a tag.
+-- several arms sharing one payload codec without sharing a tag.
 codec :: Codec.Codec PlayerQuantity.PlayerQuantity
 codec = Fields.object $ do
   player <- Fields.required "player" PlayerRef.codec PlayerQuantity.player
