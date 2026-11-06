@@ -155,6 +155,7 @@ tellUndone seat action why =
     because reason = Text.pack $ case reason of
       Undoing.IllegalProposal -> " (a choice announced for it was illegal)"
       Undoing.UnpaidCost -> " (its cost was not paid)"
+      Undoing.IllegalDeclaration -> " (it broke a restriction or requirement on attacking or blocking)"
       Undoing.RepeatedLoop -> " (it would repeat a loop, so a different choice is needed)"
 
 -- | Asks the seat, handing the screen to it first.

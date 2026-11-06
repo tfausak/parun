@@ -2507,8 +2507,9 @@ attemptAttackDeclaration perform pid asked forced rejected = do
         again = not (Set.member proposal rejected)
     -- CombatEffectSpec's "CR 508.1d an illegal declaration is rewound and asked
     -- again, not replaced by the ceiling's" is the proof.
+    -- The chooser asked again is told why (GameState.undone).
     if not allowed && again
-      then attemptAttackDeclaration perform pid (Just chooser) False (Set.insert proposal rejected)
+      then Game.noteUndoing chooser Undoing.IllegalDeclaration >> attemptAttackDeclaration perform pid (Just chooser) False (Set.insert proposal rejected)
       else do
         -- A declaration already rewound once and offered again degrades to
         -- forcedAttackDeclaration. The whole answer is replaced rather than
@@ -3472,8 +3473,9 @@ attemptBlockDeclaration perform pid asked attacking rejected = do
         again = not (Set.member chosen rejected)
     -- CombatEffectSpec's "CR 509.1c an illegal declaration is rewound and asked
     -- again, not replaced by the ceiling's" is the proof.
+    -- The chooser asked again is told why (GameState.undone).
     if not allowed && again
-      then attemptBlockDeclaration perform pid (Just chooser) attacking (Set.insert chosen rejected)
+      then Game.noteUndoing chooser Undoing.IllegalDeclaration >> attemptBlockDeclaration perform pid (Just chooser) attacking (Set.insert chosen rejected)
       else do
         -- A declaration already rewound once and offered again degrades to
         -- forcedBlockDeclaration -- always legal, and equal to "no blocks"
