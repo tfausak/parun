@@ -14,7 +14,7 @@
 -- The only module that may CASE on Parun.Types.CombatRestriction.
 -- Parun.Engine.Keyword constructs one -- rule 702.98a's unleash -- and reads none.
 -- Parun.Engine.Combat asks for a SET OF IDS, for a SET OF ROWS, or for NUMBERS
--- (CR 802.3a's bounds, keyed by the seat each is scoped to, and CR 509.1b's
+-- (CR 802.3a's bounds, keyed by what each counts the attackers of, and CR 509.1b's
 -- per-attacker ones, keyed by the attacker), and never learns
 -- which card, or which keyword, produced any of them. The rows
 -- are the two pairwise restrictions, which no set of creatures could state: CR
@@ -24,12 +24,14 @@
 -- second are both resolved here, so neither crosses into Parun.Engine.Combat.
 module Parun.Engine.CombatRestriction where
 
+import qualified Control.Applicative as Applicative
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
+import qualified Parun.Engine.Battle as Battle
 import qualified Parun.Engine.Condition as Condition
 import qualified Parun.Engine.Defender as Defender
 import qualified Parun.Engine.Detain as Detain
@@ -55,7 +57,9 @@ import qualified Parun.Types.AffectedUnless as AffectedUnless
 import qualified Parun.Types.AimedAt as AimedAt
 import qualified Parun.Types.AimedPlayers as AimedPlayers
 import qualified Parun.Types.AloneUnless as AloneUnless
+import qualified Parun.Types.AttackLimitScope as AttackLimitScope
 import qualified Parun.Types.AttackLimitUnless as AttackLimitUnless
+import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackTargetKind as AttackTargetKind
 import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
@@ -324,10 +328,12 @@ cantBlockAlone defending subjects pool gs = companionsIn (inForce defending gs) 
 -- creatures may be declared as attackers. That rule splits them in two and this
 -- record is the split -- a bound that names no player is judged against the
 -- whole declaration, and one that names a player is judged against the creatures
--- attacking that player alone.
+-- attacking that player alone. A bound naming one permanent (CR 306.6, CR 310.5)
+-- is the second half's, keyed by that permanent.
 --
--- Nothing of the source survives into either half, which is the point:
--- Parun.Engine.Combat learns numbers and never learns which card produced them.
+-- Nothing of the restriction survives into either half, which is the point:
+-- Parun.Engine.Combat learns numbers and what they count, and never learns which
+-- card produced them.
 data AttackLimits = MkAttackLimits
   { -- | CR 802.3a's first sentence, keyed by the defending players whose
     -- announcements the bound counts (CR 508.5a: a gate naming the defending
@@ -335,11 +341,30 @@ data AttackLimits = MkAttackLimits
     -- counts every seat. Empty when no unscoped bound is in force. Silent
     -- Arbiter; Synthetic Tidal Palisade for the gated reading.
     whole :: Map.Map (Set PlayerId) Natural,
-    -- | CR 802.3a's second sentence, keyed by the defending player the bound
-    -- names. A seat absent from the map is unbounded. Crawlspace.
-    perDefender :: Map.Map PlayerId Natural
+    -- | CR 802.3a's second sentence, keyed by what the bound counts the
+    -- attackers of. A key absent from the map is unbounded. Crawlspace; Tomik,
+    -- Orzhov Lawmage.
+    perTarget :: Map.Map Attacked Natural
   }
   deriving (Eq, Show)
+
+-- | What a scoped bound counts the attackers of: a seat, or one permanent.
+data Attacked
+  = -- | CR 802.3a: the creatures attacking this player, not their planeswalkers
+    -- or battles (Crawlspace's ruling).
+    AttackedPlayer PlayerId
+  | -- | CR 306.6 / 310.5: the creatures attacking this permanent, under either
+    -- of CR 506.3's arms naming it.
+    AttackedPermanent ObjectId
+  deriving (Eq, Ord, Show)
+
+-- | The key an announcement counts against. Exhaustive, so a fourth of CR
+-- 506.3's attackable things has to decide here.
+attacked :: AttackTarget.AttackTarget -> Attacked
+attacked target = case target of
+  AttackTarget.OfPlayer pid -> AttackedPlayer pid
+  AttackTarget.OfPlaneswalker oid -> AttackedPermanent oid
+  AttackTarget.OfBattle oid -> AttackedPermanent oid
 
 -- CR 508.1c: the TIGHTEST bound in force right now on how many creatures may be
 -- declared as attackers, or Nothing when nothing bounds it, scoped as CR 802.3a
@@ -354,7 +379,11 @@ data AttackLimits = MkAttackLimits
 -- The SCOPE's perspective is CR 109.5's "you" -- the source's controller --
 -- which is `cantAttackPlayer`'s pairing and for its reason: the sentence names
 -- players by their relation to the card printing it. A source whose controller
--- cannot be found names nobody rather than everybody.
+-- cannot be found names nobody rather than everybody. A bound scoped to the
+-- source counts the attackers of the source itself, its gate read at CR 508.5's
+-- defending player of an attack on it: the battle's protector, else its
+-- controller. No printing gates that scope, so the gate seat is a regression
+-- fence.
 --
 -- Both halves read their gates per seat, which is what makes this one walk
 -- rather than two calls to `bounded`: a scoped row's gate is read at the seat it
@@ -376,9 +405,13 @@ attackLimit gs =
         Just (n, Nothing) -> Just n
         _ -> Nothing
       scopedAt player (source, _, restriction) = case attackingMoreThan restriction of
-        Just (n, Just scope) -> case Projection.controllerOf source gs of
+        Just (n, Just (AttackLimitScope.Players scope)) -> case Projection.controllerOf source gs of
           Nothing -> Nothing
           Just you -> if PlayerEffect.inScope player you gs scope then Just n else Nothing
+        _ -> Nothing
+      atSource row@(source, _, restriction) = case attackingMoreThan restriction of
+        Just (n, Just AttackLimitScope.Source)
+          | not (lifted (Battle.protectorOf source gs Applicative.<|> Projection.controllerOf source gs) gs row) -> Just (AttackedPermanent source, n)
         _ -> Nothing
       tightest select = List.foldl' tighter Nothing . Maybe.mapMaybe select
       forSeat player = tightest (scopedAt player) (filter (not . lifted (Just player) gs) rows)
@@ -391,7 +424,10 @@ attackLimit gs =
             Map.fromListWith
               min
               (Maybe.mapMaybe (\row -> unscoped row >>= \n -> let seats = counted row in if Set.null seats then Nothing else Just (seats, n)) rows),
-          perDefender = Map.fromList (Maybe.mapMaybe (\player -> fmap ((,) player) (forSeat player)) defenders)
+          perTarget =
+            Map.fromListWith
+              min
+              (Maybe.mapMaybe (\player -> fmap ((,) (AttackedPlayer player)) (forSeat player)) defenders <> Maybe.mapMaybe atSource rows)
         }
 
 -- CR 509.1b, the blocking counterpart. Silent Arbiter's second sentence: the
@@ -567,9 +603,9 @@ attackingPlayer cr = case cr of
 -- interval of them) and no Affected can stand in for one -- which is the whole
 -- reason the arms exist.
 --
--- Each answers the scope beside the number: the attacking one CR 802.3a's
--- seats, the blocking one the attackers a per-attacker bound counts against.
-attackingMoreThan :: CombatRestriction.CombatRestriction -> Maybe (Natural, Maybe PlayerScope.PlayerScope)
+-- Each answers the scope beside the number: the attacking one what CR 802.3a's
+-- bound counts the attackers of, the blocking one the attackers a per-attacker bound counts against.
+attackingMoreThan :: CombatRestriction.CombatRestriction -> Maybe (Natural, Maybe AttackLimitScope.AttackLimitScope)
 attackingMoreThan cr = case cr of
   CombatRestriction.CantAttack {} -> Nothing
   CombatRestriction.CantBlock {} -> Nothing

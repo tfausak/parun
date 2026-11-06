@@ -76,6 +76,10 @@ intrinsicManaAbilityOf pc =
 isBasicLandType :: Subtype.Subtype -> Bool
 isBasicLandType = Maybe.isJust . subtypeMana
 
+-- | CR 205.3j: read off correlatedCardTypes below, so the list exists once.
+isPlaneswalkerType :: Subtype.Subtype -> Bool
+isPlaneswalkerType = Set.member CardType.Planeswalker . correlatedCardTypes
+
 -- | CR 205.3i
 isLandType :: Subtype.Subtype -> Bool
 isLandType subtype = case subtype of

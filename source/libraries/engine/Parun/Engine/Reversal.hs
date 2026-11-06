@@ -456,6 +456,7 @@ objectWith before entry closed = do
   bestowed <- field Object.bestowed
   mutating <- field Object.mutating
   prototyped <- field Object.prototyped
+  castPrepared <- field Object.castPrepared
   boughtBack <- field Object.boughtBack
   unannounced <- field Object.unannounced
   spliced <- field Object.spliced
@@ -526,6 +527,7 @@ objectWith before entry closed = do
         Object.bestowed = bestowed,
         Object.mutating = mutating,
         Object.prototyped = prototyped,
+        Object.castPrepared = castPrepared,
         Object.boughtBack = boughtBack,
         Object.unannounced = unannounced,
         Object.spliced = spliced,

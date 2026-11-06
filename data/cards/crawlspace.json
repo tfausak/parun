@@ -6,7 +6,10 @@
           "type": "CantAttackMoreThan",
           "value": {
             "defenders": {
-              "type": "You"
+              "type": "Players",
+              "value": {
+                "type": "You"
+              }
             },
             "limit": 2
           }
