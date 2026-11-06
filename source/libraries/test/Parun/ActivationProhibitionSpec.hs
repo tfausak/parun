@@ -41,14 +41,12 @@ import qualified Parun.Support as S
 import qualified Parun.Types.Action as A
 import qualified Parun.Types.ActiveObjectProhibition as ActiveObjectProhibition
 import qualified Parun.Types.GameState as GameState
-import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.RestrictedCreatures as RestrictedCreatures
-import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Zone as Zone
 
 -- The permanents an activation action names, of either shape: CR 602.2's
@@ -183,20 +181,11 @@ unenchantedSpec s registry = Spec.describe s "Unenchanted" $ do
 -- Regenerate" pays mana and nothing else, so the tap cannot answer for the
 -- prohibition.
 --
--- THE PAIR: the same activation is made on both boards, for the same tap and
--- the same {E}, and they differ only in which of bob's two identical Trolls the
--- one target slot named. A green control leg therefore cannot come from an
--- unpaid cost, a missing Mountain, or a board on which bob could never have
--- activated anything.
-storedSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+-- The named Troll withheld beside its twin, and the paired board aimed at the
+-- twin, are scenarios under data/scenarios/activation-prohibition/. What stays
+-- here reads the stored row itself, which no scenario check can.
+storedSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 storedSpec s registry = Spec.describe s "Stored" $ do
-  Spec.it s "CR 602.2 whole cards: the Troll Deadlock Trap named cannot be activated, and its twin can" $ do
-    (victim, twin, resolved) <- deadlockResolved s registry "Uthden Troll" const
-    let offered = twinOffers victim twin resolved
-    Spec.assertBool s (notElem victim offered) "the named Troll's regeneration is withheld"
-    Spec.assertEqWith s "and its twin's is the one Troll offer left" offered [twin]
-    Spec.assertEqWith s "one prohibition was stored, over the Troll named" (fmap ActiveObjectProhibition.affected (GameState.objectProhibitions resolved)) [RestrictedCreatures.Named victim]
-    Spec.assertEqWith s "and the ability's other clause tapped that same Troll" (fmap Object.tapped (Game.lookupObject victim resolved)) (Just TapState.Tapped)
   -- CR 400.7: the replayed Troll is a new object, so the row names nothing on
   -- the board and that Troll may regenerate. `replayed` below has the board.
   Spec.it s "CR 400.7 whole cards: a Troll bounced by Unsummon and replayed the same turn is no longer prohibited" $ do
@@ -209,40 +198,6 @@ storedSpec s registry = Spec.describe s "Stored" $ do
     Spec.assertBool s (elem twin offered) "and so is the twin's, which the Trap never named"
     Spec.assertEqWith s "exactly one permanent arrived on the replay" (length arrivals) 1
     Spec.assertEqWith s "and the stored row still names the Troll that left" (fmap ActiveObjectProhibition.affected (GameState.objectProhibitions final)) [RestrictedCreatures.Named victim]
-
--- The two twins bob may activate right now, narrowed off `activatableIds` so
--- bob's Mountain -- which CR 605.3a offers him on every board here -- cannot
--- stand in for either of them.
-twinOffers :: ObjectId.ObjectId -> ObjectId.ObjectId -> GameState.GameState -> [ObjectId.ObjectId]
-twinOffers victim twin gs = filter (\oid -> oid == victim || oid == twin) (activatableIds (Action.legalActions S.bob gs))
-
--- Alice's Deadlock Trap, activated once and resolved, over a board of bob's two
--- identical Uthden Trolls and the Mountain that pays for either's ability.
--- `pick` chooses which Troll the one target slot names, and is the only thing
--- the boards differ in. The two energy counters are the ones the Trap's own
--- entry trigger would have given alice, placed directly because S.addPermanent
--- puts the artifact onto the battlefield rather than resolving it there.
-deadlockResolved ::
-  (Monad m) =>
-  Spec.Spec m n ->
-  Registry.Registry m ->
-  String ->
-  (ObjectId.ObjectId -> ObjectId.ObjectId -> ObjectId.ObjectId) ->
-  m (ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
-deadlockResolved s registry printingName pick = do
-  trap <- S.printingOf s registry "Deadlock Trap"
-  troll <- S.printingOf s registry printingName
-  mountain <- S.printingOf s registry "Mountain"
-  let (victim, withVictim) = S.addPermanent troll S.bob (S.landsFor mountain S.bob 1 (Setup.emptyGame S.bothPlayers))
-      (twin, withTwin) = S.addPermanent troll S.bob withVictim
-      (trapId, withTrap) = S.addPermanent trap S.alice withTwin
-      board = mainPhaseForAlice (S.addPlayerCounter PlayerCounterKind.Energy 2 S.alice withTrap)
-      abilities = Activatable.abilitiesFor trapId board
-      resolved = case abilities of
-        [ability] -> S.runPure (namingTarget (pick victim twin)) board (Activate.activateAbility S.alice trapId ability >> Stack.resolveTop)
-        _ -> board
-  Spec.assertEqWith s "Deadlock Trap states exactly one activated ability" (length abilities) 1
-  pure (victim, twin, resolved)
 
 -- Aim the Trap's one target slot at this permanent, PINNED by filtering the
 -- offered set rather than built from the id: a hand-built recipient is a

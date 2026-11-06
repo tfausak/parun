@@ -135,11 +135,6 @@ spec-local helper, and the `other-*` tail, are left out: grep for them.
 
 ## Tests
 
-### `ActivationProhibitionSpec`
-
-- CR 400.7 whole cards: a Troll bounced by Unsummon and replayed the same turn is no longer prohibited | `check:other-GameState.objectProhibitions`
-- CR 602.2 whole cards: the Troll Deadlock Trap named cannot be activated, and its twin can | `check:other-GameState.objectProhibitions`
-
 ### `ArchenemySpec`
 
 - CR 205.4h an ongoing scheme stays face up and its static ability applies | `board:battlefield` `board:objects-ids` `board:player-startingdeck` `board:schemedecks`
