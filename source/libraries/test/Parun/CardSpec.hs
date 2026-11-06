@@ -760,6 +760,7 @@ objectRefPositions =
         ("detain", Effect.Detain (plantedRef "dt"), [plantedRef "dt"]),
         ("earthbend", Effect.Earthbend (Earthbend.MkEarthbend (Quantity.Type.Literal 1) (plantedRef "eb")), [plantedRef "eb"]),
         ("airbend", Effect.Airbend (plantedRef "ab"), [plantedRef "ab"]),
+        ("assimilate", Effect.Assimilate (plantedRef "as"), [plantedRef "as"]),
         ("goad", Effect.Goad (plantedRef "go"), [plantedRef "go"]),
         ("does-not-untap-next", Effect.DoesNotUntapNext (DoesNotUntapNext.MkDoesNotUntapNext (plantedRef "du") 1), [plantedRef "du"]),
         ("transform", Effect.Transform (plantedRef "tr"), [plantedRef "tr"]),
@@ -1305,6 +1306,7 @@ ownCounts effect = case effect of
   -- Earthbend's N likewise.
   Effect.Earthbend (Earthbend.MkEarthbend quantity _) -> quantityCounts quantity
   Effect.Airbend {} -> []
+  Effect.Assimilate {} -> []
   Effect.TemptWithTheRing -> []
   Effect.OpenAttraction -> []
   Effect.Planeswalk -> []
@@ -1863,6 +1865,7 @@ effectNestedEffects effect = case effect of
   Effect.Blight {} -> []
   Effect.Earthbend {} -> []
   Effect.Airbend {} -> []
+  Effect.Assimilate {} -> []
   Effect.TemptWithTheRing -> []
   Effect.OpenAttraction -> []
   Effect.Planeswalk -> []
@@ -2429,6 +2432,7 @@ effectReplacements effect = case effect of
   Effect.Blight _ -> []
   Effect.Earthbend _ -> []
   Effect.Airbend _ -> []
+  Effect.Assimilate _ -> []
   Effect.TemptWithTheRing -> []
   Effect.OpenAttraction -> []
   Effect.Planeswalk -> []
@@ -3009,6 +3013,7 @@ effectMintedFaces effect = case effect of
   Effect.Blight _ -> []
   Effect.Earthbend _ -> []
   Effect.Airbend _ -> []
+  Effect.Assimilate _ -> []
   Effect.TemptWithTheRing -> []
   Effect.OpenAttraction -> []
   Effect.Planeswalk -> []
@@ -5958,6 +5963,7 @@ effectFilters effect = case effect of
   Effect.Earthbend (Earthbend.MkEarthbend quantity ref) -> frame Unframed (quantityFilters quantity) <> frame SourceHostFramed (objectRefFilters ref)
   -- Rule 701.65a states no count, so the exiled objects' own Filters are all of it.
   Effect.Airbend ref -> frame SourceHostFramed (objectRefFilters ref)
+  Effect.Assimilate ref -> frame SourceHostFramed (objectRefFilters ref)
   Effect.TemptWithTheRing -> []
   Effect.OpenAttraction -> []
   Effect.Planeswalk -> []

@@ -147,6 +147,7 @@ creatureTypeWord subtype = case subtype of
   Subtype.Bison -> Just (Text.pack "Bison")
   Subtype.Blinkmoth -> Just (Text.pack "Blinkmoth")
   Subtype.Boar -> Just (Text.pack "Boar")
+  Subtype.Borg -> Just (Text.pack "Borg")
   Subtype.Bringer -> Just (Text.pack "Bringer")
   Subtype.Brushwagg -> Just (Text.pack "Brushwagg")
   Subtype.Camarid -> Just (Text.pack "Camarid")

@@ -338,6 +338,7 @@ manaProduced effect = case effect of
   Effect.Blight _ -> Nothing
   Effect.Earthbend _ -> Nothing
   Effect.Airbend _ -> Nothing
+  Effect.Assimilate _ -> Nothing
   Effect.TemptWithTheRing -> Nothing
   Effect.OpenAttraction -> Nothing
   Effect.Planeswalk -> Nothing
@@ -542,6 +543,7 @@ playerChoice effect = case effect of
   Effect.Blight _ -> Nothing
   Effect.Earthbend _ -> Nothing
   Effect.Airbend _ -> Nothing
+  Effect.Assimilate _ -> Nothing
   Effect.TemptWithTheRing -> Nothing
   Effect.OpenAttraction -> Nothing
   Effect.Planeswalk -> Nothing
@@ -797,6 +799,7 @@ movesLibraryCard effect = case effect of
   Effect.Blight _ -> False
   Effect.Earthbend _ -> False
   Effect.Airbend _ -> False
+  Effect.Assimilate _ -> False
   Effect.TemptWithTheRing -> False
   Effect.OpenAttraction -> False
   Effect.Assemble {} -> False

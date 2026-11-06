@@ -318,6 +318,7 @@ ownQuantities effect = case effect of
   Effect.Blight (Blight.MkBlight _ quantity _) -> [quantity]
   Effect.Earthbend (Earthbend.MkEarthbend quantity _) -> [quantity]
   Effect.Airbend {} -> []
+  Effect.Assimilate {} -> []
   Effect.TemptWithTheRing -> []
   Effect.OpenAttraction -> []
   Effect.Planeswalk -> []
@@ -1562,6 +1563,9 @@ effectObjectRefs effect =
         -- CR 701.65a's objects are Effect.MoveToZone's: Parun.Engine.Airbend.exile
         -- is a MoveToZone, and the arm hands this ref to it unchanged.
         Effect.Airbend ref -> [(movedQuestions, ref)]
+        -- CR 701.72b's cards are Effect.MoveToZone's, Parun.Engine.Assimilate
+        -- handing the asked objects to one; CR 701.72a's permanents stay put.
+        Effect.Assimilate ref -> [(movedQuestions, ref)]
         Effect.TemptWithTheRing -> []
         Effect.OpenAttraction -> []
         Effect.Planeswalk -> []

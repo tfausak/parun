@@ -56,7 +56,7 @@ framedWith choices source gs context =
       -- the state no longer holds answers Nothing.
       Filter.sourceOwner = fmap Object.owner (Game.lookupObject source gs),
       -- CR 607.5: only those the abilities doing the reading put there.
-      Filter.sourceEntrants = Map.keysSet (Map.filter (== EntryLink.MkEntryLink source (SourceChoices.acquisition choices)) (GameState.enteredWith gs)),
+      Filter.sourceEntrants = Map.keysSet (Map.filter (Set.member (EntryLink.MkEntryLink source (SourceChoices.acquisition choices))) (GameState.enteredWith gs)),
       -- CR 607.5: the same acquisition's counter links.
       Filter.sourceCountered = Map.filter (not . Set.null) (fmap (Set.map CounterLink.moved . Set.filter (\link -> CounterLink.source link == source && CounterLink.acquisition link == SourceChoices.acquisition choices)) (GameState.counteredWith gs)),
       -- CR 607.2a: the cards in exile now (CR 400.7) linked to the source.

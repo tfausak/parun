@@ -726,6 +726,7 @@ rewriteEffect pairs effect = case effect of
   -- CR 612 reaches the ObjectRef's own filters; rule 701.65a names no subtype
   -- word and the {2} it fixes is not a card's text.
   Effect.Airbend ref -> Effect.Airbend (rewriteObjectRef pairs ref)
+  Effect.Assimilate ref -> Effect.Assimilate (rewriteObjectRef pairs ref)
   Effect.TemptWithTheRing -> effect
   Effect.OpenAttraction -> effect
   Effect.Planeswalk -> effect

@@ -1,0 +1,25 @@
+{
+  "description": "CR 701.72a / 701.72c The Best of Both Worlds assimilates bob's creature, pumps it, then returns only the Borg assimilated with it to its owner",
+  "note": "Chapter I takes bob's Grizzly Bears: alice controls it, with a +1/+1 counter, as a Borg artifact creature, so the Queen's +2/+0 reaches it (5/3). Chapter II gives it +2/+2 (7/5). Chapter III exiles it and returns it under bob's control as a new Bear with no counter. Alice's Borg Queen is a Borg the Saga did not assimilate, and stays.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "WUUUUU", "battlefield": [{"card": "Borg Queen, Perfection Manifest", "label": "queen"}], "hand": [{"card": "The Best of Both Worlds", "label": "saga"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$saga"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Controller", "object": "$bears", "is": "alice"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$bears", "kind": {"type": "PlusOnePlusOne"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$bears", "types": ["Artifact", "Creature"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "$bears", "subtypes": ["Borg"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 5, "toughness": 3}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 7, "toughness": 5}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}},
+    {"turn": 5, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 5, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Controller", "object": "Grizzly Bears", "is": "bob"}}},
+    {"turn": 5, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "Grizzly Bears", "kind": {"type": "PlusOnePlusOne"}, "count": 0}}},
+    {"turn": 5, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "Grizzly Bears", "subtypes": ["Bear"]}}},
+    {"turn": 5, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Borg Queen, Perfection Manifest", "count": 1}}},
+    {"turn": 5, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "The Best of Both Worlds", "count": 1}}}
+  ]
+}

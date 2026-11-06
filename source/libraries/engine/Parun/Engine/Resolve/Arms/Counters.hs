@@ -20,6 +20,7 @@ import qualified Data.Set as Set
 import qualified Parun.Engine.Airbend as Airbend
 import qualified Parun.Engine.Amass as Amass
 import qualified Parun.Engine.Archenemy as Archenemy
+import qualified Parun.Engine.Assimilate as Assimilate
 import qualified Parun.Engine.Attraction as Attraction
 import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Blight as Blight
@@ -1267,6 +1268,35 @@ airbend applyEffectWith runSubgame resolving source controller legal chosen ref 
   -- earlier airbend's arrivals are not this one's. A regression fence: no
   -- card in data/cards/ airbends twice in one resolution.
   Monad.unless (Set.null (Set.difference exiled before)) (State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.Airbend controller))))
+
+-- CR 701.72a / 701.72b: "assimilate" -- the whole keyword action, whose
+-- instructions Parun.Engine.Assimilate writes as Effects and this arm runs
+-- through the SAME executor a card's own instructions run through. Nothing here
+-- reads which effects those are.
+--
+-- The reference is asked or read ONCE, before anything moves (CR 608.2d, CR
+-- 608.2h), and each object it names is sorted by where it is now: a permanent
+-- takes rule 701.72a's instructions and a card in any other zone rule 701.72b's.
+-- Each group is placed in this arm's own `legal` under its reserved slot, so
+-- the instructions read exactly the objects the reference named. May target,
+-- Airbend's posture: an illegal or unfilled slot names nothing, and the whole
+-- action is a no-op.
+--
+-- CR 701.72c's link for rule 701.72a's permanents is written here, after the
+-- instructions and only for those still on the battlefield; rule 701.72b's move
+-- writes its own (Parun.Engine.Assimilate.cardInstruction).
+assimilate :: (Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
+assimilate applyEffectWith runSubgame resolving source controller legal chosen ref = do
+  named <- Common.askingObjects resolving source controller legal chosen ref
+  onBattlefield <- State.gets (\g oid -> Set.member oid (GameState.battlefield g))
+  let (permanents, cards) = List.partition onBattlefield named
+      bound slot oids = Map.insert slot (Set.fromList (fmap Recipient.ToObject oids))
+      assimilating = bound Binding.assimilatedPermanents permanents (bound Binding.assimilatedCards cards legal)
+      run = applyEffectWith runSubgame resolving source controller assimilating chosen
+  Monad.unless (null permanents) $ do
+    Monad.forM_ Assimilate.permanentInstructions run
+    State.modify' (\g -> foldr (Common.linkEntrant resolving source) g (filter (`Set.member` GameState.battlefield g) permanents))
+  Monad.unless (null cards) (run Assimilate.cardInstruction)
 
 -- CR 702.189a's mana through AddMana's own arm, then CR 702.189b's marker:
 -- this is a firebending ability resolving, and `controller` is who controls it.
