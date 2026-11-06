@@ -30,6 +30,7 @@ import qualified Parun.Engine.Action as Action
 import qualified Parun.Engine.Activatable as Activatable
 import qualified Parun.Engine.Activate as Activate
 import qualified Parun.Engine.Binding as Binding
+import qualified Parun.Engine.Claim as Claim
 import qualified Parun.Engine.Cost as Cost
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Event as Event
@@ -54,6 +55,8 @@ import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.Claim as Claim.Type
+import qualified Parun.Types.ClaimAxis as ClaimAxis
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.CounterKind as CounterKind
@@ -2645,7 +2648,10 @@ pluralBoardSpec s registry = Spec.describe s "plural sources" $ do
   -- Parun.Benchmark's drum board: the Drum's tap takes one of the Elves (CR
   -- 118.3), so eight Elves and a Drum make eight mana. The relaxation counts the
   -- objects the claims contend for, so the {9} is refused before the walk; on
-  -- twenty Elves that walk is 2^21 boards, which this would not outlive.
+  -- twenty Elves that walk is 2^21 boards, which this would not outlive. A
+  -- payable {20} or {30} walks until a board pays: the most activations first
+  -- (Parun.Engine.Mana.sourceOptions), each board asked as a matching
+  -- (Parun.Engine.Claim.countable) rather than over every subset; see #6413.
   Spec.it s "CR 118.3 a Springleaf Drum beside Llanowar Elves taps one of them" $ do
     drum <- S.printingOf s registry "Springleaf Drum"
     elves <- S.printingOf s registry "Llanowar Elves"
@@ -2654,6 +2660,22 @@ pluralBoardSpec s registry = Spec.describe s "plural sources" $ do
     Spec.assertBool s (pays 8 (boardOf 8)) "eight Elves, or seven and the Drum, make {8}"
     Spec.assertBool s (not (pays 9 (boardOf 8))) "CR 118.3 but not a {9}"
     Spec.assertBool s (not (pays 21 (boardOf 20))) "nor twenty Elves a {21}"
+    Spec.assertBool s (pays 20 (boardOf 20)) "while twenty Elves make {20}"
+    Spec.assertBool s (pays 30 (boardOf 30)) "and thirty a {30}, each board a matching rather than 2^31 subsets"
+
+-- Parun.Engine.Claim's matching on its own, on the shape the Drum board takes:
+-- pools that meet, where the entry asked first takes an object a later one
+-- needs, so only an augmenting path finds the assignment (#6413).
+claimMatchingSpec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+claimMatchingSpec s = Spec.describe s "claim matching" $ do
+  let claimOf count oids = Claim.Type.MkClaim {Claim.Type.axis = ClaimAxis.Tapping, Claim.Type.pool = Set.fromList (fmap ObjectId.MkObjectId oids), Claim.Type.count = count, Claim.Type.threshold = Nothing}
+  Spec.it s "CR 118.3 a claim gives back the object a narrower one needs" $ do
+    Spec.assertBool s (Claim.satisfiable [claimOf 1 [1, 2], claimOf 1 [1, 3], claimOf 1 [3]]) "the three take 2, 1 and 3"
+    Spec.assertBool s (not (Claim.satisfiable [claimOf 1 [1, 2], claimOf 1 [1, 3], claimOf 2 [3]])) "but three objects cannot meet four"
+  Spec.it s "CR 118.3 claims repeat as often as their tightest subset allows" $ do
+    Spec.assertEqWith s "four objects meet the pair twice" (Claim.repeats [claimOf 1 [1, 2, 3, 4], claimOf 1 [1, 2]]) 2
+    Spec.assertEqWith s "and a fifth does not free the narrower one" (Claim.repeats [claimOf 1 [1, 2, 3, 4, 5], claimOf 1 [1, 2]]) 2
+    Spec.assertEqWith s "nothing claimed is limited elsewhere" (Claim.repeats [claimOf 0 [1]]) 1
 
 -- alice, active, in her precombat main phase: one Transmogrant Altar, one Goblin
 -- Piker for the sacrifice to take, and optionally a Swamp to pay the {B} and a
@@ -3907,6 +3929,7 @@ spec s registry = Spec.describe s "Parun.Engine.Mana" $ do
   phyrexianAltarSpec s registry
   transmograntAltarSpec s registry
   pluralBoardSpec s registry
+  claimMatchingSpec s
   grinningIgnusSpec s registry
   mysticGateSpec s registry
   skyshroudElfSpec s registry
