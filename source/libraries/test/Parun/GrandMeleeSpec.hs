@@ -93,6 +93,48 @@ spec s registry = Spec.describe s "GrandMelee" $ do
       (turnsAfter 7 conceded)
       [(seat 4, False), (seat 5, False), (seat 6, False), (seat 7, False), (seat 0, True), (seat 0, False), (seat 2, False)]
 
+  -- CR 500.11 / 614.10a: seat 0 casts Meditate ("You skip your next turn."),
+  -- so when seat 4's marker reaches seat 0 the turn is skipped and the marker
+  -- passes on to seat 1 as at the end of a turn, the other marker's seat 5
+  -- going first (docs/decisions.md, "Where a skipped Grand Melee turn leaves
+  -- its marker").
+  Spec.it s "CR 500.11 a skipped turn passes its marker on" $ do
+    forest <- S.printingOf s registry "Forest"
+    island <- S.printingOf s registry "Island"
+    meditate <- S.printingOf s registry "Meditate"
+    let (spellId, staged) = S.addHandCard meditate (seat 0) (S.landsFor island (seat 0) 3 (melee forest 8))
+        main = untilPhase Phase.PrecombatMain staged
+        resolved = snd (Engine.runGamePure S.identityAnswer (S.runPure S.identityAnswer main (S.cast (seat 0) spellId)) Engine.priorityLoop)
+    Spec.assertEqWith s "CR 500.11 seat 0's turn is passed over" (fmap fst (turnsAfter 10 resolved)) (seats [4, 1, 5, 2, 6, 3, 7, 4, 5, 1])
+
+  -- CR 807.4i / 614.10a: seat 0 casts Capture of Jingzhou, then Meditate, so
+  -- seat 0 keeps its marker for the extra turn, which comes after seat 4's in
+  -- number order (CR 807.4d), and that extra turn is the next turn Meditate
+  -- skips (Magosi, the Waterveil's ruling). The kept marker then passes on to
+  -- seat 1.
+  Spec.it s "CR 807.4i a kept marker's skipped extra turn passes it on" $ do
+    forest <- S.printingOf s registry "Forest"
+    island <- S.printingOf s registry "Island"
+    capture <- S.printingOf s registry "Capture of Jingzhou"
+    meditate <- S.printingOf s registry "Meditate"
+    let staged = captureAndMeditate forest island capture meditate 8 0
+    Spec.assertEqWith s "the extra turn is pending" (length (GameState.extraTurns staged)) 1
+    Spec.assertEqWith s "CR 807.4i seat 0's extra turn is passed over" (turnsAfter 5 staged) [(seat 4, False), (seat 5, False), (seat 1, False), (seat 6, False), (seat 2, False)]
+
+  -- CR 807.4i / 614.10a: the same cast by seat 4 on its first turn, when seat
+  -- 0's marker is at seat 1, within three seats on seat 4's right. So seat 4
+  -- passes its marker on and takes the extra turn just before its next turn.
+  -- Meditate skips that extra turn, and the marker it arrived on stays for the
+  -- ordinary turn still owed.
+  Spec.it s "CR 807.4i a skipped extra turn keeps the marker for the turn still owed" $ do
+    forest <- S.printingOf s registry "Forest"
+    island <- S.printingOf s registry "Island"
+    capture <- S.printingOf s registry "Capture of Jingzhou"
+    meditate <- S.printingOf s registry "Meditate"
+    let staged = captureAndMeditate forest island capture meditate 8 1
+    Spec.assertEqWith s "the extra turn is pending" (length (GameState.extraTurns staged)) 1
+    Spec.assertEqWith s "CR 807.4i seat 4's ordinary turn follows" (turnsAfter 8 staged) (fmap (\n -> (seat n, False)) [1, 5, 2, 6, 3, 7, 0, 4])
+
   -- CR 807.5a: on seat 0's turn only seats 7, 0 and 1 are within range of the
   -- marker. Once seat 1 has cast Shock, seat 2 is within range of an object's
   -- controller, so is asked too until it resolves.
@@ -116,6 +158,18 @@ spec s registry = Spec.describe s "GrandMelee" $ do
     seated n = Setup.emptyGame (seat 0 NonEmpty.:| fmap seat [1 .. n - 1])
     holders gs = fmap (PlayerId.unwrap . TurnMarker.holder) (GameState.turnMarkers gs)
     onMain gs = gs {GameState.phase = Phase.PrecombatMain, GameState.priority = Just (seat 0)}
+
+-- The seat of `n` whose turn begins `turns` turns in casts Capture of
+-- Jingzhou, then Meditate, in that turn's first main phase.
+captureAndMeditate :: Printing.Printing -> Printing.Printing -> Printing.Printing -> Printing.Printing -> Natural -> Int -> GameState.GameState
+captureAndMeditate forest island capture meditate n turns =
+  let begun = Maybe.fromMaybe (melee forest n) (Maybe.listToMaybe (reverse (fmap snd (turnStates turns (melee forest n)))))
+      caster = GameState.activePlayer begun
+      (captureId, withCapture) = S.addHandCard capture caster (S.landsFor island caster 8 begun)
+      (meditateId, staged) = S.addHandCard meditate caster withCapture
+      resolve gs = snd (Engine.runGamePure S.identityAnswer gs Engine.priorityLoop)
+      captured = resolve (S.runPure S.identityAnswer (untilPhase Phase.PrecombatMain staged) (S.cast caster captureId))
+   in resolve (S.runPure S.identityAnswer captured (S.cast caster meditateId))
 
 -- A Grand Melee game of `n` seats, each with ten Forests in their library.
 melee :: Printing.Printing -> Natural -> GameState.GameState

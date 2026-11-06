@@ -1328,3 +1328,20 @@ Entries are ordered by the first rule each cites.
 - **Site**: `Parun.Engine.Combat`'s `blockScopeGiven`, `blockCeilingGiven`
   and `pileChooser`. The scenarios under `data/scenarios/camouflage/`.
 - **Issue**: #5464.
+
+## Where a skipped Grand Melee turn leaves its marker
+
+- **Question**: In Grand Melee a player's turn comes when a turn marker
+  reaches them (CR 807.4c). If an effect makes them skip that turn, what does
+  the marker do?
+- **Rules**: CR 500.11, 614.10, 807.4c, 807.4d, 807.4i (CR of 2026-09-25).
+- **Decision**: As at the end of a turn they took: CR 807.4c's handoff runs,
+  so the marker passes left (or stays, for a pending extra turn), and the
+  next marker in number order goes first.
+- **Rejected**: The marker staying with the skipping player, who then has no
+  turn under it and stalls it. Passing it and letting its new holder go at
+  once, ahead of the other markers, which treats the skipped turn as never
+  scheduled rather than proceeded past.
+- **Site**: `Parun.Engine.Engine.takeMarkedTurn`. `Parun.GrandMeleeSpec`'s
+  "CR 500.11 a skipped turn passes its marker on".
+- **Issue**: #5746.

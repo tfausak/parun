@@ -13,12 +13,12 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeLossCause as LifeLossCause
 import qualified Parun.Types.ObjectId as ObjectId
-import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PlaneswalkCause as PlaneswalkCause
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerInstruction as PlayerInstruction
 import qualified Parun.Types.Regenerability as Regenerability
+import qualified Parun.Types.SkipWindow as SkipWindow
 import qualified Parun.Types.Throw as Throw
 import qualified Parun.Types.TokenLot as TokenLot
 import qualified Parun.Types.TurnUpProcedure as TurnUpProcedure
@@ -43,9 +43,9 @@ import qualified Parun.Types.ZoneChange as ZoneChange
 -- re-collects against a board that already shows the change.
 --
 -- WouldBeginPhase is the one arm that is not about an OBJECT: CR 614.1b's skips
--- replace a step, a phase or a turn, none of which any object owns. Its PlayerId
--- is the active player, and so CR 616.1's "affected player" for the choice among
--- applicable skips.
+-- replace a step, a phase or a turn, none of which any object owns. Its
+-- PlayerId is the active player (for a turn, the player who would begin it),
+-- and so CR 616.1's "affected player" for the choice among applicable skips.
 --
 -- WouldTurnFaceUp carries the object for WouldEnter's reason: CR 708.11 has the
 -- ability applied WHILE the permanent is turning over, and
@@ -110,17 +110,19 @@ data ProposedEvent
     -- of lots rather than one card and a count so that a CR 614.1a append
     -- (Parun.Types.TokenR.plus) stays inside the ONE event a later row scales.
     WouldCreateTokens PlayerId.PlayerId (Seq.Seq TokenLot.TokenLot)
-  | -- | CR 500.11 / 614.10: a step or phase would begin, on this player's turn.
-    -- Raised by Engine.runStep before anything about the step is observable, so
-    -- a skip that takes it leaves no trace -- CR 614.10 stops a step, phase or
-    -- turn being skipped once it has started, read as the moment this event
-    -- exists.
+  | -- | CR 500.11 / 614.10: a step, phase or turn would begin, on this
+    -- player's turn.
     --
-    -- A PhaseSelector, not a Phase, because CR 500.11 lets a skip name a whole
+    -- Raised by Engine.runStep and Engine.takeNextTurn before anything about
+    -- it is observable, so a skip that takes it leaves no trace -- CR 614.10
+    -- stops a step, phase or turn being skipped once it has started, read as
+    -- the moment this event exists.
+    --
+    -- A SkipWindow, not a Phase, because CR 500.11 lets a skip name a whole
     -- PHASE and CR 500.1's beginning, combat and ending phases are more than one
     -- schedule entry each. Engine.runStep therefore raises this TWICE at the
     -- first step of such a phase -- once for the phase, once for the step.
-    WouldBeginPhase PhaseSelector.PhaseSelector PlayerId.PlayerId
+    WouldBeginPhase SkipWindow.SkipWindow PlayerId.PlayerId
   | -- | CR 614.1e / 708.11: a face-down permanent is being turned face up.
     -- Raised by Parun.Engine.Event.performTurnFaceUp, the only place in the
     -- engine that turns anything face up -- the one funnel CR 116.2b's special

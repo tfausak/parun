@@ -1277,7 +1277,7 @@ redirectDamage resolving source controller legal (RedirectDamage.MkRedirectDamag
     _ -> pure ()
 
 skipPhase :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> SkipPhase.SkipPhase -> Game ()
-skipPhase resolving source controller legal (SkipPhase.MkSkipPhase ref selector uses duration) = do
+skipPhase resolving source controller legal (SkipPhase.MkSkipPhase ref selector uses duration count) = do
   -- CR 614.1b: "skip" is a replacement effect, installed floating because a
   -- sorcery's skip outlives the sorcery (CR 614.3). CR 614.10a: one instance
   -- PER NAMED PLAYER, each its own row rather than merged, so "skip the next
@@ -1293,8 +1293,15 @@ skipPhase resolving source controller legal (SkipPhase.MkSkipPhase ref selector 
   -- CR 805.8: under the shared team turns option one effect naming several
   -- players on a team skips that team's step once, so the team's first named
   -- player takes the one row. Replacement.applies matches it for the team.
+  --
+  -- CR 614.10a: "skip your next two turns" is `count` rows for each named
+  -- player, read ONCE, as TakeExtraTurn's count is. CR 107.2's posture for a
+  -- quantity that cannot be evaluated: no rows.
   gs <- State.get
-  let named = List.foldl' (\kept pid -> if any (Turn.sharesTurn gs pid) kept then kept else kept <> [pid]) [] (playerRefPlayers legal resolving source controller gs ref)
+  let viewOf = effectViewOf resolving source legal gs
+      context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+      rows = Integer.toNaturalSaturating (Maybe.fromMaybe 0 (Quantity.evaluateFor viewOf context gs resolving source count))
+      named = List.foldl' (\kept pid -> if any (Turn.sharesTurn gs pid) kept then kept else kept <> [pid]) [] (playerRefPlayers legal resolving source controller gs ref)
       install pid g = case Expiry.arm resolving legal controller source duration g of
         Nothing -> g
         Just expiry ->
@@ -1328,7 +1335,7 @@ skipPhase resolving source controller legal (SkipPhase.MkSkipPhase ref selector 
                     ActiveReplacement.choices = SourceContext.choicesOf (Game.readingAcquisition resolving source g source) source g
                   }
            in g1 {GameState.replacements = active : GameState.replacements g1}
-  State.modify' (\g -> List.foldl' (flip install) g named)
+  State.modify' (\g -> List.foldl' (flip install) g (concatMap (List.genericReplicate rows) named))
 
 affectPlayers :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> AffectPlayers.AffectPlayers -> Game ()
 affectPlayers resolving source controller legal (AffectPlayers.MkAffectPlayers duration affected playerEffect) =

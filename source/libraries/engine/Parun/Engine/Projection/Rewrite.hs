@@ -879,7 +879,7 @@ rewriteEffect pairs effect = case effect of
   -- prove them.
   Effect.Replace (Replace.MkReplace duration uses origin condition replacement) ->
     Effect.Replace (Replace.MkReplace (rewriteDuration pairs duration) uses origin (fmap (rewriteCondition pairs) condition) (rewriteReplacementEffect pairs replacement))
-  Effect.SkipPhase x -> Effect.SkipPhase x {SkipPhase.duration = rewriteDuration pairs (SkipPhase.duration x)}
+  Effect.SkipPhase x -> Effect.SkipPhase x {SkipPhase.duration = rewriteDuration pairs (SkipPhase.duration x), SkipPhase.count = rewriteQuantity pairs (SkipPhase.count x)}
   -- CR 612.1 through every half of the shield that holds printed words: the
   -- objects it covers, the predicates describing its recipients and its source,
   -- the countdown's amount, the duration and the CR 615.5 rider. `kind`,

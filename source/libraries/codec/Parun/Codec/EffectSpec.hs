@@ -209,6 +209,7 @@ import qualified Parun.Types.SetHalfLocked as SetHalfLocked
 import qualified Parun.Types.SetOwner as SetOwner
 import qualified Parun.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
 import qualified Parun.Types.SkipPhase as SkipPhase
+import qualified Parun.Types.SkipWindow as SkipWindow
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.StickerKind as StickerKind
@@ -1031,13 +1032,13 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.SkipPhase (SkipPhase.MkSkipPhase (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (PhaseSelector.Step (Phase.Beginning BeginningStep.DrawStep)) Uses.Once Duration.Indefinite))
+      (Effect.SkipPhase (SkipPhase.MkSkipPhase (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (SkipWindow.PartOfTurn (PhaseSelector.Step (Phase.Beginning BeginningStep.DrawStep))) Uses.Once Duration.Indefinite SkipPhase.defaultCount))
       " {\"type\":\"SkipPhase\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"selector\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":\"DrawStep\"}}}} "
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (Effect.SkipPhase (SkipPhase.MkSkipPhase (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) PhaseSelector.CombatPhase Uses.Once Duration.Indefinite))
+      (Effect.SkipPhase (SkipPhase.MkSkipPhase (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (SkipWindow.PartOfTurn PhaseSelector.CombatPhase) Uses.Once Duration.Indefinite SkipPhase.defaultCount))
       " {\"type\":\"SkipPhase\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"selector\":{\"type\":\"CombatPhase\"}}} "
   -- CR 116.2c.
   Spec.it s "LaterPayment" $

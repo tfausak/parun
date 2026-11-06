@@ -629,7 +629,8 @@ clearedSaddles objects =
 -- Takes the player EXPLICITLY rather than reading GameState.activePlayer,
 -- because CR 800.4m needs this to fire for a seat whose turn does not begin: a
 -- departed player's durations last until their turn WOULD have begun. Engine's
--- turn handoff walks the seating order and calls this at every seat it passes.
+-- turn handoff walks the seating order and calls this at every departed seat it
+-- passes, or under CR 805.4 as that seat's team begins a turn.
 --
 -- Dropping at the handoff is observably identical to dropping "as the turn
 -- begins": CR 500.12, CR 502.4 and CR 704.3 leave nothing that could observe

@@ -62,6 +62,7 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
 import qualified Parun.Types.Scaling as Scaling
+import qualified Parun.Types.SkipWindow as SkipWindow
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TokenPattern as TokenPattern
 import qualified Parun.Types.TokenR as TokenR
@@ -333,7 +334,7 @@ spec s =
           Common.assertCodec
             s
             codec
-            (ReplacementEffect.PhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep), PhasePattern.whosePhase = ControllerRelation.Related PlayerRelation.AnyPlayer})
+            (ReplacementEffect.PhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = SkipWindow.PartOfTurn (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)), PhasePattern.whosePhase = ControllerRelation.Related PlayerRelation.AnyPlayer})
             " {\"type\":\"PhaseR\",\"value\":{\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":\"Upkeep\"}}}} "
         -- The baked player-scoped whosePhase = Among, which only Resolve's
         -- SkipPhase arm produces and no card authors (#437). The codec has to
@@ -342,7 +343,7 @@ spec s =
           Common.assertCodec
             s
             codec
-            (ReplacementEffect.PhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = PhaseSelector.Step (Phase.Beginning BeginningStep.DrawStep), PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (PlayerId.MkPlayerId 1))})
+            (ReplacementEffect.PhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = SkipWindow.PartOfTurn (PhaseSelector.Step (Phase.Beginning BeginningStep.DrawStep)), PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (PlayerId.MkPlayerId 1))})
             " {\"type\":\"PhaseR\",\"value\":{\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":\"DrawStep\"}},\"whosePhase\":{\"type\":\"Among\",\"value\":[1]}}} "
         -- The whole-phase selector, once Resolve has baked the player its resolution
         -- named -- the shape a bare Phase cannot spell (CR 500.1).
@@ -350,7 +351,7 @@ spec s =
           Common.assertCodec
             s
             codec
-            (ReplacementEffect.PhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = PhaseSelector.CombatPhase, PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (PlayerId.MkPlayerId 1))})
+            (ReplacementEffect.PhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = SkipWindow.PartOfTurn PhaseSelector.CombatPhase, PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (PlayerId.MkPlayerId 1))})
             " {\"type\":\"PhaseR\",\"value\":{\"whichPhase\":{\"type\":\"CombatPhase\"},\"whosePhase\":{\"type\":\"Among\",\"value\":[1]}}} "
         -- CR 614.1e / 702.37b: megamorph's "as this permanent is turned face up, put a
         -- +1/+1 counter on it". Minted by Parun.Engine.Keyword rather than written by a

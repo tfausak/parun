@@ -1,12 +1,12 @@
 module Parun.Types.PhasePattern where
 
 import qualified Parun.Types.ControllerRelation as ControllerRelation
-import qualified Parun.Types.PhaseSelector as PhaseSelector
+import qualified Parun.Types.SkipWindow as SkipWindow
 
--- | CR 614.1b / 500.11: which step-or-phase beginnings a SKIP intercepts. Eon Hub
--- is (Step (Beginning Upkeep)) for everybody; Stonehorn Dignitary is CombatPhase
--- for one player -- the whole of CR 506.1's five steps and none of them
--- individually.
+-- | CR 614.1b / 500.11: which step, phase or turn beginnings a SKIP intercepts.
+-- Eon Hub is (Step (Beginning Upkeep)) for everybody; Stonehorn Dignitary is
+-- CombatPhase for one player -- the whole of CR 506.1's five steps and none of
+-- them individually; Meditate is the whole turn of one player.
 --
 -- `whosePhase` is CR 614.1's "does this instance apply" question asked about a
 -- PLAYER, and for a step of the turn it applies only on that player's own turn.
@@ -19,7 +19,7 @@ import qualified Parun.Types.PhaseSelector as PhaseSelector
 -- card authors a player-scoped phase skip" rejects one in card JSON, the same
 -- treatment SetController's baked PlayerId gets (#199).
 data PhasePattern = MkPhasePattern
-  { whichPhase :: PhaseSelector.PhaseSelector,
+  { whichPhase :: SkipWindow.SkipWindow,
     whosePhase :: ControllerRelation.ControllerRelation
   }
   deriving (Eq, Ord, Show)

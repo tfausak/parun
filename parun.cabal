@@ -1479,6 +1479,8 @@ library codec
     Parun.Codec.SideDeckSpec
     Parun.Codec.SkipPhase
     Parun.Codec.SkipPhaseSpec
+    Parun.Codec.SkipWindow
+    Parun.Codec.SkipWindowSpec
     Parun.Codec.SlotCount
     Parun.Codec.SlotCountSpec
     Parun.Codec.SlotName
@@ -3236,6 +3238,7 @@ library types
     Parun.Types.Sickness
     Parun.Types.SideDeck
     Parun.Types.SkipPhase
+    Parun.Types.SkipWindow
     Parun.Types.SlotArity
     Parun.Types.SlotCount
     Parun.Types.SlotName

@@ -233,6 +233,7 @@ import qualified Parun.Types.SetHalfLocked as SetHalfLocked
 import qualified Parun.Types.SetOwner as SetOwner
 import qualified Parun.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
 import qualified Parun.Types.SkipPhase as SkipPhase
+import qualified Parun.Types.SkipWindow as SkipWindow
 import qualified Parun.Types.SlotArity as SlotArity
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpeedDecrease as SpeedDecrease
@@ -255,6 +256,7 @@ import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.TypeLine as TypeLine
 import qualified Parun.Types.UntapR as UntapR
 import qualified Parun.Types.UntapRewrite as UntapRewrite
+import qualified Parun.Types.Uses as Uses
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 import qualified Parun.Types.ZoneScope as ZoneScope
@@ -378,7 +380,7 @@ ownQuantities effect = case effect of
   Effect.BecomeCopy (BecomeCopy.MkBecomeCopy _ _ duration _ _) -> foldMap durationQuantities duration
   Effect.CopyStackObject (CopyStackObject.MkCopyStackObject _ _ quantity _ _) -> [quantity]
   Effect.Replace (Replace.MkReplace duration _ _ condition _) -> durationQuantities duration <> foldMap Resolve.conditionQuantities condition
-  Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration) -> durationQuantities duration
+  Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration count) -> count : durationQuantities duration
   Effect.LaterPayment (LaterPayment.MkLaterPayment duration _ _) -> durationQuantities duration
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity _) -> quantity : durationQuantities duration
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ _) -> durationQuantities duration
@@ -890,6 +892,28 @@ isPhaseR :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.G
 isPhaseR replacement = case replacement of
   ReplacementEffect.PhaseR _ -> True
   _ -> False
+
+-- CR 500.11 / 614.10a: a turn skip is spent by the turn it takes. A PhaseR over
+-- a whole turn, static or floating, has no count of its own (a card writes a
+-- SkipPhase, whose `count` and `uses` are that count), and an Unlimited
+-- SkipPhase of a whole turn is never spent.
+turnSkipOffends :: Face.Face Card.Type.Card -> Bool
+turnSkipOffends card =
+  any isTurnPhaseR (cardReplacementEffects card) || any unspentTurnSkip (cardAuthoredEffects card)
+  where
+    isTurnPhaseR replacement = case replacement of
+      ReplacementEffect.PhaseR phasePattern -> PhasePattern.whichPhase phasePattern == SkipWindow.WholeTurn
+      _ -> False
+
+-- | A SkipPhase naming a whole turn and never spent.
+unspentTurnSkip :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
+unspentTurnSkip = maybe False ((== Uses.Unlimited) . SkipPhase.uses) . turnSkip
+
+-- | A SkipPhase naming a whole turn.
+turnSkip :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Maybe SkipPhase.SkipPhase
+turnSkip effect = case effect of
+  Effect.SkipPhase e | SkipPhase.selector e == SkipWindow.WholeTurn -> Just e
+  _ -> Nothing
 
 -- phasePatternOffends one replacement class over, for the other fields the codec
 -- accepts and only the engine writes: TurnUpR.requiring and TurnUpR.paying, CR
@@ -3302,6 +3326,33 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertBool s (not (any phasePatternOffends (cardReplacementEffects card))) "the real Eon Hub is symmetric and accepted"
     Spec.assertBool s (any phasePatternOffends (cardReplacementEffects baked)) "and the same card naming a seat is rejected"
     Spec.assertBool s (any engineOnlyOffends (cardReplacementEffects baked)) "and whosePhase is among the relations Resolve.overRelations reaches"
+  -- CR 500.11 / 614.10a: Engine.walkToNextTurn and takeMarkedTurn look again
+  -- after every skipped turn, so a turn skip that is never spent would loop
+  -- them forever. See turnSkipOffends.
+  Spec.it s "no card skips a turn without limit" $ do
+    ps <- S.allPrintings s corpus
+    let offenders = filter (anyFace turnSkipOffends . Printing.card) ps
+        skippers = filter (anyFace (any (Maybe.isJust . turnSkip) . cardAuthoredEffects) . Printing.card) ps
+    -- Guards against a vacuous sweep: Meditate's spell and Eater of Days'
+    -- trigger are the turn skips the pool prints.
+    Spec.assertEqWith s "the sweep sees both turn skips" (filter (`notElem` fmap (S.nameOf . Printing.card) skippers) (fmap (CardName.MkCardName . Text.pack) ["Meditate", "Eater of Days"])) []
+    Spec.assertEqWith s "a turn skip is spent" (fmap (S.nameOf . Printing.card) offenders) []
+  -- The rejecting direction, against Meditate's own skip made Unlimited and Eon
+  -- Hub's static skip made a whole turn's.
+  Spec.it s "the lint itself catches an unspent turn skip" $ do
+    meditate <- S.printingOf s registry "Meditate"
+    eonHub <- S.printingOf s registry "Eon Hub"
+    let skips = Maybe.mapMaybe turnSkip (cardAuthoredEffects (S.combinedFace meditate))
+        unlimited = fmap (\e -> Effect.SkipPhase e {SkipPhase.uses = Uses.Unlimited}) skips
+        wholeTurn replacement = case replacement of
+          ReplacementEffect.PhaseR phasePattern -> ReplacementEffect.PhaseR phasePattern {PhasePattern.whichPhase = SkipWindow.WholeTurn}
+          other -> other
+        hub = S.combinedFace eonHub
+        baked = hub {Face.replacementEffects = fmap (\pr -> pr {PrintedReplacement.effect = wholeTurn (PrintedReplacement.effect pr)}) (Face.replacementEffects hub)}
+    Spec.assertBool s (not (null skips) && not (turnSkipOffends (S.combinedFace meditate))) "the real Meditate is accepted"
+    Spec.assertBool s (all unspentTurnSkip unlimited) "and the same skip made Unlimited is rejected"
+    Spec.assertBool s (not (turnSkipOffends hub)) "the real Eon Hub is accepted"
+    Spec.assertBool s (turnSkipOffends baked) "and its static skip over a whole turn is rejected"
   -- The same lint one event class over, for the OTHER fields the codec accepts and
   -- only the engine writes: CR 615.7's shielded recipient and its remaining amount,
   -- plus CR 122.1c's minted pair. See engineOnlyOffends.

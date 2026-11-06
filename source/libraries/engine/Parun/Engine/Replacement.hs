@@ -130,7 +130,6 @@ import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.PermanentCandidate as PermanentCandidate
 import qualified Parun.Types.PhasePattern as PhasePattern
-import Parun.Types.PhaseSelector (PhaseSelector)
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Parun.Types.Player as Player
@@ -163,6 +162,8 @@ import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Parun.Types.ReplacementProvenance as ReplacementProvenance
 import qualified Parun.Types.SacrificeToEnter as SacrificeToEnter
 import qualified Parun.Types.Scaling as Scaling
+import Parun.Types.SkipWindow (SkipWindow)
+import qualified Parun.Types.SkipWindow as SkipWindow
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.Subtype as Subtype
@@ -939,20 +940,22 @@ matchesPrinted viewOf gs event candidate =
         (ReplacementEffect.TokenR (TokenR.MkTokenR pat _ _), ProposedEvent.WouldCreateTokens pid lots) ->
           matchesPlayer gs candidate (TokenPattern.whose pat) pid
             && any (\lot -> reachesLot pat lot && matchesTokenLot gs (candidateContext gs candidate) (TokenPattern.whatToken pat) pid lot) lots
-        -- CR 614.1b / 500.11: a skip intercepts a step or phase BEGINNING, and
-        -- names exactly which one -- and, for a player-scoped skip, whose.
+        -- CR 614.1b / 500.11: a skip intercepts a step, phase or turn
+        -- BEGINNING, and names exactly which one -- and, for a player-scoped
+        -- skip, whose.
         --
-        -- EQUALITY on the PhaseSelector, so a pattern naming a whole phase
+        -- EQUALITY on the SkipWindow, so a pattern naming a whole phase
         -- (Stonehorn Dignitary) matches only the phase question Engine.runStep
         -- raises at that phase's first step, and one naming a step matches only
         -- the step question. That is what keeps CR 500.1's decomposition of a
         -- phase into steps out of this comparison.
         --
-        -- The event's PlayerId is the ACTIVE player, which is also whose step
-        -- this is: every step and phase in a turn belongs to the player whose
-        -- turn it is, or to their team (CR 805.4). So Fatigue is `whosePhase`
-        -- Among that player, Necropotence is Related You (CR 109.5, the row's
-        -- controller), and Eon Hub is Related AnyPlayer.
+        -- The event's PlayerId is the ACTIVE player, or for a whole turn the
+        -- player who would begin it, which is also whose step this is: every
+        -- step and phase in a turn belongs to the player whose turn it is, or
+        -- to their team (CR 805.4). So Fatigue is `whosePhase` Among that
+        -- player, Necropotence is Related You (CR 109.5, the row's controller),
+        -- and Eon Hub is Related AnyPlayer.
         --
         -- CR 805.8: under the shared team turns option a skip naming any player
         -- on the active team is that team's, so a teammate's row matches too.
@@ -2498,8 +2501,9 @@ readsApplier re = case re of
   ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ PlaneswalkRewrite.ArrangeTopTwo) -> False
   -- GameLossR's answer, and for its reason.
   ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ (PlaneswalkRewrite.RunEffects _)) -> True
-  -- CR 614.10: a skip replaces the step or phase with nothing, whoever applies it;
-  -- whether a row's "you" is the player it is ABOUT was settled by `applies`.
+  -- CR 614.10: a skip replaces the step, phase or turn with nothing, whoever
+  -- applies it; whether a row's "you" is the player it is ABOUT was settled by
+  -- `applies`.
   ReplacementEffect.PhaseR _ -> False
 
 -- CR 614.6: does applying this effect replace a coin flip with a die roll or a
@@ -2887,8 +2891,8 @@ affectedChooserOf gs event = case event of
   -- counter put on a PLAYER is that player -- not the one putting it.
   ProposedEvent.WouldPutPlayerCounters _ pid _ _ -> Just pid
   ProposedEvent.WouldCreateTokens pid _ -> Just pid
-  -- CR 616.1's "affected player": a step or phase beginning affects no object,
-  -- so the player whose turn it is chooses among applicable skips.
+  -- CR 616.1's "affected player": a step, phase or turn beginning affects no
+  -- object, so the player whose turn it is chooses among applicable skips.
   ProposedEvent.WouldBeginPhase _ pid -> Just pid
   -- CR 616.1's affected object is the permanent turning over, and its controller
   -- is CR 702.37e's "you" -- the player who took the special action.
@@ -4660,7 +4664,7 @@ installTurnSkips entry gs =
                 { ActiveReplacement.effect =
                     ReplacementEffect.PhaseR
                       PhasePattern.MkPhasePattern
-                        { PhasePattern.whichPhase = selector,
+                        { PhasePattern.whichPhase = SkipWindow.PartOfTurn selector,
                           -- The turn's taker, which for a step or phase OF that
                           -- turn is also whose step it is (see PhasePattern).
                           PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (ExtraTurn.taker entry))
@@ -4810,7 +4814,7 @@ rowApplied spellId ts gs =
   let standing active = ActiveReplacement.source active == spellId && ActiveReplacement.timestamp active == ts
    in not (any standing (GameState.replacements gs))
 
-asPhaseBegin :: ProposedEvent -> Maybe (PhaseSelector, PlayerId)
+asPhaseBegin :: ProposedEvent -> Maybe (SkipWindow, PlayerId)
 asPhaseBegin event = case event of
   ProposedEvent.WouldBeginPhase selector pid -> Just (selector, pid)
   ProposedEvent.WouldChangeZone {} -> Nothing
