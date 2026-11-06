@@ -1516,7 +1516,7 @@ priorityLoop = do
                               Action.Type.Play oid mName -> do
                                 -- CR 116.2a: the special action, made under a
                                 -- CR 601.3 permission (Cast.playLand).
-                                Cast.playLand (Resolve.runReplacementEffects playSubgame) False p oid mName
+                                Event.takingSpecialAction $ Cast.playLand (Resolve.runReplacementEffects playSubgame) False p oid mName
                                 grantAfterSettle p
                                 loop trail'
                               Action.Type.Cast oid name facing -> do
@@ -1547,8 +1547,10 @@ priorityLoop = do
                               -- window to respond. Priority is retained and the
                               -- pass count restarts, CR 117.4's "passing in
                               -- succession" meaning without actions in between.
+                              -- Every special action runs in CR 401.5's window
+                              -- (Event.takingSpecialAction).
                               Action.Type.TurnFaceUp oid procedure -> do
-                                FaceDown.turnFaceUp performManaAbility p procedure oid
+                                Event.takingSpecialAction $ FaceDown.turnFaceUp performManaAbility p procedure oid
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2m / 709.5e: a special action too, the
@@ -1556,7 +1558,7 @@ priorityLoop = do
                               -- sees is the DESIGNATION, which settleForPriority
                               -- gathers like any other.
                               Action.Type.Unlock oid half -> do
-                                Room.unlock performManaAbility p oid half
+                                Event.takingSpecialAction $ Room.unlock performManaAbility p oid half
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2e: a special action too, the TurnFaceUp
@@ -1566,25 +1568,25 @@ priorityLoop = do
                               -- Ordinary and not ToPayCyclingCost, CR 702.29c's
                               -- cause being a cycling ability's cost.
                               Action.Type.DiscardFromHand oid -> do
-                                Event.discard (Resolve.runReplacementEffects playSubgame) DiscardCause.Ordinary p oid
+                                Event.takingSpecialAction $ Event.discard (Resolve.runReplacementEffects playSubgame) DiscardCause.Ordinary p oid
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2k / 702.170b: a special action too, the
                               -- TurnFaceUp arm's shape.
                               Action.Type.Plot oid cost -> do
-                                Plot.plot performManaAbility p oid cost
+                                Event.takingSpecialAction $ Plot.plot performManaAbility p oid cost
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2h / 702.143b: a special action too.
                               Action.Type.Foretell oid -> do
-                                Foretell.foretell performManaAbility p oid
+                                Event.takingSpecialAction $ Foretell.foretell performManaAbility p oid
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2f / 702.62a: a special action too, and
                               -- the one whose window is the card's own
                               -- castability rather than a phase.
                               Action.Type.Suspend oid -> do
-                                Suspend.suspend performManaAbility p oid
+                                Event.takingSpecialAction $ Suspend.suspend performManaAbility p oid
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2g / 702.139a: a special action too, and
@@ -1592,19 +1594,19 @@ priorityLoop = do
                               -- names the card, outside the game having no
                               -- object to name it with (CR 400.11).
                               Action.Type.PutCompanionIntoHand -> do
-                                Companion.take performManaAbility p
+                                Event.takingSpecialAction $ Companion.take performManaAbility p
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2i / 901.9: a special action too, and one
                               -- that takes no object; CR 901.9a-c give the roller
                               -- priority afterwards whatever the die shows.
                               Action.Type.RollPlanarDie -> do
-                                Planechase.roll performManaAbility p
+                                Event.takingSpecialAction $ Planechase.roll performManaAbility p
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2j / 702.106c: a special action too.
                               Action.Type.TurnConspiracyFaceUp oid -> do
-                                Conspiracy.turnFaceUp p oid
+                                Event.takingSpecialAction $ Conspiracy.turnFaceUp p oid
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2c: a special action too, and the one whose
@@ -1612,24 +1614,25 @@ priorityLoop = do
                               -- from printed text. CR 613.1's next projection is
                               -- what makes the ending visible; nothing is undone.
                               Action.Type.EndEffect _ resolution -> do
-                                EndEffect.endEffect performManaAbility p resolution
+                                Event.takingSpecialAction $ EndEffect.endEffect performManaAbility p resolution
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2c: a special action too, whose payment
                               -- leaves the offer in place.
                               Action.Type.MakeLaterPayment _ createdAt -> do
-                                paid <- LaterPayment.pay performManaAbility p createdAt
-                                Foldable.for_ paid (Resolve.runLaterPayment playSubgame)
+                                Event.takingSpecialAction $ do
+                                  paid <- LaterPayment.pay performManaAbility p createdAt
+                                  Foldable.for_ paid (Resolve.runLaterPayment playSubgame)
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2c / 116.3: Channel's life for mana.
                               Action.Type.PayLifeForMana life mana -> do
-                                _ <- Cost.payLifeForMana performManaAbility p life mana
+                                _ <- Event.takingSpecialAction (Cost.payLifeForMana performManaAbility p life mana)
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 116.2d: a special action too.
                               Action.Type.Ignore oid name -> do
-                                Ignore.ignore performManaAbility p oid name
+                                Event.takingSpecialAction $ Ignore.ignore performManaAbility p oid name
                                 grantAfterSettle p
                                 loop trail'
                               -- CR 605.3a's first window, and CR 605.3b's

@@ -433,6 +433,12 @@ data GameState = MkGameState
     -- (Parun.Engine.Event.announcing); then each library's top card as it
     -- began, the only one that stays shown until it ends (Game.shownTop).
     announcedTops :: Maybe (Map.Map PlayerId.PlayerId ObjectId.ObjectId),
+    -- | CR 401.5: Nothing unless a player is taking a special action
+    -- (Parun.Engine.Event.takingSpecialAction); then each library's top card as
+    -- it began, the only one that stays shown until it ends (Game.shownTop).
+    -- Apart from announcedTops, whose window a mana ability activated during the
+    -- action opens and closes inside this one.
+    actionTops :: Maybe (Map.Map PlayerId.PlayerId ObjectId.ObjectId),
     -- | CR 101.4b: Nothing outside a Parun.Types.ForEach loop; inside one, the
     -- permanents each ChoosePermanents of it has picked so far, beside who
     -- picked them, which a later pick's prompt carries

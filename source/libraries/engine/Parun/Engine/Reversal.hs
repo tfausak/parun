@@ -153,6 +153,7 @@ withoutAnnouncement before entry closed = do
   drawsThisTurn <- mapOf GameState.drawsThisTurn
   keptFaceDown <- one GameState.keptFaceDown
   announcedTops <- one GameState.announcedTops
+  actionTops <- one GameState.actionTops
   loopPicks <- one GameState.loopPicks
   repeatPicks <- one GameState.repeatPicks
   revealedTops <- mapOf GameState.revealedTops
@@ -291,6 +292,7 @@ withoutAnnouncement before entry closed = do
         GameState.drawsThisTurn = drawsThisTurn,
         GameState.keptFaceDown = keptFaceDown,
         GameState.announcedTops = announcedTops,
+        GameState.actionTops = actionTops,
         GameState.loopPicks = loopPicks,
         GameState.repeatPicks = repeatPicks,
         GameState.revealedTops = revealedTops,
