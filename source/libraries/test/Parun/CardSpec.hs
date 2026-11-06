@@ -26,6 +26,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
+import qualified Data.Text.Encoding as TextEncoding
 import qualified Parun.Codec.CastOffer as CastOffer
 import qualified Parun.Codec.Subtype as Subtype
 import qualified Parun.Engine.Binding as Binding
@@ -2880,6 +2881,7 @@ reservedSlots =
       Binding.attackingCreature,
       Binding.attackingCreatures,
       Binding.attackingPlayer,
+      Binding.damagersController,
       Binding.combatDamager,
       Binding.mentoredCreature,
       Binding.exploitedCreature,
@@ -8019,6 +8021,19 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
       "CR 106.12a thatManaSource bound by a Destroy is caught"
       (reservedBindings manaOffender)
       (Set.singleton Binding.manaSource)
+  -- A choice binds a slot too, so a misnamed one is the same defect: Siren's
+  -- Call naming its chosen player `thatPlayer` would have its CR 603.7 end-step
+  -- trigger read CR 102.1's active player instead. Built from the committed
+  -- file, so the graft is the one renamed slot and nothing else.
+  Spec.it s "the lint itself catches a choice that binds a reserved slot" $ do
+    json <- S.committedJson "sirens-call.json"
+    let misnamed = Text.replace (Text.pack "\"namedPlayer\"") (Text.pack "\"thatPlayer\"") json
+        faceOf text = either (Left . Text.unpack) (Right . Card.combined) (Registry.parseCard (TextEncoding.encodeUtf8 text))
+    Spec.assertEqWith
+      s
+      "a ChoosePlayer bound to thatPlayer is caught, and the real card binds no reserved slot"
+      (fmap reservedBindings (faceOf misnamed), fmap reservedBindings (faceOf json))
+      (Right (Set.singleton Binding.triggerPlayer), Right Set.empty)
   -- Both sweeps above range over a face's MINTED cards as well as the face
   -- itself, and this is what proves that half. CR 111.3 makes the abilities a
   -- token's creator defines "functionally equivalent to the characteristic
