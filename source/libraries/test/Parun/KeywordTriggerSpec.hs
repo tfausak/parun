@@ -1761,7 +1761,7 @@ cloneOf gs =
 --     errata is why every echo cost is printed at all.
 --
 -- Driven through Engine.runStep and never a synthetic StepBegan: the clock turns
--- in Engine.runStepThatBegan, so a fixture that only recorded CR 603.2b's event
+-- in Engine.startStep, so a fixture that only recorded CR 603.2b's event
 -- would leave every permanent at ControlClock.Gained and each leg below would
 -- pass for the wrong reason.
 echoSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
