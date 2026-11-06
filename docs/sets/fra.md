@@ -238,8 +238,6 @@ first.
 - #6488: Codie, Ravenous Codex. No filter matches a prepared spell (CR 722.3d).
 - #6487: Infinite Coursework. No effect removes the prepared designation (CR
   722.3b).
-- #6490: Desperate Futurescribe; Proctor of Potential; Surveillance Phantasm. No
-  turn tally counts scries or surveils (CR 701.22a, 701.25a).
 - #6491: Command the Stage. Damage readers have no `WhichTurn`, so "last turn"
   can't be asked.
 - #6496: Loot, the Anomaly. `CombatDamageAmount` can't treat a negative power as

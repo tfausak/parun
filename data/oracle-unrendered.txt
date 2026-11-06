@@ -3394,3 +3394,6 @@ time-vault
 false-orders
 ydwen-efreet
 forcefield
+desperate-futurescribe
+proctor-of-potential
+surveillance-phantasm
