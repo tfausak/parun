@@ -1854,15 +1854,24 @@ exchangeValues settle resolving source controller legal (ExchangeValues.MkExchan
 -- their gaining it. Under a shared team total (Game.lifeSharers) that is CR
 -- 810.9c's single player: their gain or loss moves the team's total.
 --
--- Not implemented: CR 810.9d's team choosing the one member a "set each
--- player's life total" affects, so the team's total takes every named
--- member's delta (#4493).
+-- CR 810.9d: where it names several members of one team, the team chooses one
+-- of them, the only one on that team affected; CR 805.2 hands the team's
+-- choice to its primary player (Game.heirOnDeparture's road). Asked in APNAP
+-- order, before any life moves. The scenario "CR 810.9d Biorhythm sets each
+-- team's life by the member the team chooses" proves it.
 setLifeTotal :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
 setLifeTotal settle resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-      recipients = playerRefPlayers legal resolving source controller gs ref
+      named = playerRefPlayers legal resolving source controller gs ref
+      sharers pid = filter (`elem` named) (Game.lifeSharers pid gs)
+      pickFor (done, kept) pid
+        | any (`elem` done) (sharers pid) = pure (done, kept)
+        | otherwise = do
+            picked <- Game.chooseAmong (\decider asked -> Prompt.ChoosePlayer decider asked source) (Game.primaryOf gs pid) (filter (`elem` sharers pid) (Game.apnapOrder gs))
+            pure (sharers pid <> done, kept <> Maybe.maybeToList picked)
+  recipients <- fmap snd (Monad.foldM pickFor ([], []) (filter (`elem` named) (Game.apnapOrder gs)))
   -- CR 608.2f's bracket, the GainLife arm's: one instruction setting several
   -- players' totals is one event, however the per-seat deltas fall out.
   Event.simultaneously . Monad.forM_ recipients $ \pid ->
@@ -1944,10 +1953,10 @@ drawGame source controller = do
 -- saying a player "can't receive a new life total" that a "can't" forbids: an
 -- assignment naming one is not a legal answer, so the existing all-or-nothing
 -- filter is where it belongs. Parun.ZoneChangeSpec's RedistributeLifeTotals
--- group is the proof.
---
--- Not implemented: CR 810.9f's "not more than one member of each team"
--- (#4493).
+-- group is the proof. So does CR 810.9f's "not more than one member of each
+-- team" under a shared team total (Game.lifeSharers): an assignment naming two
+-- is refused, which the scenario "CR 810.9f Reverse the Sands may not touch
+-- two members of a team" proves.
 redistributeLifeTotals :: Game () -> ObjectId -> PlayerId -> Game ()
 redistributeLifeTotals settle source controller = do
   gs <- State.get
@@ -1971,10 +1980,11 @@ redistributeLifeTotals settle source controller = do
           GT -> not (PlayerEffect.prohibitsGainingLife taker gs)
           LT -> not (PlayerEffect.prohibitsLosingLife taker gs)
           EQ -> True
+        oneEach = and [taker == other || notElem other (Game.lifeSharers taker gs) | taker <- Set.toList takers, other <- Set.toList takers]
     -- CR 608.2f's bracket, the ExchangeLifeTotals arm's: one redistribution is
     -- one action taken on every seat it names, so the whole permutation's gains
     -- and losses share one Parun.Types.EventGroup.
-    Monad.when (isPermutation && all reachable (Map.toList assignment)) . Event.simultaneously . Monad.forM_ (Map.toList assignment) $ \(taker, giver) ->
+    Monad.when (isPermutation && oneEach && all reachable (Map.toList assignment)) . Event.simultaneously . Monad.forM_ (Map.toList assignment) $ \(taker, giver) ->
       Common.changeLifeByDelta settle taker (lifeOf giver - lifeOf taker)
 
 -- CR 702.179c: each named player's speed increases by this much. Its two

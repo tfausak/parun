@@ -1502,7 +1502,9 @@ payGatePaid runSubgame resolving source controller idx cIdx legal announced comm
 -- before the next payer in APNAP order answers theirs -- Killing Wave's and
 -- Whirlwind Denial's rulings -- and is told what the payers before them
 -- answered for THAT member (CR 101.4b). Affordability is of everything the
--- payer has agreed to so far (CR 118.3).
+-- payer has agreed to so far (CR 118.3), plus the life their teammates sharing
+-- a total have agreed to pay (CR 810.9b): the scenario "CR 810.9b Killing Wave
+-- caps two teammates' payments at the team's life total" proves it.
 --
 -- Only then does anybody pay, and each payer pays everything they agreed to as
 -- ONE payment (Cost.together), which is those rulings' "then pays that amount"
@@ -1525,7 +1527,8 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
       agreeOne acc payer member = do
         (slots, options) <- State.gets (Common.gateCostOf resolving source controller (legalFor member) gate)
         let earlier = Seq.fromList [(p, maybe PayerAnswer.Declined (\(_, cost) -> PayerAnswer.Paid cost Set.empty) taken) | (p, m, taken) <- Foldable.toList acc, m == member]
-            owed = fmap (Cost.together . fmap snd) (NonEmpty.nonEmpty (agreedBy payer acc))
+            teammates = [Cost.lifePart cost | (p, _, Just (_, cost)) <- Foldable.toList acc, p /= payer, elem p (Game.lifeSharers payer gs)]
+            owed = fmap Cost.together (NonEmpty.nonEmpty (fmap snd (agreedBy payer acc) <> teammates))
         agreed <- Common.payGateAgreed resolving source (PayOffer.ForMember member) earlier payer gate slots owed options
         pure (payer, member, fmap ((,) slots) agreed)
       -- One payer's offers answered again, in place, each against what was

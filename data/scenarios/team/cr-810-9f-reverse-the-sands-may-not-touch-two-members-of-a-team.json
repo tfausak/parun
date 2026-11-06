@@ -1,0 +1,180 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "plains",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains-2",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains-3",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains-4",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains-5",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains-6",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains-7",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains-8",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Reverse the Sands",
+            "label": "reverse-the-sands",
+            "ready": true
+          }
+        ],
+        "life": 10,
+        "name": "alice",
+        "team": 1
+      },
+      {
+        "life": 10,
+        "name": "bob",
+        "team": 1
+      },
+      {
+        "life": 15,
+        "name": "carol",
+        "team": 2
+      },
+      {
+        "life": 15,
+        "name": "dave",
+        "team": 2
+      }
+    ],
+    "sharedTeamLife": true,
+    "step": "PrecombatMain"
+  },
+  "description": "CR 810.9f Reverse the Sands may not touch two members of a team",
+  "note": "Alice's team shares 10 life and carol's 15. Alice's answer gives alice and bob the other team's totals and the reverse, touching two members of each team, so it is refused and nothing changes. Taken, it would leave the teams on 20 and 5.",
+  "timeline": [
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseRedistribution",
+          "with": [
+            [
+              "alice",
+              "carol"
+            ],
+            [
+              "bob",
+              "dave"
+            ],
+            [
+              "carol",
+              "alice"
+            ],
+            [
+              "dave",
+              "bob"
+            ]
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$plains",
+            "$plains-2",
+            "$plains-3",
+            "$plains-4",
+            "$plains-5",
+            "$plains-6",
+            "$plains-7",
+            "$plains-8"
+          ],
+          "object": "$reverse-the-sands"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 10,
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 10,
+          "player": "bob"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 15,
+          "player": "carol"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 15,
+          "player": "dave"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
