@@ -20,6 +20,7 @@ import qualified Parun.Engine.Condition as Condition
 import qualified Parun.Engine.Count as Count
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Event as Event
+import qualified Parun.Engine.Event.Trigger as Trigger
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword.Engine
@@ -45,6 +46,7 @@ import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivationRestriction as ActivationRestriction
 import qualified Parun.Types.Activations as Activations
 import qualified Parun.Types.Activator as Activator
+import qualified Parun.Types.BattlefieldCandidate as BattlefieldCandidate
 import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardType as CardType
@@ -580,8 +582,12 @@ plainYield mana = MkYield {yieldMana = mana, yieldDoubling = Map.empty, yieldX =
 --
 -- `xCeiling` is the largest X a route announcing one is priced at
 -- (`announcing` below); payableResolutionsGiven says why its bound is exact.
-manaSuppliesGiven :: Natural -> Capacity -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> [Maybe ManaRestriction.ManaRestriction] -> ObjectId -> GameState -> [(Activations.Activations, Yield, ManaCost, Activations.Activations)]
-manaSuppliesGiven xCeiling capacity pcs pid borrowed oid gs =
+--
+-- `sample` is Trigger.battlefieldCandidates of `gs` and `rewritesOf` is
+-- Replacement.manaRewrites of it, handed in so a sweep samples the board and
+-- gathers its replacements once rather than per source.
+manaSuppliesGiven :: Natural -> Capacity -> Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> (ObjectId -> [ManaType]) -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> [Maybe ManaRestriction.ManaRestriction] -> ObjectId -> GameState -> [(Activations.Activations, Yield, ManaCost, Activations.Activations)]
+manaSuppliesGiven xCeiling capacity sample rewritesOf pcs pid borrowed oid gs =
   let -- Applied HERE and not left to the caller: this is the one reader of a
       -- route's yield on the supply side, so wrapping it once is what makes the
       -- model a property of the walk rather than of who called it. Idempotent,
@@ -741,7 +747,7 @@ manaSuppliesGiven xCeiling capacity pcs pid borrowed oid gs =
             choice <- Maybe.mapMaybe ManaAbility.playerChoice (Foldable.toList (Clause.effects clause)),
             List.elem pid (Maybe.fromMaybe [] (PlayerEffect.playersInScope (Just pid) (Just pid) gs (ChoosePlayer.scope choice)))
           ]
-      options = manaOptionsOfGiven pcs oid gs
+      options = manaOptionsVisiting Set.empty rewritesOf pcs oid gs
       -- Lazy, and forced only for a permanent mixing open and closed routes or
       -- reached by a grant: manaSourcesGiven hands this nothing else pid does
       -- not control.
@@ -754,7 +760,7 @@ manaSuppliesGiven xCeiling capacity pcs pid borrowed oid gs =
       -- restriction, which narrows only the route's own mana (CR 106.6).
       triggered option (activations, yield, manaCost, own) =
         [ (activations, yield {yieldMana = Mana.MkMana (unitsOf (yieldMana yield) <> unitsOf bonus)}, manaCost, own)
-        | bonus <- triggeredYields pid (choosable option) oid option (yieldMana yield) gs
+        | bonus <- triggeredYields sample pid (choosable option) oid option (yieldMana yield) gs
         ]
       counted = concatMap (\option -> foldMap (\extra -> concatMap (triggered option . restricted extra) (perCandidate option)) (routeAccess (mayTakeRoute controls pid oid gs) borrowed (ManaOption.cost option) (ManaOption.ability option))) options
       available = filter (\(activations, _, _, _) -> Activations.times activations > 0) counted
@@ -779,8 +785,11 @@ manaSuppliesGiven xCeiling capacity pcs pid borrowed oid gs =
 -- payer's share on this branch of the walk, which can be repriced past the
 -- option's own yield. One round is the whole of it: a trigger's mana is
 -- resolution mana, which fires no triggered mana ability (CR 605.5a).
-triggeredYields :: PlayerId -> Map.Map SlotName.SlotName (Set.Set PlayerId) -> ObjectId -> ManaOption -> Mana -> GameState -> [Mana]
-triggeredYields pid chosen oid option share gs =
+--
+-- `sample` is the CR 603.10 board every event is filed with: `gs`'s own, the
+-- copy differing from it only in its log.
+triggeredYields :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> PlayerId -> Map.Map SlotName.SlotName (Set.Set PlayerId) -> ObjectId -> ManaOption -> Mana -> GameState -> [Mana]
+triggeredYields sample pid chosen oid option share gs =
   let made = yieldUnits option
       types = Set.fromList (fmap ManaUnit.manaType (made <> unitsOf share))
       tapped =
@@ -795,7 +804,7 @@ triggeredYields pid chosen oid option share gs =
         ]
       resolved = GameEvent.ManaAbilityResolved (ManaAbilityResolved.MkManaAbilityResolved {ManaAbilityResolved.permanent = oid, ManaAbilityResolved.amount = Natural.length made})
       events = tapped <> added <> [resolved]
-      board = List.foldl' (flip Event.recordEvent) gs events
+      board = List.foldl' (flip (Event.recordEventOver sample)) gs events
       recorded = Foldable.toList (Seq.drop (Seq.length (GameState.events board) - length events) (GameState.events board))
       fired = filter (\pending -> ManaAbility.isTriggeredManaAbility (fmap LoggedEvent.event (PendingTrigger.firedBy pending)) (PendingTrigger.ability pending)) (Event.reactionTriggers recorded board)
    in fmap (Mana.MkMana . concat) (traverse (triggerAdds pid board) fired)
@@ -886,12 +895,13 @@ manaOptionsOf = manaOptionsOfGiven Map.empty
 
 -- The same options against a pre-projected board (#200).
 manaOptionsOfGiven :: Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [ManaOption]
-manaOptionsOfGiven = manaOptionsVisiting Set.empty
+manaOptionsOfGiven pcs oid gs = manaOptionsVisiting Set.empty (Replacement.manaRewrites gs) pcs oid gs
 
 -- The same options, worked out while the sources in `visited` are being asked
--- what they could produce (`produced`).
-manaOptionsVisiting :: Set.Set ObjectId -> Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [ManaOption]
-manaOptionsVisiting visited pcs oid gs = ListUtils.nubOrd (fmap fst (pricedOptionsVisiting visited Map.empty gs pcs oid gs))
+-- what they could produce (`produced`). `rewritesOf` is
+-- Replacement.manaRewrites of `gs`, which a sweep gathers once.
+manaOptionsVisiting :: Set.Set ObjectId -> (ObjectId -> [ManaType]) -> Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [ManaOption]
+manaOptionsVisiting visited rewritesOf pcs oid gs = ListUtils.nubOrd (fmap fst (pricedOptionsVisiting visited rewritesOf Map.empty gs pcs oid gs))
 
 -- CR 601.2h / 608.2h: each option as OFFERED beside the same option priced with
 -- the slots its cost's payment bound -- Priest of Yawgmoth's "equal to the
@@ -907,12 +917,12 @@ manaOptionsVisiting visited pcs oid gs = ListUtils.nubOrd (fmap fst (pricedOptio
 -- a doubling adds to, which this scenario proves:
 -- data/scenarios/doubling-cube-doubles-what-its-own-cost-leaves.json.
 manaRepricingsGiven :: Map.Map SlotName.SlotName Binding.Type.Binding -> GameState -> Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [(ManaOption, ManaOption)]
-manaRepricingsGiven paid poolBoard pcs oid gs = ListUtils.nubOrd (pricedOptionsVisiting Set.empty paid poolBoard pcs oid gs)
+manaRepricingsGiven paid poolBoard pcs oid gs = ListUtils.nubOrd (pricedOptionsVisiting Set.empty (Replacement.manaRewrites gs) paid poolBoard pcs oid gs)
 
 -- Both prices off ONE traversal of the colour choices, so a pair's halves are
 -- the same choice. Unshared: manaOptionsOfGiven forces the offered half alone.
-pricedOptionsVisiting :: Set.Set ObjectId -> Map.Map SlotName.SlotName Binding.Type.Binding -> GameState -> Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [(ManaOption, ManaOption)]
-pricedOptionsVisiting visited paid poolBoard pcs oid gs =
+pricedOptionsVisiting :: Set.Set ObjectId -> (ObjectId -> [ManaType]) -> Map.Map SlotName.SlotName Binding.Type.Binding -> GameState -> Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [(ManaOption, ManaOption)]
+pricedOptionsVisiting visited rewritesOf paid poolBoard pcs oid gs =
   let tags = productionTagsGiven pcs oid gs
       choices = sourceChoicesOf oid gs
       -- CR 106.6, stamped from the instruction that adds the unit: the
@@ -1025,7 +1035,7 @@ pricedOptionsVisiting visited paid poolBoard pcs oid gs =
       -- CR 305.6's intrinsic clause is minted again for the new type, so a
       -- Tundra's {W} route and {U} route retyped alike are one option and not
       -- two the player could not tell apart.
-      rewrites = ListUtils.nubOrd (Replacement.manaRewrites gs oid)
+      rewrites = ListUtils.nubOrd (rewritesOf oid)
       retyped cost (offered, priced)
         | notElem CostComponent.TapThis (Cost.components cost) || null rewrites = [(offered, priced)]
         | otherwise = fmap (\manaType -> (retype manaType offered, retype manaType priced)) rewrites
@@ -1232,7 +1242,7 @@ manaTypesOf = manaTypesVisiting Set.empty
 -- The same question asked while the sources in `visited` are being asked it
 -- (`produced`).
 manaTypesVisiting :: Set.Set ObjectId -> ObjectId -> GameState -> [ManaType]
-manaTypesVisiting visited oid gs = ListUtils.nubOrd (concatMap (typesOf . Mana.MkMana . yieldUnits) (manaOptionsVisiting visited Map.empty oid gs))
+manaTypesVisiting visited oid gs = ListUtils.nubOrd (concatMap (typesOf . Mana.MkMana . yieldUnits) (manaOptionsVisiting visited (Replacement.manaRewrites gs) Map.empty oid gs))
 
 setPool :: PlayerId -> Mana -> GameState -> GameState
 setPool pid pool gs = gs {GameState.manaPool = Map.insert pid pool (GameState.manaPool gs)}
@@ -3108,6 +3118,10 @@ data Sources = MkSources
     -- The capacity the list was swept under, which re-measures a source at a
     -- nonzero announced X.
     sourceCapacity :: Capacity,
+    -- The CR 603.10 sample every supply's triggeredYields files, taken once.
+    sourceSample :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics),
+    -- Replacement.manaRewrites of the board, its replacements gathered once.
+    sourceRewrites :: ObjectId -> [ManaType],
     -- Each of `sourceIds`' supplies at X = 0, in the same order.
     sourceSupplies :: [[(Activations.Activations, Yield, ManaCost, Activations.Activations)]],
     sourceBorrowed :: ObjectId -> [Maybe ManaRestriction.ManaRestriction],
@@ -3122,10 +3136,14 @@ supplySourcesGiven :: Capacity -> [Projection.ControlGrant] -> Map.Map ObjectId 
 supplySourcesGiven capacity grants pcs pid gs =
   let ids = manaSourcesGiven Set.empty (supplyCapacity capacity) grants pcs pid gs
       borrowed = PlayerEffect.tapForManaGrants pid gs
+      sample = Trigger.battlefieldCandidates gs
+      rewritesOf = Replacement.manaRewrites gs
    in MkSources
         { sourceIds = ids,
           sourceCapacity = capacity,
-          sourceSupplies = fmap (\oid -> manaSuppliesGiven 0 capacity pcs pid (borrowed oid) oid gs) ids,
+          sourceSample = sample,
+          sourceRewrites = rewritesOf,
+          sourceSupplies = fmap (\oid -> manaSuppliesGiven 0 capacity sample rewritesOf pcs pid (borrowed oid) oid gs) ids,
           sourceBorrowed = borrowed,
           sourceClauses = PlayerEffect.spendManaAsThough pid gs,
           sourceLifeForMana = PlayerEffect.lifeForMana pid gs,
@@ -3218,7 +3236,7 @@ payableResolutionsGiven subject spending swept pcs pid committed committedEnergy
         | costClauses == clauses = serves
         | otherwise = serves . rewriteSupply costClauses
       pooled = fmap (rewriteSupply clauses . supplyOf admitting) (unitsOf (Game.poolOf pid gs))
-      suppliesAt limit oid = manaSuppliesGiven limit capacity pcs pid (sourceBorrowed swept oid) oid gs
+      suppliesAt limit oid = manaSuppliesGiven limit capacity (sourceSample swept) (sourceRewrites swept) pcs pid (sourceBorrowed swept oid) oid gs
       -- CR 601.2b / 602.2b: a route announcing its own X (Wizard's Rockets)
       -- is priced at every X up to D * 2^(m - 1), where D is what the cost and
       -- every other mana-eating group demand at most and m how many such
