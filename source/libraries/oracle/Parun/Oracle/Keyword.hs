@@ -12,6 +12,7 @@ import qualified Parun.Oracle.Filter as Filter
 import qualified Parun.Oracle.Prose as Prose
 import qualified Parun.Types.Backup as Backup
 import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.Cycling as Cycling
 import qualified Parun.Types.Devour as Devour
 import qualified Parun.Types.DevourCount as DevourCount
@@ -349,7 +350,8 @@ landwalk self f = do
     _ -> []
   [Prose.capitalise (Text.unwords (before <> [word]))]
 
--- | Every keyword 'printed' answers for with no payload: the words an ingested card's text may
+-- | Every keyword 'printed' answers for with no payload: the words an
+-- ingested card's text may name alone.
 standalone :: [Keyword.Keyword]
 standalone =
   [ Keyword.Deathtouch,
@@ -458,3 +460,107 @@ standalone =
 -- 'standalone', which holds the keywords the codec writes as a bare tag.
 landwalks :: [Keyword.Keyword]
 landwalks = [Keyword.Landwalk (Filter.Type.HasSubtype subtype) | subtype <- [Subtype.Plains, Subtype.Island, Subtype.Swamp, Subtype.Mountain, Subtype.Forest]]
+
+-- | The keywords 'printed' answers for with a number alone, each as the
+-- function from it: "Crew 3". Backup is not among them: which keywords it
+-- grants depends on the printed order of the lines (CR 702.165a), which
+-- Oracle text normalised does not keep.
+numberedKeywords :: [Natural.Natural -> Keyword.Keyword]
+numberedKeywords =
+  [ Keyword.Rampage,
+    Keyword.Fading,
+    Keyword.Amplify,
+    Keyword.Modular . Just,
+    Keyword.Bushido,
+    Keyword.Soulshift,
+    Keyword.Dredge,
+    Keyword.Bloodthirst . Just,
+    Keyword.Graft,
+    Keyword.Ripple,
+    Keyword.Vanishing . Just,
+    Keyword.Absorb,
+    Keyword.Frenzy,
+    Keyword.Poisonous,
+    Keyword.Hideaway,
+    \n -> Keyword.Devour Devour.MkDevour {Devour.quality = Nothing, Devour.count = DevourCount.Fixed n},
+    Keyword.Annihilator,
+    Keyword.Tribute,
+    Keyword.Renown,
+    Keyword.Crew,
+    Keyword.Fabricate,
+    Keyword.Afflict,
+    Keyword.Afterlife,
+    Keyword.Casualty,
+    Keyword.Toxic,
+    Keyword.Saddle,
+    Keyword.Mobilize . KeywordCount.Fixed,
+    Keyword.Firebending . KeywordCount.Fixed
+  ]
+
+-- | The keywords 'printed' answers for with a cost alone, each as the function
+-- from it: "Cycling {2}" (CR 702.29a).
+costedKeywords :: [Cost.Type.Cost Keyword.Keyword -> Keyword.Keyword]
+costedKeywords =
+  [ \c -> Keyword.Equip Equip.MkEquip {Equip.cost = c, Equip.quality = Nothing, Equip.target = EquipTarget.Creature},
+    Keyword.MoreThanMeetsTheEye,
+    \c -> Keyword.Ward Ward.MkWard {Ward.cost = c, Ward.perEach = Nothing},
+    Keyword.CumulativeUpkeep,
+    Keyword.Buyback,
+    \c -> Keyword.Cycling Cycling.MkCycling {Cycling.cost = c, Cycling.searchFor = Nothing},
+    Keyword.Echo,
+    Keyword.Kicker,
+    Keyword.Multikicker,
+    Keyword.Flashback,
+    \c -> Keyword.Morph Morph.MkMorph {Morph.cost = c, Morph.variant = MorphVariant.Plain},
+    \c -> Keyword.Morph Morph.MkMorph {Morph.cost = c, Morph.variant = MorphVariant.Mega},
+    Keyword.Entwine,
+    Keyword.Replicate,
+    Keyword.Recover,
+    Keyword.AuraSwap,
+    Keyword.Fortify,
+    Keyword.Evoke,
+    Keyword.Prowl,
+    Keyword.Unearth,
+    Keyword.LevelUp,
+    Keyword.Miracle,
+    Keyword.Overload,
+    Keyword.Outlast,
+    Keyword.Dash,
+    Keyword.Surge,
+    Keyword.Escalate,
+    Keyword.Embalm,
+    Keyword.Eternalize,
+    Keyword.Spectacle,
+    Keyword.Escape,
+    Keyword.Foretell . ForetellCost.Stated,
+    Keyword.Cleave,
+    Keyword.Reconfigure,
+    Keyword.Blitz,
+    Keyword.Squad,
+    Keyword.Disguise,
+    Keyword.Plot,
+    Keyword.Offspring,
+    Keyword.Freerunning,
+    Keyword.Bestow,
+    Keyword.Mutate,
+    Keyword.Mayhem . Just,
+    Keyword.Madness . MadnessCost.Stated,
+    Keyword.Scavenge,
+    Keyword.Encore,
+    Keyword.WebSlinging,
+    Keyword.Sneak,
+    Keyword.Transmute,
+    Keyword.Transfigure,
+    Keyword.Warp,
+    Keyword.Disturb,
+    Keyword.Harmonize
+  ]
+
+-- | The keywords 'printed' answers for with a number and a cost, each as the
+-- function from them: "Reinforce 1\8212{1}{W}" (CR 702.77a), "Suspend
+-- 4\8212{G}" (CR 702.62a).
+numberedCostedKeywords :: [Natural.Natural -> Cost.Type.Cost Keyword.Keyword -> Keyword.Keyword]
+numberedCostedKeywords =
+  [ \n c -> Keyword.Reinforce Reinforce.MkReinforce {Reinforce.amount = n, Reinforce.cost = c},
+    \n c -> Keyword.Suspend (Just Suspend.MkSuspend {Suspend.counters = SuspendCounters.Literal n, Suspend.cost = c})
+  ]

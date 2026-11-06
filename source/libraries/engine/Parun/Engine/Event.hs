@@ -56,6 +56,7 @@ import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword
 import qualified Parun.Engine.ManaRider as ManaRider
+import qualified Parun.Engine.Plane as Plane
 import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Players as Players
 import qualified Parun.Engine.Projection as Projection
@@ -214,6 +215,7 @@ import qualified Parun.Types.Milled as Milled
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.MutateSide as MutateSide
+import qualified Parun.Types.NumberFloor as NumberFloor
 import Parun.Types.Object (Object)
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
@@ -453,7 +455,7 @@ restampLifeChanges logged =
 recordEventOver :: GameState -> GameEvent -> GameState -> GameState
 recordEventOver board event gs =
   let group = GameState.nextEventGroup gs
-   in (involveActedOn event gs)
+   in (involveActedOn event (exposeShown event gs))
         { GameState.events = GameState.events gs Seq.|> LoggedEvent.MkLoggedEvent {LoggedEvent.group = group, LoggedEvent.event = event},
           GameState.nextEventGroup =
             if GameState.eventGroupDepth gs == 0
@@ -2332,16 +2334,13 @@ loop settle asOf batch diverting allowances applied prevented exiledBy shuffling
     -- hallowed-moonlight-exiles-a-token-that-enters-as-a-copy-of-a-creature and
     -- hallowed-moonlight-exiles-a-card-that-enters-as-a-copy-of-a-creature.
     --
-    -- CR 616.1e: for a minted object (`from` the battlefield, runEntry's
-    -- convention), a redirect and the CR 616.1e entry rewrites still applicable
-    -- are one choice for its controller, and CR 616.1f re-collects after each.
-    -- Proved by the scenarios
-    -- hallowed-moonlight-exiles-a-wood-elemental-token-before-it-sacrifices and
-    -- hallowed-moonlight-exiles-a-wood-elemental-token-after-it-sacrifices.
-    --
-    -- Not implemented: that choice for a card moved onto the battlefield, whose
-    -- diverted entry is rolled back with the rewrites already applied; the
-    -- redirect goes first there (#6383).
+    -- CR 616.1e: a redirect and the CR 616.1e entry rewrites still applicable
+    -- are one choice for the entering object's controller, and CR 616.1f
+    -- re-collects after each. Proved by the scenarios
+    -- hallowed-moonlight-exiles-a-wood-elemental-token-before-it-sacrifices,
+    -- hallowed-moonlight-exiles-a-wood-elemental-token-after-it-sacrifices and
+    -- their two -card- twins; a card's diverted entry keeps what applied first
+    -- (unenter).
     bucket
       | Just from <- diverting,
         ProposedEvent.WouldEnter oid <- event,
@@ -2352,7 +2351,7 @@ loop settle asOf batch diverting allowances applied prevented exiledBy shuffling
                 Just (ProposedEvent.WouldChangeZone zc _ _ _)
                   | ZoneChange.to zc == Zone.Battlefield -> loop settle asOf batch Nothing allowances applied prevented exiledBy shuffling split event
                 _ -> pure (redirected, [], prevented, exiledBy, shuffling, split)
-          if from /= Zone.Battlefield || null bucket || null redirects || not (all ((== ReplacementBucket.Other) . Replacement.bucketOf) redirects)
+          if null bucket || null redirects || not (all ((== ReplacementBucket.Other) . Replacement.bucketOf) redirects)
             then continue =<< divertEntry batch from oid
             else do
               picked <- Replacement.choose gs event (bucket <> redirects)
@@ -5304,7 +5303,7 @@ chooseQuality quality chooser acquisition oid = case quality of
         then pure most
         else do
           gs <- State.get
-          answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor chooser gs) chooser oid least (Just most))
+          answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor chooser gs) chooser oid least NumberFloor.Least (Just most))
           pure (max least (min most answer))
     let pick chosen _ = do
           picked <- Game.chooseAmong (\decider who -> Prompt.ChooseColor decider who oid) chooser (filter (`Set.notMember` chosen) [minBound .. maxBound :: Color.Color])
@@ -5317,7 +5316,7 @@ chooseQuality quality chooser acquisition oid = case quality of
     gs <- State.get
     let least = ChooseBetween.least range
         most = ChooseBetween.most range
-    answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor chooser gs) chooser oid least (Just most))
+    answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor chooser gs) chooser oid least NumberFloor.Least (Just most))
     State.modify' (Game.recordChoice Chosen.Number acquisition (const (Just (max least (min most answer)))) oid)
   where
     subtype prompt = do
@@ -7337,20 +7336,33 @@ stayPut oid obj requestedDest position shuffling = case Object.zone obj of
   _ -> pure Seq.empty
 
 -- CR 701.20d's new object for a library card shown to a player -- revealed (a
--- live CR 701.20a window, a Revealed entry this turn, or CR 401.6's revealed top
--- card, GameState.revealedTops) or looked at (CR 701.20e's Looked) -- re-minted
--- where it lies (remint). Answers the id the card now has.
+-- live CR 701.20a window, or a Revealed entry) or looked at (CR 701.20e's
+-- Looked) -- re-minted where it lies (remint). CR 701.24a's "no player knows
+-- their order" widens it to every card whose id reached a seat
+-- (Object.exposed): one shown on an earlier turn, or a top card shown to its
+-- owner alone. Answers the id the card now has.
+-- Parun.PlayerViewSpec's CR 701.24a cases prove the widening.
 forgetShown :: ObjectId -> GameState -> (ObjectId, GameState)
 forgetShown oid gs = case Game.lookupObject oid gs of
   Just obj
-    | Object.zone obj == Zone.Library && shown -> remint oid gs
-    where
-      shown = not (Set.null (Object.revealed obj)) || elem oid (GameState.revealedTops gs) || any names (GameState.events gs)
-      names logged = case LoggedEvent.event logged of
-        GameEvent.Revealed r -> Revealed.card r == oid
-        GameEvent.Looked l -> Looked.card l == oid
-        _ -> False
+    | Object.zone obj == Zone.Library && (Object.exposed obj || not (Set.null (Object.revealed obj))) -> remint oid gs
   _ -> (oid, gs)
+
+-- | CR 701.24a: mark that an object's id has reached a seat (Object.exposed).
+expose :: ObjectId -> GameState -> GameState
+expose oid gs = gs {GameState.objects = Map.adjust (\obj -> obj {Object.exposed = True}) oid (GameState.objects gs)}
+
+-- | `expose` for the card a logged event shows (shownCard).
+exposeShown :: GameEvent -> GameState -> GameState
+exposeShown event = maybe id expose (shownCard event)
+
+-- | The card a reveal (CR 701.20a) or a look showed, CR 701.20e having a look
+-- follow a reveal's rules.
+shownCard :: GameEvent -> Maybe ObjectId
+shownCard event = case event of
+  GameEvent.Revealed revealed -> Just (Revealed.card revealed)
+  GameEvent.Looked looked -> Just (Looked.card looked)
+  _ -> Nothing
 
 -- A library card swapped into the same place in its pile under a fresh id,
 -- through Object.newIncarnation. Not a zone change, so nothing is logged and no
@@ -7382,7 +7394,8 @@ remint oid gs = case Game.lookupObject oid gs of
 -- settle that is no longer revealed there -- a card is over it, or nothing
 -- reveals it now -- is re-minted where it lies (remint), so it is a new object
 -- once revealed again; then each library's revealed top is recorded
--- (Visibility.revealedTop). Settled at CR 117.5 and after each instruction
+-- (Visibility.revealedTop), and each top card any seat sees, a look's audience
+-- included, is exposed (CR 701.24a, forgetShown). Settled at CR 117.5 and after each instruction
 -- (Parun.Engine.Resolve.Effect.applyEffectWith), so a run that ends and
 -- resumes within one resolution is seen.
 --
@@ -7397,7 +7410,9 @@ settleRevealedTops gs =
   let now = Map.fromList [(pid, top) | pid <- Map.keys (GameState.players gs), Just top <- [Visibility.revealedTop pid gs]]
       lapsed = [oid | (pid, oid) <- Map.toList (GameState.revealedTops gs), Map.lookup pid now /= Just oid, Game.zoneOf oid gs == Just Zone.Library]
       reminted = Foldable.foldl' (\g oid -> snd (remint oid g)) gs lapsed
-   in reminted {GameState.revealedTops = now}
+      seated = Map.keys (GameState.players reminted)
+      seen = [top | pid <- seated, Just top <- [Game.shownTop pid reminted], any (\seat -> Visibility.sees seat top reminted == Visibility.Type.Visible) seated]
+   in (Foldable.foldl' (flip expose) reminted seen) {GameState.revealedTops = now}
 
 -- forgetShown over every card an instruction reordered, in the order given.
 forgetAllShown :: (Foldable t) => t ObjectId -> GameState -> GameState
@@ -8498,13 +8513,14 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                         if fromZone == Zone.Stack then changeZoneReturning settle oid Zone.Graveyard else pure Seq.empty
                       -- CR 614.6 / 614.12: a battlefield-bound redirect, asked inside
                       -- the entry loop (Replacement.matchesPrinted), takes the card,
-                      -- so the entry is unmade and the modified event is the move,
+                      -- so the entry is unmade for the card alone (unenter) and the
+                      -- modified event is the move,
                       -- from where it was, that happens instead; the answer is where
                       -- it landed, as for a redirect the loop above settled. Proved
                       -- by the scenario
                       -- hallowed-moonlight-exiles-a-card-that-enters-as-a-copy-of-a-creature.
                       Just (EntryRefusal.Diverted zone end) -> do
-                        State.put unentered
+                        State.modify' (unenter unentered oid newId)
                         changeZoneWithCause settle discarded asOf batch oid zone end Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried resolving Seq.empty
                     pure (fmap (\r -> (r, if fromZone == Zone.Stack || isDiverted r then fallen else Seq.empty)) refusal)
               -- Read off the refusal and not off whether `newId` still names an
@@ -9959,6 +9975,39 @@ placeDiverted oid zone position = do
        in Game.insertIntoZone zone position (Object.owner obj) oid g1 {GameState.objects = Map.insert oid arrived (GameState.objects g1)}
     recordMintedArrival zone oid
 
+-- CR 614.6 / 616.1e: a card's entry a redirect took, unmade for the card alone,
+-- so what the entry loop applied before the redirect stands (Wood Elemental's
+-- sacrifice): `newId` is gone, and `oid` is back where `unentered` held it, with
+-- what the move re-keyed to `newId` (carryOver, perpetuate) re-keyed back. A
+-- stored effect made inside the loop names `newId` no more. Proved by the
+-- scenarios hallowed-moonlight-exiles-a-wood-elemental-card-after-it-sacrifices
+-- and hallowed-moonlight-exiles-a-card-that-enters-as-a-copy-of-a-creature.
+unenter :: GameState -> ObjectId -> ObjectId -> GameState -> GameState
+unenter unentered oid newId gs =
+  let restore field = Map.alter (const (Map.lookup oid (field unentered))) oid
+      unanchor eff
+        | ContinuousEffect.timestamp eff < GameState.nextTimestamp unentered = Just (reanchor newId (Set.singleton oid) eff)
+        | Affected.TheseObjects oids <- ContinuousEffect.affected eff,
+          Set.member newId oids =
+            let rest = Set.delete newId oids
+             in if Set.null rest then Nothing else Just eff {ContinuousEffect.affected = Affected.TheseObjects rest}
+        | otherwise = Just eff
+      deleted = Game.deleteObject newId gs
+      placed = maybe deleted (\origin -> Game.returnToOrigin oid origin deleted) (Game.entryOriginOf oid unentered)
+      stacked = case List.elemIndex oid (GameState.stack unentered) of
+        Just index -> let (above, below) = List.splitAt index (GameState.stack placed) in above <> (oid : below)
+        Nothing -> GameState.stack placed
+   in placed
+        { GameState.objects = restore GameState.objects (GameState.objects placed),
+          GameState.stack = stacked,
+          GameState.stackedIn = restore GameState.stackedIn (GameState.stackedIn placed),
+          GameState.lastKnown = restore GameState.lastKnown (GameState.lastKnown placed),
+          GameState.stackArchive = restore GameState.stackArchive (GameState.stackArchive placed),
+          GameState.continuousEffects = Maybe.mapMaybe unanchor (GameState.continuousEffects placed),
+          GameState.replacements = fmap (rewatch newId oid . reenter newId oid) (GameState.replacements placed),
+          GameState.exiledWith = fmap (relink newId oid) (GameState.exiledWith placed)
+        }
+
 -- CR 614.1a on the two roads that MINT onto the battlefield: an object whose
 -- EntryRewrite.SacrificeToEnter went unpaid, or whose ExileFromGraveyard with
 -- `orGraveyard` could not exile its count, never entered, so it is removed --
@@ -11206,19 +11255,20 @@ revealResolving resolving pid oid = do
   stampReveal (RevealWindow.WhileOnStack resolving) oid
 
 -- | Susan Foreman's rewrite of CR 701.31b: this player looks at the top two
--- cards of their planar deck and puts the one they choose on top and the other
--- on the bottom, on behalf of the object `source`. With fewer than two there is
--- nothing to put anywhere.
+-- cards of their planar deck (CR 901.15c: the communal one) and puts the one
+-- they choose on top and the other on the bottom, on behalf of the object
+-- `source`. With fewer than two there is nothing to put anywhere.
 arrangeTopTwo :: ObjectId -> PlayerId -> Game ()
 arrangeTopTwo source pid = do
   gs <- State.get
-  case Game.sideDeckOf SideDeck.Planar pid gs of
+  let holder = Plane.planarDeckHolder pid gs
+  case Game.sideDeckOf SideDeck.Planar holder gs of
     first : second : rest -> do
       Monad.mapM_ (look pid) [first, second]
       chosen <- Game.chooseAmong (\decider asked -> Prompt.ChooseCardFromAmong decider asked source) pid [first, second]
       let top = Maybe.fromMaybe first chosen
           bottom = if top == first then second else first
-      State.modify' (Game.overSideDecks SideDeck.Planar (Map.insert pid (Seq.fromList (top : rest <> [bottom]))))
+      State.modify' (Game.overSideDecks SideDeck.Planar (Map.insert holder (Seq.fromList (top : rest <> [bottom]))))
     _ -> pure ()
 
 -- | CR 701.20e: a player looks at a card, shown to them and, per CR 723.4, to

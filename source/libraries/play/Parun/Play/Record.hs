@@ -68,9 +68,8 @@ entryFor seats asked answer = case prompt of
     at pid move = Timed.MkTimed (When.MkWhen (GameState.turnNumber gs) (GameState.phase gs) (labelOf seats pid)) Nothing (Entry.Do move)
 
 -- | Objects by card name and creation order, as the runner reads them back
--- on the same state; players by their seat's label.
---
--- Not implemented: naming an object with no card (#5232).
+-- on the same state, and an object with no card, an ability on the stack (CR
+-- 405.1), by its place from the top; players by their seat's label.
 namer :: Map.Map PlayerId.PlayerId Label.Label -> GameState.GameState -> Reply.Namer
 namer seats gs =
   Reply.MkNamer
@@ -78,7 +77,9 @@ namer seats gs =
         Just card ->
           let name = Face.name (NonEmpty.head (Card.faces card))
            in Reference.Printed name (maybe 0 ((+ 1) . Int.toNaturalSaturating) (List.elemIndex oid (Scenario.namedObjects name gs)))
-        Nothing -> Reference.Labelled (Label.MkLabel (Text.pack ("object " <> show (ObjectId.unwrap oid)))),
+        Nothing -> case List.elemIndex oid (GameState.stack gs) of
+          Just index -> Reference.OnStack (Int.toNaturalSaturating index + 1)
+          Nothing -> Reference.Labelled (Label.MkLabel (Text.pack ("object " <> show (ObjectId.unwrap oid)))),
       Reply.namePlayer = labelOf seats
     }
 

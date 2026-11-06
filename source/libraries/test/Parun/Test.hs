@@ -228,6 +228,7 @@ import qualified Parun.Codec.CostComponentSpec
 import qualified Parun.Codec.CostDirectionSpec
 import qualified Parun.Codec.CostKeywordSpec
 import qualified Parun.Codec.CostModifierSpec
+import qualified Parun.Codec.CostOfferSpec
 import qualified Parun.Codec.CostReductionSpec
 import qualified Parun.Codec.CostScaleSpec
 import qualified Parun.Codec.CostSpec
@@ -530,6 +531,7 @@ import qualified Parun.Codec.NextDamageOutcomeSpec
 import qualified Parun.Codec.NextStepOfSpec
 import qualified Parun.Codec.NinjutsuSpec
 import qualified Parun.Codec.NinjutsuVariantSpec
+import qualified Parun.Codec.NumberFloorSpec
 import qualified Parun.Codec.ObjectCountSpec
 import qualified Parun.Codec.ObjectIdSpec
 import qualified Parun.Codec.ObjectRefSpec
@@ -1225,6 +1227,7 @@ spec s registry corpus = do
   Parun.Codec.CostDirectionSpec.spec s
   Parun.Codec.CostKeywordSpec.spec s
   Parun.Codec.CostModifierSpec.spec s
+  Parun.Codec.CostOfferSpec.spec s
   Parun.Codec.CostReductionSpec.spec s
   Parun.Codec.CostScaleSpec.spec s
   Parun.Codec.CostSpec.spec s
@@ -1529,6 +1532,7 @@ spec s registry corpus = do
   Parun.Codec.ObjectSnapshotSpec.spec s
   Parun.Codec.ObjectSpec.spec s
   Parun.Codec.OfferCastSpec.spec s
+  Parun.Codec.NumberFloorSpec.spec s
   Parun.Codec.OnsetSpec.spec s
   Parun.Codec.OperandSpec.spec s
   Parun.Codec.OptionalDecisionSpec.spec s

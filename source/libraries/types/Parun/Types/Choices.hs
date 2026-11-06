@@ -3,6 +3,7 @@ module Parun.Types.Choices where
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import Numeric.Natural (Natural)
+import qualified Parun.Types.CostOffer as CostOffer
 import qualified Parun.Types.Mana as Mana
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ModeIndex as ModeIndex
@@ -20,6 +21,9 @@ data Choices = MkChoices
     modes :: Maybe (Seq.Seq ModeIndex.ModeIndex),
     x :: Maybe Natural,
     cost :: Maybe ManaCost.ManaCost,
+    -- | What offered the cost wanted, where `cost` alone leaves two candidates
+    -- (CR 601.2b).
+    costOffer :: Maybe CostOffer.CostOffer,
     -- | CR 601.2h's permutation of the non-mana cost components' printed
     -- indices.
     costOrder :: Maybe [Natural],
@@ -37,6 +41,7 @@ none =
       modes = Nothing,
       x = Nothing,
       cost = Nothing,
+      costOffer = Nothing,
       costOrder = Nothing,
       manaSources = Seq.empty,
       manaYields = Seq.empty

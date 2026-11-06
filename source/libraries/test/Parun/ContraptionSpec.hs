@@ -29,6 +29,7 @@ import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.Sba as Sba
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Engine.Stack as Stack
+import qualified Parun.Engine.Visibility as Visibility
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
@@ -49,6 +50,7 @@ import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.SideDeck as SideDeck
+import qualified Parun.Types.Visibility as Visibility.Type
 import qualified Parun.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -128,6 +130,12 @@ assembleSpec s registry = Spec.describe s "Assemble" $ do
     Spec.assertEqWith s "the three sprockets were offered, once" (sprocketsOffered asked) [[Designation.Sprocket1, Designation.Sprocket2, Designation.Sprocket3]]
     Spec.assertEqWith s "one card is left in the Contraption deck" (length (Game.sideDeckOf SideDeck.Contraption S.alice after)) 1
     Spec.assertBool s (not (Set.member thopter (GameState.battlefield after))) "and the Ornithopter was destroyed"
+  Spec.it s "a card in the Contraption deck is face down to every player, owner included" $ do
+    depot <- S.printingOf s registry "Arms Depot"
+    let gs = withDepots depot 2 S.alice (Setup.emptyGame S.bothPlayers)
+        sight oid = [Visibility.sees seat oid gs | seat <- [S.alice, S.bob]]
+        obscured = [Visibility.Type.Obscured, Visibility.Type.Obscured]
+    Spec.assertEqWith s "CR 708.5: the Contraption back hides both cards" (fmap sight (Game.sideDeckOf SideDeck.Contraption S.alice gs)) [obscured, obscured]
   Spec.it s "an empty Contraption deck assembles nothing and asks nothing" $ do
     pick <- S.printingOf s registry "First Pick"
     forest <- S.printingOf s registry "Forest"

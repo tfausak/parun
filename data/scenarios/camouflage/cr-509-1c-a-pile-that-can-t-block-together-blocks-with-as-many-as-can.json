@@ -1,0 +1,120 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "forest",
+            "ready": true
+          },
+          {
+            "card": "Charging Rhino",
+            "label": "rhino",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Camouflage",
+            "label": "camo"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "ready": true
+          },
+          {
+            "card": "Giant Spider",
+            "label": "spider",
+            "ready": true
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "BeginningOfCombat"
+  },
+  "description": "CR 509.1 / 509.1c Camouflage: where a pile can't block its attacker together, its defending player chooses which of its creatures block, but must block with as many as can",
+  "note": "Charging Rhino can't be blocked by more than one creature, and bob's one pile holds Hill Giant and Giant Spider. Declining to block obeys none of the piles' blocks where one can be obeyed, so it is refused; the Spider alone blocking stands.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$rhino"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$forest"
+          ],
+          "object": "$camo"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "DividePiles",
+          "with": [
+            [
+              "$giant",
+              "$spider"
+            ]
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "player": "bob",
+      "refuse": {
+        "Block": {}
+      },
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Block": {
+          "$spider": [
+            "$rhino"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Blockers": {
+          "attacker": "$rhino",
+          "blockers": [
+            "$spider"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    }
+  ]
+}

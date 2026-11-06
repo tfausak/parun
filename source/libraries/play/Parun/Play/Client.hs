@@ -219,12 +219,14 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
     variable <- field "variable" offer >>= textOf
     least <- field "least" offer >>= naturalOf
     greatest <- field "greatest" offer >>= naturalOf
-    pure (ranged (Text.concat [Text.pack "Choose ", variable, Text.pack " for ", objectName view source]) least (Just greatest))
-  -- A bid's least is the high bid, and it has no greatest.
+    pure (ranged (Text.concat [Text.pack "Choose ", variable, Text.pack " for ", objectName view source]) least Text.empty (Just greatest))
+  -- CR 608.2d: a bid's least is the high bid, which answering declines to top.
   "ChooseNumber" -> do
     source <- field "source" offer
     least <- field "least" offer >>= naturalOf
-    pure (ranged (Text.pack "Choose a number for " <> objectName view source) least (field "greatest" offer >>= naturalOf))
+    meaning <- field "floor" offer >>= field "type" >>= textOf
+    let note = if meaning == Text.pack "HighBid" then Text.pack ("; " <> show least <> " lets the high bid stand") else Text.empty
+    pure (ranged (Text.pack "Choose a number for " <> objectName view source) least note (field "greatest" offer >>= naturalOf))
   "ChooseOptional" -> do
     source <- field "source" offer
     pure
@@ -283,9 +285,9 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
   where
     offer = Question.offer question
     -- A number from least to greatest, or from least up with no greatest.
-    ranged heading least greatest =
+    ranged heading least note greatest =
       let range = maybe ("at least " <> show least) (\most -> "from " <> show least <> " to " <> show most) greatest
-       in ( [heading <> Text.pack (", " <> range <> ":")],
+       in ( [heading <> Text.pack (", " <> range) <> note <> Text.pack ":"],
             \typed -> case Read.readMaybe (Text.unpack (Text.strip typed)) of
               Just n | least <= n && all (n <=) greatest -> Right (R.Number (toInteger n))
               _ -> Left (Text.pack ("Type a number " <> maybe "of " (const "") greatest <> range <> "."))

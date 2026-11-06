@@ -6,17 +6,20 @@
 module Parun.Engine.Plane where
 
 import qualified Data.List as List
+import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Face as Face
+import qualified Parun.Types.GameSettings as GameSettings
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.SideDeck as SideDeck
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Parun.Types.TypeLine as TypeLine
@@ -37,6 +40,15 @@ isPhenomenonFace face = Set.member CardType.Phenomenon (TypeLine.types (Face.typ
 -- leaves the command zone, where nothing can copy it or change its type.
 isPlanarCard :: ObjectId -> GameState -> Bool
 isPlanarCard oid gs = maybe False isPlanarFace (Game.faceOf oid gs)
+
+-- | CR 901.15c: the seat whose GameState.sideDecks entry holds this player's
+-- planar deck: the player themselves, or under the single planar deck option the
+-- one seat keyed, which holds the communal deck. Which seat that is is storage,
+-- not ownership (CR 901.15b), and it stays keyed after its player leaves.
+planarDeckHolder :: PlayerId -> GameState -> PlayerId
+planarDeckHolder pid gs
+  | GameSettings.singlePlanarDeck (GameState.settings gs) = maybe pid fst (Map.lookupMin (Game.sideDecksOf SideDeck.Planar gs))
+  | otherwise = pid
 
 -- | CR 901.10 / 901.10b: the owner of the phenomenon card this object is a
 -- triggered ability from, or a copy of one (CR 707.10b), and Nothing for any

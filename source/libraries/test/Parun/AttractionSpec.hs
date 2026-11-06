@@ -35,6 +35,7 @@ import qualified Parun.Engine.Resolve.Common as Resolve
 import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Engine.Stack as Stack
+import qualified Parun.Engine.Visibility as Visibility
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
@@ -69,6 +70,7 @@ import qualified Parun.Types.SourceChoices as SourceChoices
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.Uses as Uses
+import qualified Parun.Types.Visibility as Visibility.Type
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChangePattern as ZoneChangePattern
 import qualified Parun.Types.ZoneChangeR as ZoneChangeR
@@ -117,6 +119,19 @@ openSpec s registry = Spec.describe s "Open an Attraction" $ do
     Spec.assertEqWith s "under alice's control" (S.countOnBattlefieldByName bumperCars S.alice after) 1
     Spec.assertEqWith s "and 202f is left in the deck" (fmap (`Game.lightsOf` after) (Attraction.deckOf S.alice after)) [Set.fromList [4, 5, 6]]
     Spec.assertEqWith s "which was two cards before" (length (Attraction.deckOf S.alice gs)) 2
+  Spec.it s "CR 701.51b / 708.5 nobody sees the cards still in the Attraction deck, before or after the open" $ do
+    attendant <- S.printingOf s registry "Deadbeat Attendant"
+    swamp <- S.printingOf s registry "Swamp"
+    cars <- S.printingOf s registry "Bumper Cars"
+    let (gs, spellId) = S.handOne attendant (withAttractions S.alice [carsA cars, carsF cars] (S.landsInPlay swamp 2))
+        cast = S.runPure S.identityAnswer gs (S.cast S.alice spellId)
+        after = S.runPure S.identityAnswer cast Engine.priorityLoop
+        sight board oid = [Visibility.sees seat oid board | seat <- [S.alice, S.bob]]
+        opened = filter (\oid -> Game.lightsOf oid after /= Set.empty) (Set.toList (GameState.battlefield after))
+        obscured = [Visibility.Type.Obscured, Visibility.Type.Obscured]
+    Spec.assertEqWith s "CR 708.5: neither player, owner included, sees the deck before the open" (fmap (sight gs) (Attraction.deckOf S.alice gs)) [obscured, obscured]
+    Spec.assertEqWith s "CR 708.5: nor the card left in it after" (fmap (sight after) (Attraction.deckOf S.alice after)) [obscured]
+    Spec.assertEqWith s "CR 701.51b: while both see the card opened" (fmap (sight after) opened) [[Visibility.Type.Visible, Visibility.Type.Visible]]
   Spec.it s "CR 717.2 / 103.3a the Attraction deck is shuffled before the game begins" $ do
     swamp <- S.printingOf s registry "Swamp"
     cars <- S.printingOf s registry "Bumper Cars"

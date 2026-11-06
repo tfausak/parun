@@ -2518,6 +2518,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.EntriesTrigger entries -> filterNames asking (EntriesTrigger.entrants entries)
   PlayerEffect.AdditionalTriggers bearers -> filterNames asking bearers
   PlayerEffect.ControlledWhileSearching -> mempty
+  PlayerEffect.BlocksFromPiles -> mempty
   PlayerEffect.YouChoose _declaration -> mempty
   PlayerEffect.ExilesFoundWhileSearching -> mempty
   PlayerEffect.CantAttackWithCreatures -> mempty

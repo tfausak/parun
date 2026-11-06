@@ -1,0 +1,105 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "forest",
+            "ready": true
+          },
+          {
+            "card": "Archangel of Tithes",
+            "label": "angel",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Camouflage",
+            "label": "camo"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "bforest",
+            "ready": true
+          },
+          {
+            "card": "Giant Spider",
+            "label": "spider",
+            "ready": true
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "BeginningOfCombat"
+  },
+  "description": "CR 509.1c Camouflage under Archangel of Tithes: a pile block that costs something is not required, so its defending player is asked and may decline",
+  "note": "bob's one pile holds Giant Spider, drawn for the attacking Archangel of Tithes, and blocking it costs {1}. Obeying the pile is legal but not free, so bob is asked rather than made to block; with a ready Forest declining is a real choice, and his empty block stands: the Archangel deals him 3.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$angel"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$forest"
+          ],
+          "object": "$camo"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "DividePiles",
+          "with": [
+            [
+              "$spider"
+            ]
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Block": {}
+      },
+      "player": "bob",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 17,
+          "player": "bob"
+        }
+      },
+      "player": "alice",
+      "step": "EndOfCombat",
+      "turn": 1
+    }
+  ]
+}

@@ -1269,6 +1269,35 @@ supplementaryDeckSpec s registry = Spec.describe s "supplementary decks" $ do
     Spec.assertEqWith s "CR 311.2 and the Academy is back in alice's planar deck" (cardNames (Planechase.deckOf S.alice after) after) ["Academy at Tolaria West"]
     Spec.assertEqWith s "not in a library or a hand" (length (Game.zoneMembers Zone.Library S.alice after) + S.handSize S.alice after) 10
 
+  -- CR 901.15a / 103.3a through Setup.newGame: alice's Academy and bob's
+  -- Tazeem make one communal deck, shuffled once as a whole, whose top card is
+  -- the starting plane.
+  Spec.it s "CR 901.15a a new game shuffles one communal planar deck" $ do
+    forest <- S.printingOf s registry "Forest"
+    academy <- S.printingOf s registry "Academy at Tolaria West"
+    tazeem <- S.printingOf s registry "Tazeem"
+    let planes p = (Deck.fromCards (Map.singleton forest 20)) {Deck.sideDecks = Map.singleton SideDeck.Planar (Map.singleton p 1)}
+        game = Setup.newGame S.performer ((S.alice, planes academy) NonEmpty.:| [(S.bob, planes tazeem)])
+        ((_, started), shuffles) = State.runState (Engine.runGame (recordShuffles S.identityAnswer) (Setup.gameWith communalPlanes S.bothPlayers) game) []
+        planar = Set.fromList (Planechase.faceUp started <> Planechase.deckOf S.bob started)
+    Spec.assertEqWith s "one plane is face up and the other in the communal deck" (length (Planechase.faceUp started), length (Planechase.deckOf S.bob started)) (1, 1)
+    Spec.assertBool s (elem planar (fmap Set.fromList shuffles)) "CR 103.3a the communal deck was shuffled whole"
+
+  -- CR 901.15c / 727.2: a restart regroups the planar cards by owner, and under
+  -- the single planar deck option they are one deck again: bob, restarting,
+  -- turns up its top and leaves the other plane in it.
+  Spec.it s "CR 901.15c a restarted Planechase game keeps one communal planar deck" $ do
+    academy <- S.printingOf s registry "Academy at Tolaria West"
+    tazeem <- S.printingOf s registry "Tazeem"
+    karn <- S.printingOf s registry "Karn Liberated"
+    board <- supplementaryBoardWith communalPlanes s registry (\d -> d {Deck.sideDecks = Map.singleton SideDeck.Planar (Map.singleton academy 1)}) (\d -> d {Deck.sideDecks = Map.singleton SideDeck.Planar (Map.singleton tazeem 1)})
+    let started = S.runPure S.identityAnswer board (Planechase.setStartingPlane S.alice)
+        (karnId, withKarn) = S.addPermanent karn S.bob started
+        before = (S.addCounter CounterKind.Loyalty 14 karnId withKarn) {GameState.activePlayer = S.bob, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.bob}
+        after = snd (Engine.runGamePure karnAnswer before Engine.priorityLoop)
+    Spec.assertEqWith s "the old game turned up alice's Academy" (cardNames (Planechase.faceUp before) before) ["Academy at Tolaria West"]
+    Spec.assertEqWith s "CR 103.7 one plane is face up and the other in the communal deck" (length (Planechase.faceUp after), length (Planechase.deckOf S.bob after)) (1, 1)
+
   -- CR 727.2 / 103.3a: a restart starts the archenemy's scheme deck over, so
   -- the ongoing Very Soil she had face up is back in it, shuffled.
   Spec.it s "CR 727.2 / 103.3a a restart puts a face-up scheme back into the shuffled scheme deck" $ do
@@ -1309,6 +1338,21 @@ supplementaryDeckSpec s registry = Spec.describe s "supplementary decks" $ do
     Spec.assertBool s (elem (Set.fromList (Planechase.deckOf S.bob before)) [Set.fromList ids | (1, _, ids) <- asks]) "CR 729.2a bob shuffled it in the subgame"
     Spec.assertBool s (elem (Set.fromList (Planechase.deckOf S.bob after)) [Set.fromList ids | (0, _, ids) <- asks]) "CR 729.5a and again in the main game"
     Spec.assertEqWith s "CR 729.5 no plane went into a library" (length (Game.zoneMembers Zone.Library S.alice after), length (Game.zoneMembers Zone.Library S.bob after)) (10, 10)
+
+  -- CR 901.15c / 729.5a: under the single planar deck option alice turned up
+  -- her Academy, and bob's Tazeem and Caldaia play the Shahrazad subgame from
+  -- the communal deck. Both come back into it, whoever turned one up there.
+  Spec.it s "CR 901.15c the communal planar deck plays the subgame and comes back whole" $ do
+    academy <- S.printingOf s registry "Academy at Tolaria West"
+    tazeem <- S.printingOf s registry "Tazeem"
+    caldaia <- S.printingOf s registry "The Caldaia"
+    board <- supplementaryBoardWith communalPlanes s registry (\d -> d {Deck.sideDecks = Map.singleton SideDeck.Planar (Map.singleton academy 1)}) (\d -> d {Deck.sideDecks = Map.singleton SideDeck.Planar (Map.fromList [(tazeem, 1), (caldaia, 1)])})
+    before <- withShahrazad s registry (S.runPure S.identityAnswer board (Planechase.setStartingPlane S.alice))
+    let ((_, after), asks) = State.runState (Engine.runGameAsked recordAsked before Engine.priorityLoop) []
+        subStates = [g | (depth, g, _) <- asks, depth == 1]
+    Spec.assertEqWith s "the main game turned up alice's Academy" (cardNames (Planechase.faceUp before) before) ["Academy at Tolaria West"]
+    Spec.assertEqWith s "CR 729.2a the subgame turned up a plane from the communal deck" (fmap (length . Planechase.faceUp) (Maybe.listToMaybe (reverse subStates))) (Just 1)
+    Spec.assertEqWith s "CR 729.5a both are back in the communal deck" (List.sort (cardNames (Planechase.deckOf S.alice after) after)) ["Tazeem", "The Caldaia"]
 
   -- CR 729.2a / 103.4e / 904.9 / 729.5a: the scheme deck moves into the
   -- subgame, so alice is its archenemy -- at 40 life, setting a scheme in
@@ -1422,10 +1466,18 @@ castAnswer p = case p of
 -- Ten Forests in each library and alice's and bob's decks adjusted, built
 -- without opening hands so a subgame's libraries are the whole ten.
 supplementaryBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> (Deck.Deck -> Deck.Deck) -> (Deck.Deck -> Deck.Deck) -> m GameState.GameState
-supplementaryBoard s registry alices bobs = do
+supplementaryBoard = supplementaryBoardWith GameSettings.plain
+
+-- supplementaryBoard, in a game started with these options.
+supplementaryBoardWith :: (Monad m) => GameSettings.GameSettings -> Spec.Spec m n -> Registry.Registry m -> (Deck.Deck -> Deck.Deck) -> (Deck.Deck -> Deck.Deck) -> m GameState.GameState
+supplementaryBoardWith settings s registry alices bobs = do
   forest <- S.printingOf s registry "Forest"
   let deck = Deck.fromCards (Map.singleton forest 10)
-  pure (S.runPure S.identityAnswer (Setup.emptyGame S.bothPlayers) (Setup.createDeck S.alice (alices deck) >> Setup.createDeck S.bob (bobs deck)))
+  pure (S.runPure S.identityAnswer (Setup.gameWith settings S.bothPlayers) (Setup.createDeck S.alice (alices deck) >> Setup.createDeck S.bob (bobs deck)))
+
+-- CR 901.15: the single planar deck option.
+communalPlanes :: GameSettings.GameSettings
+communalPlanes = GameSettings.plain {GameSettings.singlePlanarDeck = True}
 
 -- Alice's precombat main phase with priority, Shahrazad in hand and two Plains
 -- to cast it.

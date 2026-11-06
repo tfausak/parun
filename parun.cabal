@@ -504,6 +504,8 @@ library codec
     Parun.Codec.CostKeywordSpec
     Parun.Codec.CostModifier
     Parun.Codec.CostModifierSpec
+    Parun.Codec.CostOffer
+    Parun.Codec.CostOfferSpec
     Parun.Codec.CostReduction
     Parun.Codec.CostReductionSpec
     Parun.Codec.CostScale
@@ -1121,6 +1123,8 @@ library codec
     Parun.Codec.NinjutsuSpec
     Parun.Codec.NinjutsuVariant
     Parun.Codec.NinjutsuVariantSpec
+    Parun.Codec.NumberFloor
+    Parun.Codec.NumberFloorSpec
     Parun.Codec.Object
     Parun.Codec.ObjectCount
     Parun.Codec.ObjectCountSpec
@@ -2663,6 +2667,7 @@ library types
     Parun.Types.CostDirection
     Parun.Types.CostKeyword
     Parun.Types.CostModifier
+    Parun.Types.CostOffer
     Parun.Types.CostReduction
     Parun.Types.CostScale
     Parun.Types.CostSubject
@@ -3014,6 +3019,7 @@ library types
     Parun.Types.NextStepOf
     Parun.Types.Ninjutsu
     Parun.Types.NinjutsuVariant
+    Parun.Types.NumberFloor
     Parun.Types.Object
     Parun.Types.ObjectCount
     Parun.Types.ObjectId

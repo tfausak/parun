@@ -34,7 +34,8 @@ empty =
       Combat.removedDefending = Map.empty,
       Combat.defenders = [],
       Combat.barred = [],
-      Combat.bands = []
+      Combat.bands = [],
+      Combat.pileBlocks = Nothing
     }
 
 -- | 'empty' on the wire, spelled once. Every field but `struckFirst` is
@@ -92,7 +93,8 @@ spec s = Spec.describe s "Parun.Codec.Combat" $ do
           -- CR 802.2 / 811.4, a seat distinct from every defender's.
           Combat.barred = [PlayerId.MkPlayerId 22],
           -- CR 702.22c, a band of two attackers whose ids no other field holds.
-          Combat.bands = [Set.fromList [ObjectId.MkObjectId 23, ObjectId.MkObjectId 24]]
+          Combat.bands = [Set.fromList [ObjectId.MkObjectId 23, ObjectId.MkObjectId 24]],
+          Combat.pileBlocks = Just (Map.singleton (ObjectId.MkObjectId 25) (Set.fromList [ObjectId.MkObjectId 26, ObjectId.MkObjectId 27]))
         }
       ( " {\"attackers\":{\"1\":{\"type\":\"OfPlayer\",\"value\":2}}"
           <> ",\"blockers\":{\"3\":[4]}"
@@ -109,7 +111,7 @@ spec s = Spec.describe s "Parun.Codec.Combat" $ do
           <> ",\"blockingNothing\":[21]"
           <> ",\"removedDefending\":{\"19\":20}"
           <> ",\"defenders\":[10],\"barred\":[22]"
-          <> ",\"bands\":[[23,24]]} "
+          <> ",\"bands\":[[23,24]],\"pileBlocks\":{\"25\":[26,27]}} "
       )
   -- CR 510.4's two ABSENT-looking states, which are not the same state. Nothing
   -- means the first combat damage step has not happened; the empty set means it

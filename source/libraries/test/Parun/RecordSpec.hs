@@ -75,6 +75,16 @@ spec s registry = Spec.describe s "Record" $ do
       (_, Left failure) -> Spec.assertFailure s (Text.unpack (Scenario.render failure))
       (Left reason, _) -> Spec.assertFailure s (Text.unpack reason)
 
+  Spec.it s "CR 405.2: a seat targeting a trigger names it by its place on the stack" $ do
+    matchup <- stifles s registry
+    let (outcome, timeline) = recorded bots matchup
+    Spec.assertBool s (any targetsStack timeline) "a seat targeted the stack"
+    replayed <- Scenario.run registry (saved matchup timeline)
+    case (outcome, replayed) of
+      (Right (result, _), Right final) -> Spec.assertEqWith s "same result" (GameState.result final) (Just result)
+      (_, Left failure) -> Spec.assertFailure s (Text.unpack (Scenario.render failure))
+      (Left reason, _) -> Spec.assertFailure s (Text.unpack reason)
+
   Spec.it s "a timeline missing an answer fails to replay" $ do
     matchup <- BotSpec.bears s registry
     let (_, timeline) = recorded bots matchup
@@ -84,6 +94,29 @@ spec s registry = Spec.describe s "Record" $ do
     missing <- maybe (Spec.assertFailure s "no attack to leave out") (pure . (+ half)) (Seq.findIndexL attacks (Seq.drop half timeline))
     replayed <- Scenario.run registry (saved matchup (Seq.deleteAt missing timeline))
     Spec.assertBool s (Either.isLeft replayed) "desync"
+
+-- Whether an entry chooses targets, one of them named by its place on the
+-- stack.
+targetsStack :: Timed.Timed -> Bool
+targetsStack timed = case Timed.entry timed of
+  Entry.Do (Move.Answer answer) -> Answer.prompt answer == Text.pack "ChooseTargets" && onStack (Answer.with answer)
+  _ -> False
+  where
+    onStack reply = case reply of
+      Reply.Text text -> Text.isPrefixOf (Text.pack "stack ") text
+      Reply.Array replies -> any onStack replies
+      Reply.Object fields -> any (onStack . snd) fields
+      _ -> False
+
+-- Two seats of Council of Advisors, whose enters trigger is on the stack for a
+-- Stifle to target.
+stifles :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m (NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck))
+stifles s registry = do
+  council <- S.printingOf s registry "Council of Advisors"
+  stifle <- S.printingOf s registry "Stifle"
+  island <- S.printingOf s registry "Island"
+  let deck = Deck.fromCards (Map.fromList [(council, 8), (stifle, 8), (island, 8)])
+  pure ((S.alice, deck) NonEmpty.:| [(S.bob, deck)])
 
 -- The prompt an entry answers, if it answers one.
 answered :: Timed.Timed -> Maybe Text.Text

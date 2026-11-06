@@ -13,12 +13,11 @@ import qualified Text.Read as Read
 
 -- | One string: @"$bear"@ for a label, @"Grizzly Bears"@ for the first object
 -- with that name, @"Grizzly Bears#2"@ for the second, @"trigger of $bear"@ and
--- @"ability of $bear"@ for the bear's newest ability on the stack, @"spell of
-
--- $bolt"@ for the spell the bolt became when it was cast. A string rather than a
--- tagged object because a scenario is mostly references, and because a
+-- @"ability of $bear"@ for the bear's newest ability on the stack,
+-- @"spell of $bolt"@ for the spell the bolt became when it was cast, and
+-- @"stack 2"@ for the object second from the top of the stack. A string rather
+-- than a tagged object because a scenario is mostly references, and because a
 -- reference is also a map key ('Parun.Codec.Move'\'s blocks and assignments).
-
 codec :: Codec.Codec Reference.Reference
 codec =
   Common.text
@@ -32,6 +31,7 @@ toText reference = case reference of
   Reference.TriggerOf source -> Text.pack "trigger of " <> toText source
   Reference.AbilityOf source -> Text.pack "ability of " <> toText source
   Reference.SpellOf source -> Text.pack "spell of " <> toText source
+  Reference.OnStack position -> Text.pack ("stack " <> show position)
   Reference.Printed name occurrence -> case occurrence of
     1 -> CardName.unwrap name
     _ -> CardName.unwrap name <> Text.pack ("#" <> show occurrence)
@@ -41,6 +41,9 @@ fromText text
   | Just source <- Text.stripPrefix (Text.pack "trigger of ") text = fmap Reference.TriggerOf (fromText source)
   | Just source <- Text.stripPrefix (Text.pack "ability of ") text = fmap Reference.AbilityOf (fromText source)
   | Just source <- Text.stripPrefix (Text.pack "spell of ") text = fmap Reference.SpellOf (fromText source)
+  | Just digits <- Text.stripPrefix (Text.pack "stack ") text = case Read.readMaybe (Text.unpack digits) of
+      Just position | Text.all Char.isDigit digits -> Right (Reference.OnStack position)
+      _ -> Left (Text.pack "expected a number after stack but got " <> digits)
   | otherwise = case Text.uncons text of
       Nothing -> Left (Text.pack "expected a reference but got an empty string")
       Just ('$', rest)
