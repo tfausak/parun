@@ -176,6 +176,7 @@ event context creature c = case c of
     one <- plain : thats
     opening' <- recurring
     [other (opening' <> " " <> who <> " " <> Text.unpack (Prose.article one) <> " " <> Text.unpack one) [(thatPlayer, "that player"), (castSpell, "it")]]
+  TriggerCondition.PlayerFacesDilemma PlayerRelation.You -> [other "Whenever you face a dilemma" []]
   _ -> []
   where
     self = Text.unpack (Target.self context)
