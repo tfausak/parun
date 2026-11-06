@@ -1,0 +1,111 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Wyrm's Crossing Patrol",
+            "label": "patrol",
+            "ready": true
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "piker",
+            "ready": true
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      },
+      {
+        "name": "carol"
+      },
+      {
+        "name": "dave"
+      }
+    ],
+    "step": "BeginningOfCombat"
+  },
+  "description": "CR 702.116a at four seats picking nobody arms no exile",
+  "note": "The four-seat pair of the tokens-are-exiled scenario, picking nobody: rule 702.116a's \"if one or more tokens are created this way\" then mints no token and arms no exile, so nothing triggers at end of combat.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$patrol",
+          "$piker"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$bob"
+      },
+      "player": "alice",
+      "source": "$patrol",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$bob"
+      },
+      "player": "alice",
+      "source": "$piker",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseLoopMembers",
+          "with": []
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Wyrm's Crossing Patrol",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "EndOfCombat",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 17,
+          "player": "bob"
+        }
+      },
+      "player": "alice",
+      "step": "PostcombatMain",
+      "turn": 1
+    }
+  ]
+}

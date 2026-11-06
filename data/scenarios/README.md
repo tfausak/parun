@@ -14,14 +14,18 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   letter per unit (`"RRC"`, CR 106.4) and
   `battlefield`, `hand`, `graveyard`, `library`, `exile`, `command` (CR
   408.1) and `ante` (CR 407) placements (a
-  library top card first; an exiled card face up and linked to nothing). A
+  library top card first; an exiled card face up and linked to nothing), and
+  `sideDecks`, each a supplementary deck of placements top first, face down
+  in the command zone (CR 717.2, 904.3): `[{ "key": "Scheme", "value":
+  [...] }]`. A
   placement names its `card` and may give a `label`, `tapped`, `ready` (CR
   302.6), `damage`, `counters`, `token` (CR 111.1, battlefield only), a
   `controller`, the label of the object or seat it is `attached` to, and
   `commander` (CR 903.3: its owner's commander), the name of the `face` it
   shows (CR 712.8e, `"Nightfall Predator"`), `faceDown` with the reason it is
-  (CR 708.2a / 708.6, `"Manifested"`) and a battle's `protector`
-  seat (CR 310.9). `active` names a seat;
+  (CR 708.2a / 708.6, `"Manifested"`), a battle's `protector`
+  seat (CR 310.9) and the numbers its printing has `lights` up on, an
+  Attraction's (CR 717.1, `[2, 3, 6]`). `active` names a seat;
   `turn` (default 1) and `step` are where the game starts; `monarch` optionally names a seat;
   `attackOption` (CR 806.2b) is `MultiplePlayers` unless given, and `null` is
   CR 507.1's choice among every opponent; `brawl` (CR 903.12a),

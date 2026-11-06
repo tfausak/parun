@@ -187,7 +187,8 @@ objectSetup name =
       Placement.commander = False,
       Placement.face = Nothing,
       Placement.faceDown = Nothing,
-      Placement.protector = Nothing
+      Placement.protector = Nothing,
+      Placement.lights = Set.empty
     }
 
 -- Test-source spelling of objectSetup: a Magic card name, never a corpus slug.
@@ -226,7 +227,8 @@ playerSetup pid =
       Seat.library = Seq.empty,
       Seat.exile = Seq.empty,
       Seat.command = Seq.empty,
-      Seat.ante = Seq.empty
+      Seat.ante = Seq.empty,
+      Seat.sideDecks = Map.empty
     }
 
 battlefield :: PlayerId.PlayerId -> [Placement.Placement] -> Seat.Seat

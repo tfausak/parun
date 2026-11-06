@@ -514,15 +514,20 @@ createInCommandZone pid printingId = do
 createInSideDeck :: SideDeck.SideDeck -> PlayerId -> PrintingId.PrintingId -> Game ()
 createInSideDeck kind pid printingId = do
   oid <- createCard pid printingId
-  State.modify' $ \gs ->
-    let moved = Game.removeFromZones oid gs
-        holder = if kind == SideDeck.Planar then Plane.planarDeckHolder pid gs else pid
-     in Game.overSideDecks
-          kind
-          (Map.insertWith (flip (Seq.><)) holder (Seq.singleton oid))
-          moved
-            { GameState.objects = Map.adjust (\o -> o {Object.zone = Zone.Command}) oid (GameState.objects moved)
-            }
+  State.modify' (intoSideDeck kind pid oid)
+
+-- | Move this player's card onto the bottom of their supplementary deck of this
+-- kind, wherever it was.
+intoSideDeck :: SideDeck.SideDeck -> PlayerId -> ObjectId -> GameState -> GameState
+intoSideDeck kind pid oid gs =
+  let moved = Game.removeFromZones oid gs
+      holder = if kind == SideDeck.Planar then Plane.planarDeckHolder pid gs else pid
+   in Game.overSideDecks
+        kind
+        (Map.insertWith (flip (Seq.><)) holder (Seq.singleton oid))
+        moved
+          { GameState.objects = Map.adjust (\o -> o {Object.zone = Zone.Command}) oid (GameState.objects moved)
+          }
 
 newGame :: HandActionPerformer -> NonEmpty.NonEmpty (PlayerId, Deck.Deck) -> Game ()
 newGame perform matchup = do

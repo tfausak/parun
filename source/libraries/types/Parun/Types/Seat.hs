@@ -8,6 +8,7 @@ import qualified Parun.Types.Label as Label
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Placement as Placement
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
+import qualified Parun.Types.SideDeck as SideDeck
 import qualified Parun.Types.TeamId as TeamId
 
 -- | One player on a scenario's board. Each zone lists its cards in creation
@@ -39,6 +40,9 @@ data Seat = MkSeat
     -- | CR 408.1: the command zone, owned by this seat.
     command :: Seq.Seq Placement.Placement,
     -- | CR 407: the ante zone, owned by this seat.
-    ante :: Seq.Seq Placement.Placement
+    ante :: Seq.Seq Placement.Placement,
+    -- | CR 717.2 / 904.3: the supplementary decks this seat brings, each top
+    -- first and face down in the command zone.
+    sideDecks :: Map.Map SideDeck.SideDeck (Seq.Seq Placement.Placement)
   }
   deriving (Eq, Ord, Show)

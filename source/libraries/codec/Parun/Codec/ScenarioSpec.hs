@@ -30,7 +30,7 @@ spec s = Spec.describe s "Parun.Codec.Scenario" $ do
           Scenario.Type.start =
             Start.Type.FromBoard
               Board.Type.MkBoard
-                { Board.Type.seats = Seat.Type.MkSeat (Label.Type.MkLabel (Text.pack "alice")) 20 Map.empty Nothing Nothing False GraveyardOrder.Type.Indifferent [] Seq.empty Seq.empty Seq.empty Seq.empty Seq.empty Seq.empty Seq.empty NonEmpty.:| [],
+                { Board.Type.seats = Seat.Type.MkSeat (Label.Type.MkLabel (Text.pack "alice")) 20 Map.empty Nothing Nothing False GraveyardOrder.Type.Indifferent [] Seq.empty Seq.empty Seq.empty Seq.empty Seq.empty Seq.empty Seq.empty Map.empty NonEmpty.:| [],
                   Board.Type.active = Label.Type.MkLabel (Text.pack "alice"),
                   Board.Type.turn = 1,
                   Board.Type.phase = Phase.Type.PrecombatMain,

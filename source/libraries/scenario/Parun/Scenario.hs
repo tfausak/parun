@@ -150,6 +150,7 @@ import qualified Parun.Types.Scenario as Scenario
 import qualified Parun.Types.ScenarioFailure as Failure
 import qualified Parun.Types.Seat as Seat
 import qualified Parun.Types.Sickness as Sickness
+import qualified Parun.Types.SideDeck as SideDeck
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.Staged as Staged
@@ -452,19 +453,21 @@ quietAnswer p = case p of
 
 -- | Every placement on the board, in placement order.
 placementsOf :: Board.Board -> [Placement.Placement]
-placementsOf board = concatMap (concatMap (Foldable.toList . snd) . zonesOf) (NonEmpty.toList (Board.seats board))
+placementsOf board = concatMap (concatMap (\(_, _, placements) -> Foldable.toList placements) . zonesOf) (NonEmpty.toList (Board.seats board))
 
--- | A seat's zones in the order they are placed, which is creation order.
-zonesOf :: Seat.Seat -> [(Zone.Zone, Seq.Seq Placement.Placement)]
+-- | A seat's zones in the order they are placed, which is creation order, each
+-- supplementary deck last and in the command zone (CR 717.2 / 904.3).
+zonesOf :: Seat.Seat -> [(Zone.Zone, Maybe SideDeck.SideDeck, Seq.Seq Placement.Placement)]
 zonesOf seat =
-  [ (Zone.Battlefield, Seat.battlefield seat),
-    (Zone.Hand, Seat.hand seat),
-    (Zone.Graveyard, Seat.graveyard seat),
-    (Zone.Library, Seat.library seat),
-    (Zone.Exile, Seat.exile seat),
-    (Zone.Command, Seat.command seat),
-    (Zone.Ante, Seat.ante seat)
+  [ (Zone.Battlefield, Nothing, Seat.battlefield seat),
+    (Zone.Hand, Nothing, Seat.hand seat),
+    (Zone.Graveyard, Nothing, Seat.graveyard seat),
+    (Zone.Library, Nothing, Seat.library seat),
+    (Zone.Exile, Nothing, Seat.exile seat),
+    (Zone.Command, Nothing, Seat.command seat),
+    (Zone.Ante, Nothing, Seat.ante seat)
   ]
+    <> [(Zone.Command, Just kind, placements) | (kind, placements) <- Map.toAscList (Seat.sideDecks seat)]
 
 boardFailure :: Map.Map Label.Label PlayerId.PlayerId -> Board.Board -> Maybe Failure.ScenarioFailure
 boardFailure ids board =
@@ -494,9 +497,9 @@ placeSeats :: (Monad m) => Registry.Registry m -> [(Seat.Seat, PlayerId.PlayerId
 placeSeats registry seated board = case seated of
   [] -> pure (Right board)
   (seat, pid) : rest -> do
-    let placeZone next (zone, placements) = case next of
+    let placeZone next (zone, deck, placements) = case next of
           Left failure -> pure (Left failure)
-          Right sofar -> placeAll registry zone pid (Foldable.toList placements) sofar
+          Right sofar -> placeAll registry zone deck pid (Foldable.toList placements) sofar
     placed <- Monad.foldM placeZone (Right board) (zonesOf seat)
     case placed of
       Left failure -> pure (Left failure)
@@ -521,8 +524,8 @@ attachAll placements board = Monad.foldM attachOne board (zip (Map.keys (GameSta
               Just recipient ->
                 Right sofar {Staged.state = gs {GameState.objects = Map.adjust (\obj -> obj {Object.attachedTo = Just recipient}) oid (GameState.objects gs)}}
 
-placeAll :: (Monad m) => Registry.Registry m -> Zone.Zone -> PlayerId.PlayerId -> [Placement.Placement] -> Staged.Staged -> m (Either Failure.ScenarioFailure Staged.Staged)
-placeAll registry zone owner placements board = case placements of
+placeAll :: (Monad m) => Registry.Registry m -> Zone.Zone -> Maybe SideDeck.SideDeck -> PlayerId.PlayerId -> [Placement.Placement] -> Staged.Staged -> m (Either Failure.ScenarioFailure Staged.Staged)
+placeAll registry zone deck owner placements board = case placements of
   [] -> pure (Right board)
   placement : rest -> do
     found <- Registry.fetchCard registry (Placement.card placement)
@@ -532,8 +535,9 @@ placeAll registry zone owner placements board = case placements of
       Right (Just _) | Placement.token placement && zone /= Zone.Battlefield -> pure (Left (Failure.MkTokenOffBattlefield (Placement.card placement)))
       Right (Just card) | Just name <- Placement.face placement, Maybe.isNothing (Engine.Card.faceNamed name card) -> pure (Left (Failure.MkUnknownFace (Placement.card placement) name))
       Right (Just card) -> do
-        let (printingId, interned) = Game.intern (Printing.ofCard card) (Staged.state board)
-            (oid, placedCard) = Setup.placeCard zone owner printingId interned
+        let (printingId, interned) = Game.intern ((Printing.ofCard card) {Printing.lights = Placement.lights placement}) (Staged.state board)
+            (oid, inZone) = Setup.placeCard zone owner printingId interned
+            placedCard = maybe inZone (\kind -> Setup.intoSideDeck kind owner oid inZone) deck
             -- CR 903.3: a commander is designated by its card identity, which
             -- every object the card becomes carries.
             placed = case Game.lookupObject oid placedCard >>= Object.identity of
@@ -564,7 +568,7 @@ placeAll registry zone owner placements board = case placements of
                 { Staged.state = placed {GameState.objects = Map.adjust adjust oid (GameState.objects placed)},
                   Staged.objects = foldr (\label -> Map.insert label oid) (Staged.objects board) (Placement.label placement)
                 }
-        placeAll registry zone owner rest next
+        placeAll registry zone deck owner rest next
 
 -- | CR 708.2: a placed face-down permanent's status, listing what the rules
 -- that allowed it list -- CR 702.168b's and CR 701.58a's ward {2}, else CR

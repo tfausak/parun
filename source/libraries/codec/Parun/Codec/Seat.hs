@@ -10,6 +10,7 @@ import qualified Parun.Codec.GraveyardOrder as GraveyardOrder
 import qualified Parun.Codec.Label as Label
 import qualified Parun.Codec.Placement as Placement
 import qualified Parun.Codec.PlayerCounterKind as PlayerCounterKind
+import qualified Parun.Codec.SideDeck as SideDeck
 import qualified Parun.Codec.TeamId as TeamId
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
@@ -39,6 +40,7 @@ codec = Fields.object $ do
   exile <- Fields.defaulted "exile" Seq.empty (Common.seq Placement.codec) Seat.exile
   command <- Fields.defaulted "command" Seq.empty (Common.seq Placement.codec) Seat.command
   ante <- Fields.defaulted "ante" Seq.empty (Common.seq Placement.codec) Seat.ante
+  sideDecks <- Fields.defaulted "sideDecks" Map.empty (Common.keyedList (Common.keyValue SideDeck.codec (Common.seq Placement.codec))) Seat.sideDecks
   pure
     Seat.MkSeat
       { Seat.name = name,
@@ -55,7 +57,8 @@ codec = Fields.object $ do
         Seat.library = library,
         Seat.exile = exile,
         Seat.command = command,
-        Seat.ante = ante
+        Seat.ante = ante,
+        Seat.sideDecks = sideDecks
       }
 
 -- | A pool as one letter per unit, CR 105.1's W, U, B, R and G and CR 106.1b's
