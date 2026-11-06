@@ -4455,8 +4455,11 @@ decideSurveil n pid = do
 -- first named ends up deepest (CR 404.1), an order that is the player's rather
 -- than the engine's (CR 404.3) -- so the scope does not ask for it again
 -- (Event.arrangedAlready).
-applySurveil :: Game () -> (PlayerId, Maybe ([ObjectId], [ObjectId], [ObjectId])) -> Game ()
-applySurveil settle (pid, decision) = Monad.forM_ decision $ \(onTop, beneath, toGraveyard) -> do
+--
+-- Answers the ids the graveyard moves ARRIVED at (CR 400.7), in the order the
+-- surveiller chose them.
+applySurveil :: Game () -> (PlayerId, Maybe ([ObjectId], [ObjectId], [ObjectId])) -> Game [ObjectId]
+applySurveil settle (pid, decision) = fmap Foldable.fold . Monad.forM decision $ \(onTop, beneath, toGraveyard) -> do
   -- Order-independent: Game.removeFromZones takes each mover out of the library
   -- by identity rather than by position.
   State.modify' (reorderLibrary pid onTop (onTop <> beneath))
@@ -4466,6 +4469,7 @@ applySurveil settle (pid, decision) = Monad.forM_ decision $ \(onTop, beneath, t
     before <- State.get
     arrived <- Monad.mapM (\c -> Event.changeZoneInBatchReturning settle before c Zone.Graveyard) toGraveyard
     State.modify' (Event.arrangedAlready (Foldable.fold arrived))
+    pure (Foldable.toList (Foldable.fold arrived))
 
 -- CR 701.29a: one player's fateseal -- decideScry's question over an opponent's
 -- library.

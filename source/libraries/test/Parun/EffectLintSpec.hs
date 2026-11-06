@@ -244,6 +244,7 @@ import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.Subtype as Subtype.Type
 import qualified Parun.Types.Superlative as Superlative
 import qualified Parun.Types.Supertype as Supertype
+import qualified Parun.Types.Surveil as Surveil
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TargetSlot as TargetSlot
@@ -349,7 +350,7 @@ ownQuantities effect = case effect of
   Effect.LookAt {} -> []
   Effect.Guess {} -> []
   Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> [quantity]
-  Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> [quantity]
+  Effect.Surveil (Surveil.MkSurveil _ quantity _) -> [quantity]
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> [quantity]
   Effect.Clash {} -> []
   Effect.AsYouCascade {} -> []

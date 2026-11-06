@@ -3395,3 +3395,5 @@ time-vault
 false-orders
 ydwen-efreet
 forcefield
+chandra-chill-of-compliance
+enlightened-confidant

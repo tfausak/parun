@@ -157,6 +157,7 @@ import qualified Parun.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
 import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.Surveil as Surveil
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TheseDiscard as TheseDiscard
 import qualified Parun.Types.Vote as Vote
@@ -1434,8 +1435,8 @@ scry settle resolving source controller legal (PlayerQuantity.MkPlayerQuantity r
   -- move was impossible too.
   Monad.mapM_ (\(pid, _) -> State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.Scry pid)))) decided
 
-surveil :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
-surveil settle resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
+surveil :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Surveil.Surveil -> Game ()
+surveil settle resolving source controller legal (Surveil.MkSurveil ref quantity mSlot) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -1461,7 +1462,11 @@ surveil settle resolving source controller legal (PlayerQuantity.MkPlayerQuantit
               OptionalDecision.Declines -> pure 0
           fmap Just (Common.decideSurveil (n + toInteger (sum extras)) pid)
         _ -> pure Nothing
-  Monad.mapM_ (Common.applySurveil settle) decided
+  arrivals <- Monad.mapM (Common.applySurveil settle) decided
+  -- CR 608.2c / 400.7j: Chandra, Chill of Compliance's "if you put a
+  -- noncreature, nonland card into your graveyard this way" finds the cards
+  -- where they arrived, the Mill arm's binding and for its reasons.
+  Common.bindObjects resolving mSlot (concat arrivals)
   -- CR 701.25d, scry's placement and for its rule.
   Monad.mapM_ (\(pid, _) -> State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.Surveil pid)))) decided
 

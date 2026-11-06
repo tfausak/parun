@@ -419,6 +419,7 @@ import qualified Parun.Types.StaticRead as StaticRead
 import qualified Parun.Types.StickerKind as StickerKind
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Supertype as Supertype
+import qualified Parun.Types.Surveil as Surveil
 import qualified Parun.Types.Suspend as Suspend
 import qualified Parun.Types.SuspendCounters as SuspendCounters
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
@@ -815,7 +816,7 @@ playerRefPositions =
         ("draw", Effect.Draw (Draw.MkDraw (plantedPlayer "dr") one Nothing), [plantedPlayer "dr"]),
         ("mill", Effect.Mill (Mill.MkMill (plantedPlayer "mi") one Nothing Nothing), [plantedPlayer "mi"]),
         ("scry", Effect.Scry (playerQuantity "sc"), [plantedPlayer "sc"]),
-        ("surveil", Effect.Surveil (playerQuantity "su"), [plantedPlayer "su"]),
+        ("surveil", Effect.Surveil (Surveil.MkSurveil (plantedPlayer "su") one Nothing), [plantedPlayer "su"]),
         ("fateseal", Effect.Fateseal (playerQuantity "fs"), [plantedPlayer "fs"]),
         ("look-at", Effect.LookAt (LookAt.MkLookAt (plantedRef "la") (SlotName.MkSlotName (Text.pack "seen")) (plantedPlayer "lk")), [plantedPlayer "lk"]),
         ("guess", Effect.Guess Guess.MkGuess {Guess.subject = plantedRef "gu", Guess.slot = SlotName.MkSlotName (Text.pack "gs"), Guess.guesser = plantedPlayer "gu", Guess.proposition = Filter.Type.And [], Guess.right = SlotName.MkSlotName (Text.pack "gr")}, [plantedPlayer "gu"]),
@@ -1333,7 +1334,7 @@ ownCounts effect = case effect of
   Effect.LookAt {} -> []
   Effect.Guess {} -> []
   Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantityCounts quantity
-  Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantityCounts quantity
+  Effect.Surveil (Surveil.MkSurveil _ quantity _) -> quantityCounts quantity
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantityCounts quantity
   Effect.Clash {} -> []
   Effect.AsYouCascade {} -> []
@@ -6007,7 +6008,7 @@ effectFilters effect = case effect of
   -- The proposition is matched in the effect's context, ChoosePermanents' Filter.
   Effect.Guess (Guess.MkGuess subject _ _ proposition _) -> frame SourceHostFramed (objectRefFilters subject) <> unframed [proposition]
   Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> frame Unframed (quantityFilters quantity)
-  Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> frame Unframed (quantityFilters quantity)
+  Effect.Surveil (Surveil.MkSurveil _ quantity _) -> frame Unframed (quantityFilters quantity)
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> frame Unframed (quantityFilters quantity)
   Effect.Clash {} -> []
   Effect.AsYouCascade {} -> []

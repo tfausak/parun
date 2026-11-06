@@ -124,6 +124,7 @@ import qualified Parun.Codec.SkipPhase as SkipPhase
 import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.Codec.SpeedDecrease as SpeedDecrease
 import qualified Parun.Codec.Subtype as Subtype
+import qualified Parun.Codec.Surveil as Surveil
 import qualified Parun.Codec.TakeExtraTurn as TakeExtraTurn
 import qualified Parun.Codec.Tap as Tap
 import qualified Parun.Codec.TurnFaceDown as TurnFaceDown
@@ -206,7 +207,7 @@ codec cardCodec abilityCodec =
           Arm.payload "Reveal" Reveal.codec Effect.Reveal (\x -> case x of Effect.Reveal y -> Just y; _ -> Nothing),
           Arm.payload "LookAt" LookAt.codec Effect.LookAt (\x -> case x of Effect.LookAt y -> Just y; _ -> Nothing),
           Arm.payload "Scry" PlayerQuantity.codec Effect.Scry (\x -> case x of Effect.Scry y -> Just y; _ -> Nothing),
-          Arm.payload "Surveil" PlayerQuantity.codec Effect.Surveil (\x -> case x of Effect.Surveil y -> Just y; _ -> Nothing),
+          Arm.payload "Surveil" Surveil.codec Effect.Surveil (\x -> case x of Effect.Surveil y -> Just y; _ -> Nothing),
           Arm.payload "Fateseal" PlayerQuantity.codec Effect.Fateseal (\x -> case x of Effect.Fateseal y -> Just y; _ -> Nothing),
           Arm.payload "Clash" SlotName.codec Effect.Clash (\x -> case x of Effect.Clash y -> Just y; _ -> Nothing),
           Arm.payload "AsYouCascade" SlotName.codec Effect.AsYouCascade (\x -> case x of Effect.AsYouCascade y -> Just y; _ -> Nothing),
