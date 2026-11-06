@@ -320,8 +320,9 @@ blocks context board gs (BlockTrigger.MkBlockTrigger role creature count) event 
   let admits = admittedAt context board gs
       tally others = Natural.length . Set.filter (`admits` others)
    in case (role, count, event) of
-        -- CR 509.3a: the GROUPED event, which is that rule's "only once each
-        -- combat for that creature, even if it blocks multiple creatures". CR
+        -- CR 509.3a: the GROUPED event, which is that rule's "generally ...
+        -- only once each combat for that creature, even if it blocks multiple
+        -- creatures"; a removed creature made to block again records it again. CR
         -- 509.4's creature put onto the battlefield blocking records only a
         -- GameEvent.BecameBlocking, which is rule 509.3a's last sentence.
         (BlockRole.Blocker, BlockCount.Once, GameEvent.BlocksDeclared d) -> admits (BlocksDeclared.blocker d) creature
@@ -341,10 +342,12 @@ blocks context board gs (BlockTrigger.MkBlockTrigger role creature count) event 
           BecameBlocking.producer b /= BlockProducer.PutOntoBattlefield
             && admits (BecameBlocking.blocker b) creature
             && admits (BecameBlocking.attacker b) others
-        -- CR 509.3c: one event per blocked attacker is what Combat records, so
-        -- matching it once is that rule's "only once each combat for that
-        -- creature". Parun.TriggerSpec's two-blocker case tells it apart from a
-        -- match on GameEvent.BecameBlocking.
+        -- CR 509.3c: Combat records one event each time an attacker goes from
+        -- unblocked to blocked, so matching it once is that rule's "generally
+        -- only once each combat": an attacker unblocked and blocked again (False
+        -- Orders) records it twice, as Balduvian Warlord's 2006-07-15 ruling has
+        -- it. Parun.TriggerSpec's two-blocker case tells it apart from a match
+        -- on GameEvent.BecameBlocking.
         (BlockRole.Attacker, BlockCount.Once, GameEvent.AttackerBlocked a) -> admits (AttackerBlocked.attacker a) creature
         -- CR 509.3d: the pair read from the ATTACKING side, once per blocker.
         -- The producer is deliberately not read: rule 509.3d's fourth sentence is

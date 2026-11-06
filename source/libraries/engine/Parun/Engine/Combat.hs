@@ -1934,7 +1934,9 @@ switchBlockers first second gs =
 -- restrictions on the creature itself (Blind-Spot Giant), which CR 506.4a
 -- leaves standing in combat once they bite. Only attackers
 -- still attacking count, so one whose attackers have all left combat hands the
--- other nothing and it is removed from combat to block nothing.
+-- other nothing and it is removed from combat to block nothing. CR 509.1b's
+-- set-shaped restrictions (blockerCountsAllowedGiven) are not asked: an
+-- exchange leaves every attacker's blocker count as it was.
 --
 -- The attackers keep their keys throughout, which is CR 509.1h: they never
 -- stopped being blocked, so no GameEvent.AttackerBlocked is recorded.
@@ -2015,9 +2017,10 @@ removeUnblocking oid gs =
 -- CR 509.3a's effect road for ONE creature (False Orders): it blocks an
 -- attacking creature `chooser` picks. The candidates are the attackers it could
 -- block (docs/decisions.md, "What a creature an effect makes block may
--- block"): canBlock and pairAllowed, Sorrow's Path's gate, over attackers
--- attacking its controller, a planeswalker they control or a battle they
--- protect (CR 509.1a), less any it already blocks (CR 509.3b). Through
+-- block"): canBlock and pairAllowed, Sorrow's Path's gate, plus the
+-- per-attacker counts of blockerCountsAllowedGiven, over attackers attacking
+-- its controller, a planeswalker they control or a battle they protect (CR
+-- 509.1a), less any it already blocks (CR 509.3b). Through
 -- Game.chooseAmong, so elided at one candidate and a no-op at none.
 --
 -- Its events are exchangeBlocks': BecameBlocking per pair, BlocksDeclared when
@@ -2029,16 +2032,26 @@ blockAttacker chooser oid = do
   gs <- State.get
   let c = GameState.combat gs
       attacking = Map.keys (Combat.attackers c)
-      blockable controller attacker =
+      targetsOf attacker = filter (\a -> not (Set.member oid (blockersOf a gs))) (attacker : Set.toList (bandmatesOf attacker c))
+      board = Snapshot.whole gs
+      -- CR 509.1b's set-shaped restrictions on each attacker it would block,
+      -- over that attacker's blockers once it joins them (menace, Charging
+      -- Rhino): blockerCountsAllowedGiven, keyed blocker -> attackers.
+      countsAllowed most attacker =
+        let joined = Map.fromListWith Set.union [(b, Set.singleton a) | a <- targetsOf attacker, b <- oid : Set.toList (blockersOf a gs)]
+         in blockerCountsAllowedGiven most (Snapshot.projected board) joined gs
+      blockable controller most attacker =
         not (Set.member oid (blockersOf attacker gs))
           && Defender.playerOfAttacker Projection.controllerWithLastKnown attacker gs == Just controller
           && pairAllowed [oid] attacking oid attacker gs
+          && countsAllowed most attacker
   case Projection.controllerOf oid gs of
     Just controller
       | canBlock controller oid gs -> do
-          mAttacker <- Game.chooseAmong (\decider who pool -> Prompt.ChoosePermanent decider who oid pool Seq.empty) chooser (filter (blockable controller) attacking)
+          let (_, _, _, (_, most, _)) = blockScopeGiven board controller gs
+          mAttacker <- Game.chooseAmong (\decider who pool -> Prompt.ChoosePermanent decider who oid pool Seq.empty) chooser (filter (blockable controller most) attacking)
           Monad.forM_ mAttacker $ \attacker -> do
-            let targets = filter (\a -> not (Set.member oid (blockersOf a gs))) (attacker : Set.toList (bandmatesOf attacker c))
+            let targets = targetsOf attacker
                 pairs = fmap (\a -> (oid, a)) targets
                 moved = List.foldl' (\m a -> Map.insertWith Set.union a (Set.singleton oid) m) (Combat.blockers c) targets
                 wasBlocking = Game.isBlocking oid gs || Set.member oid (Combat.blockingNothing c)
@@ -3181,6 +3194,8 @@ enterBlocking controller oid attacker = do
   State.put
     gs
       { GameState.combat =
+          -- CR 509.3d: the attacker "becomes blocked by" this creature, though
+          -- CR 509.4 says it never "blocked".
           noteBlockedBy (Map.singleton attacker (Set.singleton oid)) $
             c
               { -- insertWith and not adjust: the attacker this creature is
