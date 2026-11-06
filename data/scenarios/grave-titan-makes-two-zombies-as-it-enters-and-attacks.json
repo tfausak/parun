@@ -75,17 +75,6 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Zombie Token",
-          "Zombie Token#2"
-        ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Count": {
           "player": "alice",
@@ -150,17 +139,6 @@
       "step": "DeclareAttackers",
       "player": "alice",
       "do": "Pass"
-    },
-    {
-      "turn": 3,
-      "step": "DeclareAttackers",
-      "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Zombie Token#3",
-          "Zombie Token#4"
-        ]
-      }
     },
     {
       "turn": 3,

@@ -20,7 +20,6 @@
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Activate": { "object": "$giant" } } },
     { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "OrderTimestamps": ["Elemental Token", "Elemental Token#2", "Elemental Token#3"] } },
     { "turn": 1, "step": "PrecombatMain", "player": "bob", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Elemental Token", "count": 3 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "bob", "check": { "Keywords": { "object": "Elemental Token", "keyword": { "type": "Haste" }, "count": 1 } } },
     { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": [] } },

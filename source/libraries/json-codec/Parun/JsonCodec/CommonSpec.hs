@@ -37,6 +37,10 @@ spec s = Spec.describe s "Parun.JsonCodec.Common" $ do
     Spec.it s "accepts surrounding blanks" $
       Spec.assertEq s (Common.parse (Text.pack " 1 ")) (Right (Value.integer 1))
 
+  Spec.describe s "asInteger" $ do
+    Spec.it s "words a refused value as JSON" $
+      Spec.assertEq s (Common.asInteger (Value.array [Value.integer 1, Value.text (Text.pack "a")])) (Left (Text.pack "expected number but got [1,\"a\"]"))
+
   Spec.describe s "tagged" $ do
     Spec.it s "omits an absent value" $
       Spec.assertEq s (Common.render (Common.tagged "ManaValue" Nothing)) (Text.pack "{\"type\":\"ManaValue\"}")

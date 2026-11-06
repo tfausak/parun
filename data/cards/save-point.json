@@ -20,10 +20,12 @@
                       {
                         "type": "RemoveFromCombat",
                         "value": {
-                          "type": "EachMatching",
-                          "value": {
-                            "type": "HasCardType",
-                            "value": "Creature"
+                          "removed": {
+                            "type": "EachMatching",
+                            "value": {
+                              "type": "HasCardType",
+                              "value": "Creature"
+                            }
                           }
                         }
                       },

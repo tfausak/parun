@@ -347,6 +347,12 @@ data Combat = MkCombat
     -- piles were assigned. Nothing while blockers are declared as usual. Written
     -- and cleared by Parun.Engine.Combat.declareBlockers around the defending
     -- players' declarations, and read by Parun.Engine.Combat.blockScopeGiven.
-    pileBlocks :: Maybe (Map.Map ObjectId.ObjectId (Set.Set ObjectId.ObjectId))
+    pileBlocks :: Maybe (Map.Map ObjectId.ObjectId (Set.Set ObjectId.ObjectId)),
+    -- | CR 509.1h: every creature that has blocked each attacker this combat,
+    -- keyed by the attacker. The history `blockers` loses as blockers leave
+    -- combat, monotone within the combat, and read by
+    -- Parun.Engine.Combat.removeUnblocking for "had become blocked by only that
+    -- creature this combat" (Balduvian Warlord's 2006-07-15 ruling).
+    blockedBy :: Map.Map ObjectId.ObjectId (Set.Set ObjectId.ObjectId)
   }
   deriving (Eq, Ord, Show)

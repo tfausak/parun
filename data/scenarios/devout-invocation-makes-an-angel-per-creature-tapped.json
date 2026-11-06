@@ -14,7 +14,6 @@
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseAnyNumberOfPermanents", "with": ["$bears", "$giant"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseAnyNumberOfPermanents", "with": ["$bears", "$lions"]}}},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Angel Token", "Angel Token#2"]}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Angel Token", "count": 2}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$ogre", "tapped": false}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$lions", "tapped": true}}}

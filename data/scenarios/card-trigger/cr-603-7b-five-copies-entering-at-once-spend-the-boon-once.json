@@ -197,20 +197,6 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Grizzly Bears#2",
-          "Grizzly Bears#3",
-          "Grizzly Bears#4",
-          "Grizzly Bears#5",
-          "Grizzly Bears#6"
-        ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Count": {
           "player": "alice",

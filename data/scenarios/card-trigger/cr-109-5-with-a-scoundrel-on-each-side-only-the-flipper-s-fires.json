@@ -78,12 +78,13 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "bob",
-      "do": {
-        "OrderTimestamps": [
-          "Treasure Token",
-          "Treasure Token#2"
-        ]
-      }
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
     },
     {
       "turn": 1,

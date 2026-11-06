@@ -216,6 +216,7 @@ import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.RemovalCount as RemovalCount
 import qualified Parun.Types.RemoveCounters as RemoveCounters
 import qualified Parun.Types.RemoveCountersAmong as RemoveCountersAmong
+import qualified Parun.Types.RemoveFromCombat as RemoveFromCombat
 import qualified Parun.Types.RemovePlayerCounters as RemovePlayerCounters
 import qualified Parun.Types.Repeat as Repeat
 import qualified Parun.Types.RepeatIf as RepeatIf
@@ -394,6 +395,7 @@ ownQuantities effect = case effect of
   Effect.TurnFaceUp _ -> []
   Effect.Fight _ -> []
   Effect.RemoveFromCombat _ -> []
+  Effect.BlockAttacker _ -> []
   Effect.BecomesBlocked _ -> []
   Effect.SwitchBlockers _ -> []
   Effect.ExchangeBlocks _ -> []
@@ -1651,7 +1653,8 @@ effectObjectRefs effect =
         Effect.TurnFaceDown (TurnFaceDown.MkTurnFaceDown ref _) -> read_ [ref]
         Effect.TurnFaceUp {} -> []
         Effect.Fight {} -> []
-        Effect.RemoveFromCombat ref -> read_ [ref]
+        Effect.RemoveFromCombat payload -> read_ [RemoveFromCombat.removed payload]
+        Effect.BlockAttacker ref -> read_ [ref]
         Effect.BecomesBlocked {} -> []
         -- The pair comes out of a target slot, not an ObjectRef.
         Effect.SwitchBlockers {} -> []

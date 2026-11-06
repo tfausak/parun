@@ -344,6 +344,11 @@ objectsLeaveWith asOf pid gs =
       -- "Funeral March triggers when its owner and its creature's owner leave at
       -- one instant" scenarios, differing in seats, prove it.
       removed = List.foldl' (Event.leaveTheGame asOf) gs owned
+      -- CR 108.3 / 407.3: a card whose owner changed keeps that change past the
+      -- game it left, for Ante.ownershipChanges' report and Setup.funnelBack's
+      -- CR 729.5 return.
+      departed = Map.filter Ante.ownerChanged (Map.restrictKeys (GameState.objects gs) (Set.fromList owned))
+      recorded = removed {GameState.departedCards = Map.union departed (GameState.departedCards removed)}
       -- CR 708.9's third sentence: the departing player reveals each face-down
       -- permanent, face-down component and face-down spell they own, read off `asOf` and recorded
       -- ahead of the LeftTheGame events, as the zone-change funnel reveals before
@@ -352,7 +357,7 @@ objectsLeaveWith asOf pid gs =
       revealed = concatMap (Event.leavingReveals asOf) owned
    in Event.simultaneouslyPure
         (\g -> List.foldl' (\g1 oid -> Event.recordEvent (GameEvent.LeftTheGame (LeftTheGame.MkLeftTheGame oid Zone.Battlefield)) g1) (List.foldl' (flip Event.recordEvent) g revealed) permanents)
-        removed
+        recorded
 
 -- CR 800.4a, second clause: any effects which give that player control of
 -- objects or players end.

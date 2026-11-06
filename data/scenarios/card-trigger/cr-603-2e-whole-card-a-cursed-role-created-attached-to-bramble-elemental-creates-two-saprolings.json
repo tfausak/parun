@@ -83,20 +83,6 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "OrderTimestamps",
-          "with": [
-            0,
-            1
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": "Pass"
     },
     {

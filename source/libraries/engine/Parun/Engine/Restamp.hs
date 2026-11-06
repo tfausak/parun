@@ -12,7 +12,9 @@ import qualified Data.Set as Set
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Event.Trigger as Trigger
 import qualified Parun.Engine.Game as Game
-import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Engine.Interchangeable as Interchangeable
+import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.View as Projection.View
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 import qualified Parun.Types.EnteringTogether as EnteringTogether
 import Parun.Types.Game (Game)
@@ -37,7 +39,7 @@ import qualified Parun.Types.Zone as Zone
 --
 -- WHOSE a group is: the object's controller, or its owner where it has none,
 -- which is the rule's own parenthetical and CR 108.4a's fallback,
--- Projection.controllerOf's. An id no longer in the game has neither, sorts
+-- Projection.View.controllerOf's. An id no longer in the game has neither, sorts
 -- last and asks nobody.
 --
 -- The rule NAMES only the active player's choice and then says "followed by each
@@ -46,10 +48,15 @@ import qualified Parun.Types.Zone as Zone
 -- engine, because the engine may not choose (and no rule elsewhere assigns that
 -- order).
 --
--- Asked at two or more, on the count alone, as Prompt.OrderTriggers' CR 101.4c
--- caller is: whether the relative stamp is ever read depends on what applies in
--- the layer afterwards, which this cannot know. A group of one is one order.
--- Game.permute keeps the engine's order for a non-permutation answer.
+-- Asked at two or more, as Prompt.OrderTriggers' CR 101.4c caller is: whether
+-- the relative stamp is ever read depends on what applies in the layer
+-- afterwards, which this cannot know. A group of one is one order, and so is a
+-- group whose members are all interchangeable (Parun.Engine.Interchangeable,
+-- the earliest-stamped against each other member, which covers every stamp
+-- between them): every permutation leaves the same game up to the ids, so the
+-- ascending order is kept. data/scenarios/restamp's "identical tokens created
+-- together ask no order" (Raise the Alarm) proves it. Game.permute keeps the
+-- engine's order for a non-permutation answer.
 --
 -- Proved by Parun.RestampSpec, whose two boards separate the keys: the seat's own
 -- choice on the transform road, and APNAP across two seats on the nightfall one.
@@ -58,14 +65,21 @@ order oids = do
   gs <- State.get
   let apnap = Game.apnapOrder gs
       last_ = length apnap
-      rank oid = maybe last_ (\pid -> Maybe.fromMaybe last_ (List.elemIndex pid apnap)) (Projection.controllerOf oid gs)
+      rank oid = maybe last_ (\pid -> Maybe.fromMaybe last_ (List.elemIndex pid apnap)) (Projection.View.controllerOf oid gs)
       -- Ascending object id within a seat, so a batch nobody is asked about is
       -- still deterministic.
       groups = List.groupBy (\a b -> rank a == rank b) (List.sortOn (\oid -> (rank oid, oid)) oids)
+      pcs = Projection.projectAll gs
+      stampOf oid = fmap Object.timestamp (Game.lookupObject oid gs)
+      alike group = case List.sortOn stampOf group of
+        earliest : rest -> all (Interchangeable.objects pcs gs earliest) rest
+        [] -> True
       ask group = case group of
-        first_ : _ : _ | Just pid <- Projection.controllerOf first_ gs -> do
-          answer <- Game.choose (Prompt.OrderTimestamps (Decide.deciderFor pid gs) pid group)
-          pure (Game.permute group answer)
+        first_ : _ : _
+          | not (alike group),
+            Just pid <- Projection.View.controllerOf first_ gs -> do
+              answer <- Game.choose (Prompt.OrderTimestamps (Decide.deciderFor pid gs) pid group)
+              pure (Game.permute group answer)
         _ -> pure group
   fmap concat (traverse ask groups)
 

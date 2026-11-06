@@ -164,23 +164,6 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Treasure Token",
-          "Treasure Token#2",
-          "Treasure Token#3",
-          "Treasure Token#4",
-          "Treasure Token#5",
-          "Treasure Token#6",
-          "Treasure Token#7",
-          "Treasure Token#8"
-        ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Count": {
           "card": "Treasure Token",

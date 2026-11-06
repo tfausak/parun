@@ -129,17 +129,6 @@
       "turn": 1
     },
     {
-      "do": {
-        "OrderTimestamps": [
-          "Faerie Token",
-          "Faerie Token#2"
-        ]
-      },
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
       "player": "alice",
       "refuse": {
         "ChooseTargets": {

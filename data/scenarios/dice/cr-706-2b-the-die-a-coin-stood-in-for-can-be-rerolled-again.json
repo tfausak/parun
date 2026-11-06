@@ -175,25 +175,6 @@
     },
     {
       "turn": 1,
-      "step": "CombatDamage",
-      "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "OrderTimestamps",
-          "with": [
-            0,
-            1,
-            2,
-            3,
-            4,
-            5,
-            6
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
       "step": "PostcombatMain",
       "player": "alice",
       "check": {

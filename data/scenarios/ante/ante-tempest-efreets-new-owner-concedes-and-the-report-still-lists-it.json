@@ -1,0 +1,117 @@
+{
+  "description": "CR 800.4a Tempest Efreet's new owner concedes and the report still lists it",
+  "note": "bob declines to pay, so the Efreet is his in his graveyard and his revealed Lightning Bolt is alice's. bob then concedes and the Efreet leaves the game with him; the report keeps it, from alice to bob, beside the Bolt.",
+  "board": {
+    "ante": true,
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Tempest Efreet",
+            "label": "efreet",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "hand": [
+          {
+            "card": "Lightning Bolt",
+            "label": "bolt"
+          }
+        ],
+        "library": [
+          {
+            "card": "Mountain"
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "library": [
+          {
+            "card": "Forest"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$efreet",
+          "ability": 0,
+          "targets": [
+            "$bob"
+          ],
+          "costOrder": [
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "ChooseToPay": {
+          "decision": "Declines"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Concede"
+    }
+  ],
+  "final": [
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Hand",
+        "card": "Lightning Bolt",
+        "count": 1
+      }
+    },
+    {
+      "View": {
+        "of": "OwnershipChanges",
+        "is": [
+          [
+            "Lightning Bolt",
+            "bob",
+            "alice"
+          ],
+          [
+            "Tempest Efreet",
+            "alice",
+            "bob"
+          ]
+        ]
+      }
+    }
+  ]
+}

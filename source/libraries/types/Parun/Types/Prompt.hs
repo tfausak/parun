@@ -928,8 +928,9 @@ data Prompt r where
   ChooseRepeat :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt OptionalDecision.OptionalDecision
   -- | CR 613.7m: the relative order of the timestamps one player's objects
   -- receive at one moment, first named stamped earlier; asked by
-  -- Parun.Engine.Restamp.order, per group in APNAP order, for two or more. CR
-  -- 712.21b / 730.3b ask it of the exiler instead (Parun.Engine.Restamp.orderFor).
+  -- Parun.Engine.Restamp.order, per group in APNAP order, for two or more not
+  -- all interchangeable. CR 712.21b / 730.3b ask it of the exiler instead
+  -- (Parun.Engine.Restamp.orderFor).
   OrderTimestamps :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt [Natural.Natural]
   -- | CR 605.3, which fixes no order: the order one player activates a batch of
   -- mana abilities in when an effect has them activate several at once (Drain

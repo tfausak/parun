@@ -1,0 +1,201 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          },
+          {
+            "card": "Island",
+            "label": "i3"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Savor the Moment",
+            "label": "savor"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice",
+        "team": 1
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "b1",
+            "tapped": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob",
+        "team": 1
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "carol",
+        "team": 2
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "dave",
+        "team": 2
+      }
+    ],
+    "sharedTeamTurns": true,
+    "step": "PrecombatMain"
+  },
+  "description": "CR 805.8 a departed taker's team skips the untap step of the extra turn",
+  "note": "CR 805.8: Savor the Moment's skip rides the turn to alice's team, so bob's tapped Island stays tapped through it and untaps on the team's next turn.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$i1",
+            "$i2",
+            "$i3"
+          ],
+          "object": "$savor"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Savor the Moment",
+          "count": 1,
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "BeginningOfCombat",
+      "turn": 1
+    },
+    {
+      "do": "Concede",
+      "player": "alice",
+      "step": "PostcombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "bob",
+          "of": "ActivePlayer"
+        }
+      },
+      "player": "bob",
+      "step": "Upkeep",
+      "turn": 2
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$b1",
+          "tapped": true
+        }
+      },
+      "player": "bob",
+      "step": "Upkeep",
+      "turn": 2
+    },
+    {
+      "check": {
+        "View": {
+          "is": "carol",
+          "of": "ActivePlayer"
+        }
+      },
+      "player": "carol",
+      "step": "Upkeep",
+      "turn": 3
+    },
+    {
+      "check": {
+        "View": {
+          "is": "bob",
+          "of": "ActivePlayer"
+        }
+      },
+      "player": "bob",
+      "step": "Upkeep",
+      "turn": 4
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$b1",
+          "tapped": false
+        }
+      },
+      "player": "bob",
+      "step": "Upkeep",
+      "turn": 4
+    }
+  ]
+}

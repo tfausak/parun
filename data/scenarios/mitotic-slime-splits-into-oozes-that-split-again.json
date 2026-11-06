@@ -112,17 +112,6 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Ooze Token",
-          "Ooze Token#2"
-        ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Count": {
           "player": "alice",
@@ -172,17 +161,6 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": "Pass"
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Ooze Token#2",
-          "Ooze Token#3"
-        ]
-      }
     },
     {
       "turn": 1,

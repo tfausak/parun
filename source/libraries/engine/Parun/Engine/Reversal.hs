@@ -74,6 +74,7 @@ withoutAnnouncement before entry closed = do
   players <- mapWith playerWith (GameState.players before) (GameState.players entry) (GameState.players closed)
   outsideObjects <- mapOf GameState.outsideObjects
   broughtIn <- seqOf GameState.broughtIn
+  departedCards <- mapOf GameState.departedCards
   manaPool <- pools (GameState.manaPool before) (GameState.manaPool entry) (GameState.manaPool closed)
   combat <- one GameState.combat
   events <- Event.restampLifeChanges <$> eventsOf GameState.events
@@ -221,6 +222,7 @@ withoutAnnouncement before entry closed = do
         GameState.players = players,
         GameState.outsideObjects = outsideObjects,
         GameState.broughtIn = broughtIn,
+        GameState.departedCards = departedCards,
         GameState.manaPool = manaPool,
         GameState.combat = combat,
         GameState.events = events,

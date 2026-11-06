@@ -257,7 +257,8 @@ representatives pcs gs candidates =
 --     GameState.stackArchive is keyed by stack objects that have left too, and
 --     its bindings are read only on behalf of a stack object or a delayed
 --     trigger (CR 608.2h), which namedByAnother and namedByStored already
---     cover.
+--     cover. GameState.departedCards holds cards that have left the game (CR
+--     800.4a), read only by the ownership report and CR 729.5's return.
 --   * GameState.damagePreventedBy is read only for the source of the ability
 --     resolving, a spell already gone from the stack, never for a candidate.
 --   * GameState.drawsThisTurn names cards, and is read here through the same two
@@ -307,6 +308,10 @@ representatives pcs gs candidates =
 -- bookkeeping. They are in the list rather than in the account above because
 -- requiring a field empty is the direction that cannot make a player's choice,
 -- so an unreachable row is the cheap side to be wrong on.
+--
+-- GameState.arrivals is required to hold no arrival rather than to be closed: an
+-- open scope with none names no object, and every simultaneous move opens one
+-- (Event.simultaneously), Restamp.order's batches included.
 quiet :: GameState -> Bool
 quiet gs =
   Seq.null (GameState.broughtIn gs)
@@ -319,7 +324,7 @@ quiet gs =
     && Map.null (GameState.copyExceptionCounters gs)
     && Map.null (GameState.detachedBindings gs)
     && Maybe.isNothing (GameState.enteringTogether gs)
-    && Maybe.isNothing (GameState.arrivals gs)
+    && all Seq.null (GameState.arrivals gs)
     && Map.null (GameState.contested gs)
 
 -- Whether a stored row, or the combat in progress, MIGHT name this object.
@@ -406,7 +411,7 @@ layeredBetween a b gs = case (Map.lookup a (GameState.objects gs), Map.lookup b 
 -- a new Combat field is an arity error here.
 combatNames :: ObjectId -> Combat.Combat -> Bool
 combatNames oid combat = case combat of
-  Combat.MkCombat attackers blockers struckFirst joinedUnder attackedUnder attackedControlledBy attacked declaredAttacked declaredAttackedBy declaredAttackedThisStep declaredAttackers declaredBlockers _blockersDeclared attackingNothing blockingNothing removedDefending _defenders _barred bands pileBlocks ->
+  Combat.MkCombat attackers blockers struckFirst joinedUnder attackedUnder attackedControlledBy attacked declaredAttacked declaredAttackedBy declaredAttackedThisStep declaredAttackers declaredBlockers _blockersDeclared attackingNothing blockingNothing removedDefending _defenders _barred bands pileBlocks blockedBy ->
     Map.member oid attackers
       || any (attackTargetNames oid) (Map.elems attackers)
       || Map.member oid blockers
@@ -426,6 +431,8 @@ combatNames oid combat = case combat of
       || Map.member oid removedDefending
       || any (Set.member oid) bands
       || maybe False (\piles -> Map.member oid piles || any (Set.member oid) piles) pileBlocks
+      || Map.member oid blockedBy
+      || any (Set.member oid) (Map.elems blockedBy)
 
 attackTargetNames :: ObjectId -> AttackTarget.AttackTarget -> Bool
 attackTargetNames oid target = case target of

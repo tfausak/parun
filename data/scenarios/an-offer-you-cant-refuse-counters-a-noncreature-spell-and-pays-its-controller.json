@@ -260,17 +260,6 @@
       "turn": 2
     },
     {
-      "do": {
-        "OrderTimestamps": [
-          "Treasure Token",
-          "Treasure Token#2"
-        ]
-      },
-      "player": "bob",
-      "step": "PrecombatMain",
-      "turn": 2
-    },
-    {
       "check": {
         "Count": {
           "card": "Shock",

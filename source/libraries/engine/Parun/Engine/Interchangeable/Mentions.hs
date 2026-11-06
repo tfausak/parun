@@ -393,6 +393,7 @@ import qualified Parun.Types.Reinforce as Reinforce
 import qualified Parun.Types.RemovalCount as RemovalCount
 import qualified Parun.Types.RemoveCounters as RemoveCounters
 import qualified Parun.Types.RemoveCountersAmong as RemoveCountersAmong
+import qualified Parun.Types.RemoveFromCombat as RemoveFromCombat
 import qualified Parun.Types.RemovePlayerCounters as RemovePlayerCounters
 import qualified Parun.Types.Repeat as Repeat
 import qualified Parun.Types.RepeatIf as RepeatIf
@@ -1587,7 +1588,8 @@ effectNames asking onCard onAbility x = case x of
   Effect.PhaseOut objectRef -> objectRefNames asking objectRef
   Effect.TurnFaceDown turnFaceDown -> turnFaceDownNames asking onAbility turnFaceDown
   Effect.TurnFaceUp slotName -> slotNames asking slotName
-  Effect.RemoveFromCombat objectRef -> objectRefNames asking objectRef
+  Effect.RemoveFromCombat payload -> objectRefNames asking (RemoveFromCombat.removed payload)
+  Effect.BlockAttacker objectRef -> objectRefNames asking objectRef
   Effect.BecomesBlocked slotName -> slotNames asking slotName
   Effect.SwitchBlockers slotName -> slotNames asking slotName
   Effect.ExchangeBlocks exchangeBlocks -> exchangeBlocksNames asking exchangeBlocks

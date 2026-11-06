@@ -292,6 +292,11 @@ stickerSheetOf ref gs = do
   slot <- Natural.toInt (StickerRef.sheet ref)
   Seq.lookup slot (Player.stickerSheets player)
 
+-- | CR 123.1: what each of these stickers says, oldest first, skipping any its
+-- sheet does not print.
+stickerContents :: Seq.Seq StickerPlacement.StickerPlacement -> GameState -> Seq.Seq StickerContent.StickerContent
+stickerContents placements gs = Seq.fromList (Maybe.mapMaybe (\p -> stickerContent (StickerPlacement.sticker p) gs) (Foldable.toList placements))
+
 -- | CR 123.2 / 123.6-123.9: what a sticker says, read off its sheet.
 stickerContent :: StickerRef.StickerRef -> GameState -> Maybe StickerContent.StickerContent
 stickerContent ref gs = do
@@ -4094,11 +4099,11 @@ attackersInTheirLastTurn gs victim =
 -- intervening "if" asks from, through Parun.Engine.Quantity's WasBlockedThisTurn
 -- arm.
 --
--- Every road onto the blocked status records the event and CR 509.3c keeps it to
--- one per combat, so an `any` is the whole question: CR 509.1a's declaration, CR
+-- Every road onto the blocked status records the event, so an `any` is the whole
+-- question: CR 509.1a's declaration, CR
 -- 509.1h's effect, CR 509.4's blocker put onto the battlefield, and an effect's
 -- reassignment under CR 509.3b -- Parun.Engine.Combat's declareBlockers,
--- becomeBlocked, putOntoBattlefieldBlocking and switchBlockers.
+-- becomeBlocked, putOntoBattlefieldBlocking, switchBlockers and blockAttacker.
 wasBlockedThisTurn :: GameState -> ObjectId -> Bool
 wasBlockedThisTurn gs oid = any ((== Just oid) . blockedAttacker . LoggedEvent.event) (GameState.events gs)
 

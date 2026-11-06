@@ -1,0 +1,67 @@
+{
+  "description": "CR 613.7m identical tokens created together ask no order",
+  "note": "Raise the Alarm's two Soldier tokens are interchangeable, so no order of their stamps can be observed and no OrderTimestamps prompt is raised: an unscheduled one fails the run.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "plains"
+          },
+          {
+            "card": "Island",
+            "label": "island"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Raise the Alarm",
+            "label": "alarm"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$alarm",
+          "mana": [
+            "$plains",
+            "$island"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Soldier Token",
+          "count": 2
+        }
+      }
+    }
+  ]
+}

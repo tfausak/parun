@@ -60,12 +60,9 @@
   },
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$swarm", "mana": ["$forest-1", "$forest-2", "$forest-3", "$forest-4", "$forest-5", "$forest-6", "$forest-7", "$forest-8", null] } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "OrderTimestamps": ["Snake Token", "Snake Token#2", "Snake Token#3"] } },
     { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Snake Token", "count": 3 } } },
-    { "turn": 3, "step": "Upkeep", "player": "alice", "do": { "OrderTimestamps": ["Snake Token#4", "Snake Token#5", "Snake Token#6"] } },
     { "turn": 3, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Snake Token", "count": 6 } } },
     { "turn": 3, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
-    { "turn": 5, "step": "Upkeep", "player": "alice", "do": { "OrderTimestamps": ["Snake Token#7", "Snake Token#8", "Snake Token#9", "Snake Token#10"] } },
     { "turn": 5, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Snake Token", "count": 10 } } }
   ]
 }

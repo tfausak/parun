@@ -1,0 +1,154 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Boggart Brute",
+            "label": "brute",
+            "ready": true
+          },
+          {
+            "card": "Craw Wurm",
+            "label": "wurm",
+            "ready": true
+          },
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m1",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "False Orders",
+            "label": "fo"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "ready": true
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "BeginningOfCombat"
+  },
+  "description": "CR 509.1b False Orders never has its target block a creature with menace alone",
+  "note": "Bob blocks nothing. False Orders on his Bears offers the Wurm and the Hill Giant, never the Boggart Brute, which can't be blocked except by two or more creatures (CR 702.111b, 101.2). Alice picks the Giant, which kills the Bears; the Brute and the Wurm deal bob 9.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$brute",
+          "$wurm",
+          "$giant"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Block": {}
+      },
+      "player": "bob",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$m1"
+          ],
+          "object": "$fo",
+          "targets": [
+            "$bears"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseOptional": "Exercises"
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "ChoosePermanent",
+          "with": "$brute"
+        }
+      },
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChoosePermanent",
+          "with": "$giant"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Blockers": {
+          "attacker": "$brute",
+          "blockers": null
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 11,
+          "player": "bob"
+        }
+      },
+      "player": "alice",
+      "step": "EndOfCombat",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Grizzly Bears",
+          "count": 0,
+          "player": "bob",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "EndOfCombat",
+      "turn": 1
+    }
+  ]
+}

@@ -58,8 +58,10 @@
                       {
                         "type": "RemoveFromCombat",
                         "value": {
-                          "type": "InSlot",
-                          "value": "target"
+                          "removed": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
                         }
                       }
                     ]

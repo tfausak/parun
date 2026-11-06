@@ -758,6 +758,7 @@ lastKnownRiderSpec s registry =
                     -- CR 122.1: nothing put a counter on the Sorcerer, and this
                     -- case is about a keyword grant rather than a counter.
                     LastKnown.counters = Map.empty,
+                    LastKnown.stickers = Seq.empty,
                     -- Nothing here copies anything; the field is filled to
                     -- build the record.
                     LastKnown.copiable = Projection.copiableCharacteristics srcId equipped,
@@ -2108,7 +2109,8 @@ departedAttackerSpec s registry =
                       Combat.Type.defenders = [S.bob],
                       Combat.Type.barred = [],
                       Combat.Type.bands = [],
-                      Combat.Type.pileBlocks = Nothing
+                      Combat.Type.pileBlocks = Nothing,
+                      Combat.Type.blockedBy = Map.empty
                     }
               }
           gone = S.departs Departure.Type.Conceded S.alice fighting
@@ -2158,7 +2160,8 @@ departedDefenderSpec s registry =
                       Combat.Type.defenders = [S.bob],
                       Combat.Type.barred = [],
                       Combat.Type.bands = [],
-                      Combat.Type.pileBlocks = Nothing
+                      Combat.Type.pileBlocks = Nothing,
+                      Combat.Type.blockedBy = Map.empty
                     }
               }
           gone = S.departs Departure.Type.Conceded S.bob attacking

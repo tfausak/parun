@@ -224,17 +224,6 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Insect Token",
-          "Insect Token#2"
-        ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "View": {
           "of": "Stack",
@@ -290,17 +279,6 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": "Pass"
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Insect Token#3",
-          "Insect Token#4"
-        ]
-      }
     },
     {
       "turn": 1,

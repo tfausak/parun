@@ -162,20 +162,6 @@
       "turn": 1,
       "step": "PostcombatMain",
       "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "OrderTimestamps",
-          "with": [
-            0,
-            1
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PostcombatMain",
-      "player": "alice",
       "check": {
         "Names": {
           "object": "$host",

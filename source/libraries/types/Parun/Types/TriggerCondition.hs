@@ -106,12 +106,14 @@ data TriggerCondition
     --
     -- Each producer of those rules reaches it: CR 509.1's declaration, an effect
     -- that causes a creature to block (Parun.Engine.Combat.switchBlockers,
-    -- General Jarkeld; Combat.exchangeBlocks, Sorrow's Path), Effect.BecomesBlocked
+    -- General Jarkeld; Combat.exchangeBlocks, Sorrow's Path; Combat.blockAttacker,
+    -- False Orders), Effect.BecomesBlocked
     -- (Curtain of Light) and a creature put onto the battlefield blocking (CR
     -- 509.4; Flash Foliage, Aetherplasm). Parun.CombatCostSpec's SwitchBlockers,
-    -- ExchangeBlocks and PutOntoBattlefieldBlocking groups and
+    -- ExchangeBlocks and PutOntoBattlefieldBlocking groups,
     -- Parun.KeywordTriggerSpec's SelfBlocksOneOrMore and
-    -- CreatureBecomesBlockedByAtLeast groups are the proof.
+    -- CreatureBecomesBlockedByAtLeast groups and data/scenarios/false-orders/
+    -- are the proof.
     Blocks BlockTrigger.BlockTrigger
   | -- | CR 603.6c: a permanent leaves the battlefield, a CR 603.10a look-back.
     Leaves LeavesTrigger.LeavesTrigger

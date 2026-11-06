@@ -104,7 +104,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 111.10a: Rapacious Dragon's enter trigger creates two Treasure tokens",
-  "note": "The two tokens enter at once, so alice orders their timestamps.",
+  "note": "The two tokens enter at once and are interchangeable, so CR 613.7m's timestamp order is not asked.",
   "timeline": [
     {
       "do": {
@@ -131,17 +131,6 @@
     },
     {
       "do": "Pass",
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
-      "do": {
-        "OrderTimestamps": [
-          "Treasure Token",
-          "Treasure Token#2"
-        ]
-      },
       "player": "alice",
       "step": "PrecombatMain",
       "turn": 1

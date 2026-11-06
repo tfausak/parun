@@ -87,17 +87,6 @@
       "turn": 1,
       "step": "DeclareAttackers",
       "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Cat Token",
-          "Cat Token#2"
-        ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareAttackers",
-      "player": "alice",
       "do": "Pass"
     },
     {

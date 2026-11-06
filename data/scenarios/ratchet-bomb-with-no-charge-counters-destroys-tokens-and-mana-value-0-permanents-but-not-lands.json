@@ -5,7 +5,6 @@
   "timeline": [
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$command", "mana": [null]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Goblin Token", "Goblin Token#2"]}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Goblin Token", "count": 2}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$bomb", "ability": 1, "costOrder": [0, 1]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},

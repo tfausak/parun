@@ -103,18 +103,6 @@
       "turn": 1,
       "step": "EndStep",
       "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Wurm Token",
-          "Wurm Token#2",
-          "Wurm Token#3"
-        ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "EndStep",
-      "player": "alice",
       "check": {
         "Count": {
           "player": "alice",

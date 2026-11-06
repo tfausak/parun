@@ -1,0 +1,113 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Craw Wurm",
+            "label": "wurm",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m1",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "False Orders",
+            "label": "fo"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "ready": true
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "BeginningOfCombat"
+  },
+  "description": "CR 509.1h False Orders unblocks an attacker its target alone blocked",
+  "note": "Bob's Bears alone block the Wurm; False Orders removes them and alice declines the re-block. The Wurm, now unblocked, deals bob 6 (Labyrinth of Skophos' combat-effect scenario is the stays-blocked twin).",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$wurm"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Block": {
+          "$bears": [
+            "$wurm"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$m1"
+          ],
+          "object": "$fo",
+          "targets": [
+            "$bears"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseOptional": "Declines"
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 14,
+          "player": "bob"
+        }
+      },
+      "player": "alice",
+      "step": "EndOfCombat",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Grizzly Bears",
+          "count": 1,
+          "player": "bob",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "EndOfCombat",
+      "turn": 1
+    }
+  ]
+}

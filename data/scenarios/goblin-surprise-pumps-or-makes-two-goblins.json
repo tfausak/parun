@@ -175,17 +175,6 @@
       "turn": 1
     },
     {
-      "do": {
-        "OrderTimestamps": [
-          "Goblin Token",
-          "Goblin Token#2"
-        ]
-      },
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
       "check": {
         "Count": {
           "card": "Goblin Token",

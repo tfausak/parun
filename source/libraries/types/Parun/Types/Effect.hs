@@ -93,6 +93,7 @@ import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.RedirectDamage as RedirectDamage
 import qualified Parun.Types.RemoveCounters as RemoveCounters
 import qualified Parun.Types.RemoveCountersAmong as RemoveCountersAmong
+import qualified Parun.Types.RemoveFromCombat as RemoveFromCombat
 import qualified Parun.Types.RemovePlayerCounters as RemovePlayerCounters
 import qualified Parun.Types.Repeat as Repeat
 import qualified Parun.Types.RepeatIf as RepeatIf
@@ -505,16 +506,15 @@ data Effect card ability
     -- argumentless -- not CR 116.2b's special action, so no cost is paid.
     TurnFaceUp SlotName.SlotName
   | -- | CR 506.4: an effect that specifically removes the named permanents from
-    -- combat (Labyrinth of Skophos). Removal only, that rule's second sentence
-    -- being the whole effect.
-    RemoveFromCombat ObjectRef.ObjectRef
+    -- combat (Labyrinth of Skophos), and CR 509.1h's unblocking of the
+    -- attackers they alone had blocked (False Orders).
+    RemoveFromCombat RemoveFromCombat.RemoveFromCombat
   | -- | CR 509.1h's escape clause: an effect says an attacking creature becomes
     -- blocked (Curtain of Light), blocked by nothing.
-    --
-    -- Not implemented: CR 509.1h's other direction, an effect saying a creature
-    -- becomes unblocked (Scryfall `oracle:"becomes unblocked"`, 2026-08-14, no
-    -- hit).
     BecomesBlocked SlotName.SlotName
+  | -- | CR 509.3a: the named creature blocks an attacking creature of the
+    -- resolving controller's choice (False Orders).
+    BlockAttacker ObjectRef.ObjectRef
   | -- | CR 509.3b's third road onto the battlefield's blocking side: an effect
     -- makes creatures ALREADY in combat block the other of two attacking
     -- creatures (General Jarkeld). The slot holds both attackers, one instance

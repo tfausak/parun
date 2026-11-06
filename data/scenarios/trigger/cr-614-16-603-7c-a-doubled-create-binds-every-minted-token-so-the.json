@@ -1,6 +1,6 @@
 {
   "description": "CR 614.16/603.7c a doubled Create binds every minted token, so the rider takes both",
-  "note": "Doubling Season doubles Tidal Wave's Create at resolution, so two Walls stand where CR 603.7c's \"it\" named one; per Anointed Procession's and Flamerush Rider's rulings the delayed sacrifice takes both, so there is nothing to ask. The engine once bound one Wall, asked which, and left the other alive. CR 613.7m's order over the two Walls' timestamps is the one question two tokens earn, and it is not the rider's; any other unscheduled prompt fails the run.",
+  "note": "Doubling Season doubles Tidal Wave's Create at resolution, so two Walls stand where CR 603.7c's \"it\" named one; per Anointed Procession's and Flamerush Rider's rulings the delayed sacrifice takes both, so there is nothing to ask. The engine once bound one Wall, asked which, and left the other alive. The two Walls are interchangeable, so CR 613.7m's order is not asked either; any unscheduled prompt fails the run.",
   "board": {
     "seats": [
       {
@@ -23,7 +23,6 @@
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$wave", "mana": ["$island", "$island-2", "$island-3"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "OrderTimestamps": ["Wall Token", "Wall Token#2"] } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Wall Token", "count": 2 } } },
     { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Wall Token", "count": 0 } } }
   ]

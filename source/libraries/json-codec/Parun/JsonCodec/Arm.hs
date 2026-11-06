@@ -269,7 +269,7 @@ keyedAnonymous tagOf arms =
             ps <- Common.asObject value
             case ps of
               [p] -> Right (Text.unpack (String.unwrap (Pair.name p)), Just (Pair.value p))
-              _ -> Left . Text.pack $ "expected a string or an object with one key but got " <> show value
+              _ -> Left . Text.pack $ "expected a string or an object with one key but got " <> Text.unpack (Common.render value)
         case List.find ((== t) . tag) arms of
           Nothing -> Left . Text.pack $ "unknown tag: " <> t
           Just arm -> decodeValue arm mv,

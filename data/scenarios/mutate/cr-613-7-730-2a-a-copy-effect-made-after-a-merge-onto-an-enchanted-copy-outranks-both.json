@@ -38,7 +38,6 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$doppelganger" } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseMutateSide", "with": "Over" } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OrderTimestamps", "with": [0, 1] } } },
     {
       "turn": 1,
       "step": "PrecombatMain",

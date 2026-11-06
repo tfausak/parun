@@ -12,7 +12,6 @@
   "timeline": [
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$birth"}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Elemental Token", "Elemental Token#2"]}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "CallCoin", "with": "Heads"}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "FlipCoin", "with": "Heads"}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Elemental Token", "count": 2}}},

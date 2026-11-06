@@ -1125,6 +1125,10 @@ lastKnownView peers oid gs lastKnown =
             _ -> Nothing,
           Filter.blocking = LastKnown.blocking lastKnown,
           Filter.paidCosts = LastKnown.paidCosts lastKnown,
+          -- CR 608.2h: the stickers it had as it left, read off their sheets as
+          -- the live view reads them. _____ Balls of Fire destroyed in response
+          -- (Parun.StickerSpec) is the proof.
+          Filter.stickers = Game.stickerContents (LastKnown.stickers lastKnown) gs,
           -- CR 718.3d: the copiable record or the object's own, viewOfCharacteristics'
           -- disjunction. A regression fence: no card asks it of a departed object.
           Filter.prototyped = PC.prototyped (LastKnown.characteristics lastKnown) || LastKnown.prototyped lastKnown,
@@ -1532,8 +1536,8 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       -- "greatest number of counters among creatures that died this turn"
       -- (Parun.CountSpec) is what reads it.
       Filter.counters = counters,
-      -- Not implemented: CR 608.2h's record of a departed object's stickers
-      -- (#4890).
+      -- CR 123.1: not copiable, so a snapshot holds none; lastKnownView
+      -- supplies a departed object's from CR 608.2h's record.
       Filter.stickers = Seq.empty,
       -- CR 701.54b: a designation, which a ProjectedCharacteristics does not carry
       -- and never could -- CR 109.3's characteristic list has no room for one. So a

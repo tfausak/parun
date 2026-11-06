@@ -110,6 +110,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.Prompt as Prompt
 import Parun.Types.Recipient (Recipient)
 import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.RemoveFromCombat as RemoveFromCombat
 import Parun.Types.Result (Result)
 import qualified Parun.Types.Result as Result
 import qualified Parun.Types.RollDie as RollDie
@@ -122,6 +123,7 @@ import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Teams as Teams
 import qualified Parun.Types.Throw as Throw
 import qualified Parun.Types.TurnFaceDown as TurnFaceDown
+import qualified Parun.Types.Unblocking as Unblocking
 import qualified Parun.Types.Zone as Zone
 
 dealDamage :: (Game Result -> Game ()) -> (Game Result -> Game ()) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> DealDamage.DealDamage -> Game ()
@@ -1767,17 +1769,21 @@ turnFaceUp resolving source controller legal slot = do
   gs <- State.get
   Monad.mapM_ Event.turnFaceUpByEffect (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot))
 
-removeFromCombat :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
-removeFromCombat resolving source controller legal ref =
+removeFromCombat :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> RemoveFromCombat.RemoveFromCombat -> Game ()
+removeFromCombat resolving source controller legal (RemoveFromCombat.MkRemoveFromCombat ref unblocking) =
   State.modify' $ \gs ->
     -- CR 506.4: through Game.removeFromCombat, the one performer of every
-    -- clause of that rule, so CR 509.1h's asymmetry comes along for free.
-    -- Unprompted and undirected: the rule leaves nothing to ask.
+    -- clause of that rule, so CR 509.1h's asymmetry comes along for free;
+    -- Combat.removeUnblocking adds that rule's unblocking to it. Unprompted
+    -- and undirected: the rule leaves nothing to ask.
     --
     -- The victims are enumerated ONCE (CR 608.2f), as Untap's fold above does;
     -- an illegal slot (CR 608.2b), a player recipient and an empty match all
     -- remove nothing, and a permanent already out of combat needs no guard.
-    foldr Game.removeFromCombat gs (objectRefObjects legal resolving controller source gs ref)
+    let remove = case unblocking of
+          Unblocking.StayBlocked -> Game.removeFromCombat
+          Unblocking.SoleBlockedUnblocked -> Combat.removeUnblocking
+     in foldr remove gs (objectRefObjects legal resolving controller source gs ref)
 
 becomesBlocked :: Map.Map SlotName (Set Recipient) -> SlotName -> Game ()
 becomesBlocked legal slot =
@@ -1791,6 +1797,14 @@ becomesBlocked legal slot =
         Just target -> Combat.becomeBlocked target gs
       -- Illegal slot (CR 608.2b) or a non-object recipient: no-op.
       _ -> gs
+
+-- CR 509.3a's effect road for each named creature, through
+-- Combat.blockAttacker, which owns the choice, its candidates and the events.
+-- The resolving controller chooses (False Orders' "of your choice").
+blockAttacker :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
+blockAttacker resolving source controller legal ref = do
+  gs <- State.get
+  Monad.mapM_ (Combat.blockAttacker controller) (objectRefObjects legal resolving controller source gs ref)
 
 -- CR 509.3b's third producer, through Combat.switchBlockers, which owns the
 -- whole reassignment: General Jarkeld's hypothetical legality test over CR
