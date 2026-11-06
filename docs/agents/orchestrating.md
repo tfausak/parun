@@ -42,6 +42,11 @@ Per set, in this order, one unit at a time ("Mechanics").
    - "Needs a capability": grouped under its issue, hardest first, a
      one-line note each on why.
 
+   A blank line separates the entries of both lists. Remove a finished
+   entry's own lines and keep the blanks around it, even where two end up
+   together: git conflicts on edits to adjacent lines, and the blanks keep
+   parallel units' edits apart.
+
    Shape `docs/sets/<set>.md` like the previous set's census as its census PR
    first wrote it (`git log --diff-filter=A --format=%h --
    docs/sets/<prev>.md`, then `git show`), not the finished file. File one
