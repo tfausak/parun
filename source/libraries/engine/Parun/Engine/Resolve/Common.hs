@@ -21,6 +21,7 @@ import qualified Parun.Engine.Archenemy as Archenemy
 import qualified Parun.Engine.Attach as Attach
 import qualified Parun.Engine.Attraction as Attraction
 import qualified Parun.Engine.Binding as Binding
+import qualified Parun.Engine.Blight as Blight
 import qualified Parun.Engine.Card as Card
 import qualified Parun.Engine.Cast as Cast
 import qualified Parun.Engine.Combat as Combat
@@ -72,6 +73,7 @@ import qualified Parun.Types.ArrangedArrival as ArrangedArrival
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.Ballot as Ballot
 import qualified Parun.Types.Binding as Binding.Type
+import qualified Parun.Types.Blight as Blight.Type
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
@@ -727,7 +729,8 @@ askedChooser resolving source controller legal ref = do
 -- they take CR 701.3c's stamps in APNAP order, each seat choosing its own, asked
 -- before the fold that mints them, as turnPermanentsOver asks -- and only of the
 -- movers the move will restamp, since Event.attach refuses the rest (CR 701.3b).
--- No board observes the order (gap #4214).
+-- data/scenarios/restamp's "orders Auras attached together" pair (Glamer
+-- Spinners) proves the order.
 attachTogether :: [ObjectId] -> Recipient -> Game ()
 attachTogether movers recipient = do
   gs <- State.get
@@ -3402,7 +3405,13 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.ChooseQuality _ -> False
   Effect.Bolster {} -> False
   Effect.Amass {} -> False
-  Effect.Blight {} -> False
+  -- CR 701.68b: a player given the choice to blight who cannot put the
+  -- counters on a creature they control can't choose to, Blight.canBlight's
+  -- test and Boggart Mischief's gate's. The scenario "CR 701.68b Grub is not
+  -- offered a blight Solemnity forbids" proves it.
+  Effect.Blight blight_ ->
+    let blighters = playerRefPlayers legal resolving source controller gs (Blight.Type.player blight_)
+     in not (null blighters) && not (any (`Blight.canBlight` gs) blighters)
   Effect.Earthbend {} -> False
   Effect.Airbend {} -> False
   Effect.TemptWithTheRing {} -> False

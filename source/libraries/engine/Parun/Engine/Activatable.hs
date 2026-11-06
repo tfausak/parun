@@ -67,11 +67,11 @@ import qualified Parun.Types.Zone as Zone
 -- activatableGiven refuses a mana ability outright. All that is left on this
 -- side is handing over the ability's cost.
 sicknessOk :: PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> Bool
-sicknessOk = sicknessOkGiven Map.empty
+sicknessOk pid srcId ability gs = sicknessOkGiven (Projection.controlGrants gs) Map.empty pid srcId ability gs
 
-sicknessOkGiven :: Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> Bool
-sicknessOkGiven pcs pid srcId ability =
-  Cost.sicknessOkGiven pcs pid srcId (ActivatedAbility.cost ability)
+sicknessOkGiven :: [Projection.ControlGrant] -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> Bool
+sicknessOkGiven grants pcs pid srcId ability =
+  Cost.sicknessOkGiven grants pcs pid srcId (ActivatedAbility.cost ability)
 
 -- The abilities to consider activating, which depends on WHERE the object is --
 -- the one place that zone question is asked, so no caller repeats it.
@@ -722,7 +722,7 @@ activatableGiven pools sources pid srcId ability gs =
         -- carries this conjunct too, for the CR 605.3a windows that never reach
         -- this function.
         && not (PlayerEffect.prohibitsActivating (ActivatedAbility.keyword ability) srcId pid gs)
-        && sicknessOkGiven pcs pid srcId ability gs
+        && sicknessOkGiven grants pcs pid srcId ability gs
         && riderOk pid srcId ability gs
         && loyaltyOk pid srcId ability gs
         && Modal.selectionPossible fillable (Modal.Type.selection modal)

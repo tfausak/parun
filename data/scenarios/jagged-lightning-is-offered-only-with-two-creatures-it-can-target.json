@@ -1,0 +1,38 @@
+{
+  "description": "CR 700.2a / 601.2c: Jagged Lightning is offered only once two creatures it can target exist, a hexproof one not counting",
+  "note": "Bob's bears and hexproof Bogle make one legal target, so only the Elves are castable; with the Elves in play there are exactly two.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "RRRRRG",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "hand": [
+          { "card": "Jagged Lightning", "label": "lightning" },
+          { "card": "Llanowar Elves", "label": "elves" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Slippery Bogle", "label": "bogle" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Cast $elves"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$elves" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Cast $lightning"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$lightning", "targetsBySlot": { "creatures": ["Llanowar Elves", "$bears"] } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Llanowar Elves", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Slippery Bogle", "count": 1 } } }
+  ]
+}

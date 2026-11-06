@@ -5,10 +5,12 @@
 -- and the stored-grant term pinned on its own.
 module Parun.VisibilitySpec where
 
+import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map as Map
+import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
@@ -23,6 +25,7 @@ import qualified Parun.Engine.Visibility as Visibility
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
+import qualified Parun.Types.Action as Action.Type
 import qualified Parun.Types.AffectedPlayers as AffectedPlayers
 import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.Audience as Audience
@@ -33,13 +36,17 @@ import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Expiry as Expiry
 import qualified Parun.Types.Face as Face
+import qualified Parun.Types.FaceDownReason as FaceDownReason
+import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Label as Label
 import qualified Parun.Types.LoggedEvent as LoggedEvent
+import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.Placement as Placement
 import qualified Parun.Types.PlayerEffect as PlayerEffect
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerScope as PlayerScope
@@ -58,6 +65,7 @@ spec s registry = Spec.describe s "Parun.Engine.Visibility" $ do
   twoBeholdsSpec s registry
   miracleBeforePlacementSpec s registry
   shuffledRevealSpec s registry
+  specialActionTopSpec s registry
   -- A card CR 121.8 keeps face down in hand exists only mid-cast, which no
   -- scenario check reaches, so the mark is written onto the state directly.
   Spec.it s "CR 121.8 / 708.5 a card kept face down in hand is hidden from its owner" $ do
@@ -288,6 +296,64 @@ shuffledRevealSpec s registry =
     -- The control, off the same run: before the shuffle, bob saw it.
     Spec.assertEqWith s "CR 701.20a at the shuffle prompt bob sees the revealed Giant" (at "shuffle") (Just ([found], [Visibility.Type.Visible]))
     Spec.assertEqWith s "bob discarded a card" (length (Game.zoneMembers Zone.Graveyard S.bob after)) 1
+
+-- CR 401.5's special-action half, off printed cards: alice plays with her top
+-- card revealed (Future Sight) and turns Pine Walker face up (CR 116.2b). Paying
+-- its {4}{G}, she sacrifices Darksteel Colossus to Ashnod's Altar (CR 605.3a),
+-- and the Colossus's replacement shuffles it into her library; the shuffle
+-- answer sends the old top card to the bottom, so the top changes mid-payment.
+-- What bob sees of her live top card is noted at each of her mana-source
+-- prompts, either side of the shuffle, and at her priority prompts after it.
+-- Driven through Engine.priorityLoop, whose special-action arms open the window.
+--
+-- The Altar's activation is CR 401.5's other window, opened and closed inside
+-- this one (Event.announcing): the prompts after it are the ones only the
+-- special action's window holds.
+specialActionTopSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+specialActionTopSpec s registry =
+  Spec.it s "CR 401.5 a top card new since a special action began is held back until it is finished" $ do
+    let faceDown placement = placement {Placement.faceDown = Just FaceDownReason.Morphed}
+        alice =
+          (S.battlefield S.alice ([S.permanent "Future Sight", S.aliased "altar" (S.permanent "Ashnod's Altar"), S.aliased "colossus" (S.permanent "Darksteel Colossus"), S.aliased "walker" (faceDown (S.permanent "Pine Walker"))] <> replicate 3 (S.permanent "Forest")))
+            { Seat.library = Seq.fromList (S.aliased "top" (S.cardSetup "Island") : replicate 3 (S.cardSetup "Plains"))
+            }
+    built <- S.buildBoardOrFail s registry (S.board (alice NonEmpty.:| [S.playerSetup S.bob]) S.alice S.precombatMain)
+    let labelled name = maybe (Spec.assertFailure s ("no " <> name)) pure (Map.lookup (Label.MkLabel (Text.pack name)) (Staged.objects built))
+    altar <- labelled "altar"
+    colossus <- labelled "colossus"
+    walker <- labelled "walker"
+    top <- labelled "top"
+    let note :: String -> GameState.GameState -> State.State (Bool, [(String, Visibility.Type.Visibility)]) ()
+        note label g = State.modify' (\(shuffled, notes) -> (shuffled, notes <> foldMap (\oid -> [(label, Visibility.sees S.bob oid g)]) (Game.topOf Zone.Library S.alice g)))
+        answer :: Asked.Asked GameState.GameState r -> State.State (Bool, [(String, Visibility.Type.Visibility)]) r
+        answer asked = do
+          shuffled <- State.gets fst
+          let g = Asked.game asked
+              stage = if shuffled then "after" else "before"
+          case Asked.prompt asked of
+            Prompt.ChooseAction _ pid actions | pid == S.alice -> do
+              Monad.when shuffled (note "priority" g)
+              pure (Maybe.fromMaybe Action.Type.Pass (List.find (\action -> case action of Action.Type.TurnFaceUp oid _ -> oid == walker; _ -> False) actions))
+            Prompt.ChooseManaSource _ pid _ sources | pid == S.alice -> do
+              note ("payment " <> stage) g
+              pure (Just (if not shuffled && elem altar sources then altar else NonEmpty.head (NonEmpty.fromList (filter (/= altar) (NonEmpty.toList sources)))))
+            Prompt.ChooseExtraManaSource {} -> pure Nothing
+            Prompt.ChooseSacrifices {} -> pure (Set.singleton colossus)
+            Prompt.Shuffle cards -> do
+              State.modify' (\(_, notes) -> (True, notes))
+              pure (filter (/= top) cards <> filter (== top) cards)
+            p -> pure (S.identityAnswer p)
+        ((_, after), (_, seen)) = State.runState (Engine.runGameAsked answer (Staged.state built) Engine.priorityLoop) (False, [])
+        at label = [visibility | (l, visibility) <- seen, l == label]
+    -- THE gameplay reading, and first: with the payment still under way, bob
+    -- does not see the card the shuffle put on top.
+    Spec.assertBool s (not (null (at "payment after"))) "alice was asked for mana after the shuffle"
+    Spec.assertBool s (all (== Visibility.Type.Obscured) (at "payment after")) "CR 401.5 at each payment prompt after the shuffle, bob does not see her new top card"
+    Spec.assertEqWith s "CR 401.5 once the Walker is face up, he does" (take 1 (at "priority")) [Visibility.Type.Visible]
+    -- The controls, off the same run.
+    Spec.assertBool s (not (null (at "payment before")) && all (== Visibility.Type.Visible) (at "payment before")) "before the shuffle, he sees the top card as the action began"
+    Spec.assertEqWith s "CR 702.37e the Walker was turned face up" (fmap Object.facing (Game.lookupObject walker after)) (Just Facing.FaceUp)
+    Spec.assertBool s (Game.topOf Zone.Library S.alice after /= Just top) "the shuffle changed her top card"
 
 -- Alice holds one card and has two in her library; bob has nothing.
 shownBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m (GameState.GameState, ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId)

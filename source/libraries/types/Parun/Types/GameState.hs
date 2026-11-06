@@ -69,6 +69,7 @@ import qualified Parun.Types.SideDeck as SideDeck
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellWasCast as SpellWasCast
 import qualified Parun.Types.Timestamp as Timestamp
+import qualified Parun.Types.TurnMarker as TurnMarker
 
 data GameState = MkGameState
   { -- | CR 800.2: the options this game was started with; never written after
@@ -433,6 +434,12 @@ data GameState = MkGameState
     -- (Parun.Engine.Event.announcing); then each library's top card as it
     -- began, the only one that stays shown until it ends (Game.shownTop).
     announcedTops :: Maybe (Map.Map PlayerId.PlayerId ObjectId.ObjectId),
+    -- | CR 401.5: Nothing unless a player is taking a special action
+    -- (Parun.Engine.Event.takingSpecialAction); then each library's top card as
+    -- it began, the only one that stays shown until it ends (Game.shownTop).
+    -- Apart from announcedTops, whose window a mana ability activated during the
+    -- action opens and closes inside this one.
+    actionTops :: Maybe (Map.Map PlayerId.PlayerId ObjectId.ObjectId),
     -- | CR 101.4b: Nothing outside a Parun.Types.ForEach loop; inside one, the
     -- permanents each ChoosePermanents of it has picked so far, beside who
     -- picked them, which a later pick's prompt carries
@@ -591,6 +598,9 @@ data GameState = MkGameState
     -- | CR 500.7: the extra turns created and not yet taken, most recently
     -- created first, each carrying the steps that turn skips (CR 500.11).
     extraTurns :: [ExtraTurn.ExtraTurn],
+    -- | CR 807.4: a Grand Melee game's turn markers in number order, written
+    -- by Parun.Engine.GrandMelee; empty in every other game.
+    turnMarkers :: [TurnMarker.TurnMarker],
     -- | CR 100.6a / 729.1a: how many subgames have begun this match, counting
     -- one in progress. The only match-scoped field: CR 729.1b keeps a subgame's
     -- effects out of the main game, but a match is a series of games, so this

@@ -98,7 +98,6 @@
                           "kinds": {
                             "type": "AtLeastOne"
                           },
-                          "slot": "moved",
                           "to": {
                             "type": "InSlot",
                             "value": "permanent"
@@ -108,20 +107,6 @@
                     ]
                   },
                   {
-                    "condition": {
-                      "type": "Compares",
-                      "value": {
-                        "comparison": "AtLeast",
-                        "measured": {
-                          "type": "InSlot",
-                          "value": "moved"
-                        },
-                        "threshold": {
-                          "type": "Literal",
-                          "value": 1
-                        }
-                      }
-                    },
                     "effects": [
                       {
                         "type": "Draw",
@@ -136,7 +121,13 @@
                           }
                         }
                       }
-                    ]
+                    ],
+                    "ifTaken": {
+                      "type": "AnyTaken",
+                      "value": [
+                        0
+                      ]
+                    }
                   }
                 ],
                 "targetSlots": {

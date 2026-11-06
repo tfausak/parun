@@ -158,8 +158,6 @@ base pid oid gs = case Game.lookupObject oid gs of
   Nothing -> Visibility.Obscured
   Just obj -> case Game.zoneOf oid gs of
     Nothing -> visibleIf (Object.owner obj == pid) -- CR 400.11
-    -- Not implemented: CR 401.5's new top card, changed while a special action
-    -- is taken, is shown at once rather than after (#5003).
     Just Zone.Library -> shownTo pid oid gs -- CR 401.2, 401.5
     Just Zone.Hand ->
       if Game.keptFaceDown oid gs

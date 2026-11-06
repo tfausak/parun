@@ -86,6 +86,32 @@ Entries are ordered by the first rule each cites.
   to the next seat, and the pass cycle restarts".
 - **Issue**: #143.
 
+## Whether a cost paid on resolution is an effect
+
+- **Question**: CR 118.12 makes the "[do something]" of "If [a player] does"
+  a cost paid as the spell or ability resolves. Do "if an effect would put
+  counters" replacements (CR 614.16) apply to the counters that cost puts?
+- **Rules**: CR 118.12, 118.12a, 609.1, 614.16, 701.63a, 122.5; Library of
+  Leng's ruling of 2004-10-04 ("costs aren't effects"), Doubling Season's of
+  2024-11-08 and B.O.B.'s of 2020-02-29 (activation costs only); CR of
+  2026-09-25.
+- **Decision**: No. It is a cost and no effect, as for a discard: Doubling
+  Season does not double Grub, Notorious Auntie's or Boggart Mischief's
+  blight, endure's counter, Goldberry, River-Daughter's move or Sphinx-Bone
+  Wand's charge counter. A replacement naming a player (Vorinclex, Monstrous
+  Raider) or any counter (Hardened Scales) still applies, and the "[effect]"
+  half's tokens are still doubled.
+- **Rejected**: An effect, by CR 609.1's broad definition: it equally admits an
+  activation cost's result, which the rulings refuse, and needs their "costs
+  aren't effects" to stop at costs paid before resolution. Splitting by moment
+  (a resolution to hang an effect on): CR 118.12 already names the action a
+  cost.
+- **Site**: `Parun.Engine.Event.resolvingCounterCause`, and
+  `Parun.Engine.Cost`'s counter-placing arms, proved by the scenarios "CR
+  118.12 Doubling Season does not double Grub's blight" and "CR 118.12
+  Doubling Season does not double a blight paid as the trigger resolves".
+- **Issue**: #4544.
+
 ## Whether one instruction naming a recipient twice deals one damage event
 
 - **Question**: Char aimed at its own caster deals 4 and 2 to one player. Is
@@ -967,6 +993,48 @@ Entries are ordered by the first rule each cites.
   `attack-option-right-seat-after-departure` stop at the same turn; no test reaches
   a later one.
 - **Issue**: none.
+
+## Whether a Grand Melee game keeps a turn marker
+
+- **Question**: CR 807.4a gives one turn marker for each full four players, so
+  fewer than four players have none. Does a game below four players stop?
+- **Rules**: CR 807.4, 807.4a, 807.4e, 807.4g; CR of 2026-09-25.
+- **Decision**: No. At least one marker remains: the count is never below one,
+  and the last marker is never removed.
+- **Rejected**: No markers, which leaves nobody able to begin a turn and a game
+  that can't end.
+- **Site**: `Parun.Engine.GrandMelee.markersFor` and `remove`. No test reaches
+  fewer than four players.
+- **Issue**: #3003.
+
+## Which seats Grand Melee's three-seat window counts
+
+- **Question**: CR 807.4d stops a player beginning their turn while a marker is
+  in "the three seats to their left". Does a departed player's seat count as
+  one of the three?
+- **Rules**: CR 801.2c, 807.4d, 807.4h; CR of 2026-09-25.
+- **Decision**: No. The window is the three nearest players still in the game.
+- **Rejected**: Counting departed seats, which lets markers bunch up as the
+  table empties. CR 807.4d's purpose is to keep each holder's range of
+  influence (CR 807.2a) clear of the others, and range closes up over a departed
+  seat (CR 801.2c, 807.4h).
+- **Site**: `Parun.Engine.GrandMelee.crowded`. `Parun.GrandMeleeSpec`'s "CR
+  807.4d a marker waits while another is within three seats on its left".
+- **Issue**: #3003.
+
+## When a departed Grand Melee player's turn would have begun
+
+- **Question**: CR 800.4m ends a departed player's "until your next turn"
+  effects when that turn would have begun. In Grand Melee, which turns are in
+  progress depends on the markers (CR 807.4c, 807.4d), so when is that?
+- **Rules**: CR 800.4k, 800.4m, 807.4c, 807.4d; CR of 2026-09-25.
+- **Decision**: When the marker that passed their seat begins its next turn,
+  for the next player to their left.
+- **Rejected**: As they leave, which ends the effect before any turn would
+  have begun.
+- **Site**: `Parun.Engine.Engine.takeMarkedTurn`'s `skipped`. No test reaches
+  it.
+- **Issue**: #3003.
 
 ## Whether Alternating Teams teammates review hands across an emptied seat
 

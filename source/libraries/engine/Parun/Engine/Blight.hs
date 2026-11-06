@@ -100,8 +100,9 @@ canBlight pid gs = not (null (payable pid gs))
 -- or the one whose cost is being paid. The CounterCause is the caller's, and the
 -- blighting player is read off it (CounterCause.putter): rule 701.68a's "you" is
 -- the player putting the counters, so one argument cannot disagree with itself.
--- CR 601.2h's cost is CounterCause.ByPayment, CR 118.12's and an effect's
--- alike CounterCause.ByEffect -- one procedure, three provenances; see #1647.
+-- A cost, CR 601.2h's or CR 118.12's, is CounterCause.ByPayment and an effect
+-- CounterCause.ByEffect -- one procedure, three provenances; see
+-- docs/decisions.md, "Whether a cost paid on resolution is an effect".
 --
 -- CHOOSE, not target: rule 701.68a says "a creature you control" without saying
 -- "target", so nothing was declared on the stack (CR 601.2c) and there is no CR

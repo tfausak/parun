@@ -208,6 +208,13 @@ legalRecipients kind perspective source slot gs =
 -- announcement is made and answers it.
 legalRecipientsGiven :: StackObjectKind.StackObjectKind -> Maybe AbilityName.AbilityName -> Pools -> Maybe PlayerId -> Bool -> Map SlotName Binding.Type.Binding -> Acquisition.Acquisition -> ObjectId -> TargetSlot -> GameState -> Set Recipient
 legalRecipientsGiven kind reader pools perspective unannounced bindings acquisition source slot gs =
+  Set.fromDistinctAscList (legalRecipientListGiven kind reader pools perspective unannounced bindings acquisition source slot gs)
+
+-- The same recipients ascending, as a LAZY list: fillableModesGiven asks only
+-- whether a slot's floor is met, and stops at the floor's last recipient
+-- rather than judging every candidate (#1448).
+legalRecipientListGiven :: StackObjectKind.StackObjectKind -> Maybe AbilityName.AbilityName -> Pools -> Maybe PlayerId -> Bool -> Map SlotName Binding.Type.Binding -> Acquisition.Acquisition -> ObjectId -> TargetSlot -> GameState -> [Recipient]
+legalRecipientListGiven kind reader pools perspective unannounced bindings acquisition source slot gs =
   -- The SAME thunk both halves read, so the whole-board projection is taken at
   -- most once per slot even when this is reached through the wrapper above, and
   -- once per enumeration when it is not (admittedGiven's own note).
@@ -262,7 +269,7 @@ legalRecipientsGiven kind reader pools perspective unannounced bindings acquisit
           && any
             (\pid -> any (\bans -> PlayerEffect.forbidsTargeting bans pid kind sourceView oid gs) (lookup pid playerBans))
             (Projection.controllerOfGiven grants oid gs)
-   in Set.filter keep (admittedGiven reader pools perspective unannounced bindings acquisition source slot gs)
+   in filter keep (admittedListGiven reader pools perspective unannounced bindings acquisition source slot gs)
 
 -- CR 801.5a: the recipients @chooser@ may name for an ability of @source@ --
 -- those within their own range, which the controller's cut
@@ -308,6 +315,11 @@ admittedRecipients perspective source slot gs =
 
 admittedGiven :: Maybe AbilityName.AbilityName -> Pools -> Maybe PlayerId -> Bool -> Map SlotName Binding.Type.Binding -> Acquisition.Acquisition -> ObjectId -> TargetSlot -> GameState -> Set Recipient
 admittedGiven reader pools perspective unannounced bindings acquisition source slot gs =
+  Set.fromDistinctAscList (admittedListGiven reader pools perspective unannounced bindings acquisition source slot gs)
+
+-- The same recipients ascending and lazily, legalRecipientListGiven's half.
+admittedListGiven :: Maybe AbilityName.AbilityName -> Pools -> Maybe PlayerId -> Bool -> Map SlotName Binding.Type.Binding -> Acquisition.Acquisition -> ObjectId -> TargetSlot -> GameState -> [Recipient]
+admittedListGiven reader pools perspective unannounced bindings acquisition source slot gs =
   let Snapshot.MkSnapshot pcs grants = board pools
       pool = TargetSlot.pool slot
       narrowing = TargetSlot.filter slot
@@ -347,7 +359,7 @@ admittedGiven reader pools perspective unannounced bindings acquisition source s
       against view = case narrowing of
         Nothing -> True
         Just f -> Filter.matches context view f
-   in Set.filter keep (basePoolGiven pools context (Binding.targetsOf bindings) pool gs)
+   in filter keep (Set.toAscList (basePoolGiven pools context (Binding.targetsOf bindings) pool gs))
 
 -- THE Filter.Context a target SLOT's own filter is matched against. Extracted
 -- from admittedGiven so that CR 608.2h's departed host (lastKnownAdmits below)
@@ -2390,13 +2402,24 @@ fillableModesGiven kind reader pools perspective seed source extra modal gs =
             -- Venerable Warsinger is the pool's one such bound, and its condition's
             -- arm supplies Binding.eventAmount unconditionally.
             sets = legalSetsGiven kind reader pools perspective True seed source slots gs
-         in -- CR 115.6 / 601.2c: a slot is unfillable when the board cannot supply
+            declared = Map.keysSet slots
+            -- A slot judged against no sibling (jointlyJudged) is answered by its
+            -- own legal set alone, whose size is then its capacity, and that size
+            -- is asked only up to the floor: the first `floorOf slot` legal
+            -- recipients are enough, and the rest are never judged (#1448).
+            enough slot =
+              let demand = floorOf slot
+               in demand == 0
+                    || not (null (List.genericDrop (demand - 1) (legalRecipientListGiven kind reader pools perspective True seed (Game.acquisitionFor reader source gs) source slot gs)))
+            -- CR 115.6 / 601.2c: a slot is unfillable when the board cannot supply
             -- the MINIMUM its count demands. An "up to one" slot with no legal
             -- recipient demands none, and is answered with zero targets.
-            if or (Map.elems (Map.intersectionWith short slots (slotCapacities counting announced slots sets gs)))
-              || not (jointlyFillableGiven kind reader pools perspective seed source slots sets gs)
-              then Nothing
-              else Just (ModeIndex.MkModeIndex i)
+            filled
+              | not (any (jointlyJudged declared) slots) = all enough slots
+              | otherwise =
+                  not (or (Map.elems (Map.intersectionWith short slots (slotCapacities counting announced slots sets gs))))
+                    && jointlyFillableGiven kind reader pools perspective seed source slots sets gs
+         in if filled then Just (ModeIndex.MkModeIndex i) else Nothing
       -- CR 601.2b: a slot counting the announced X demands no target until that
       -- announcement exists (countAt), and a seed's X where it holds one (CR
       -- 702.37f's turned-face-up trigger). A printed floor (Face.minimumX,
@@ -2407,7 +2430,8 @@ fillableModesGiven kind reader pools perspective seed source extra modal gs =
       -- function's reason: a graveyard-scoped slot is offered the union over the
       -- named slot's players, and a minimum no ONE of those graveyards can supply
       -- is a mode with no legal announcement rather than a fillable one.
-      short slot capacity = capacity < TargetCount.least (countAt counting announced (TargetSlot.count slot))
+      short slot capacity = capacity < floorOf slot
+      floorOf slot = TargetCount.least (countAt counting announced (TargetSlot.count slot))
    in Set.fromList (Maybe.mapMaybe (uncurry fillable) (zip [0 :: Natural ..] ms))
 
 -- CR 603.2: every target slot with its "that player" atoms baked against this
