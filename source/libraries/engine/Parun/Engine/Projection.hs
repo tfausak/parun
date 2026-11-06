@@ -12,6 +12,7 @@ import qualified Data.Foldable as Foldable
 import qualified Data.Graph as Graph
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Lazy as Map.Lazy
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
@@ -2314,7 +2315,7 @@ wordSwapOf m = case m of
 -- which is built with every gate open -- nothing here re-enters gather.
 gather :: GameState -> [Gathered]
 gather gs =
-  let ungated = gatherGiven (\_ _ _ -> False) (const False) alwaysFunctioning Nothing gs
+  let ungated = gatherUngated gs
    in -- Almost every board has no ability-removing effect, no conditional static
       -- ability and nothing setting a land's subtype, and then the gathered list
       -- IS the ungated one.
@@ -2323,6 +2324,11 @@ gather gs =
           let (stripped, waited) = layerSixGate ungated gs
            in gatherGiven stripped waited (conditionHolds ungated gs) (Just ungated) gs
         else ungated
+
+-- gather's seed pass: every effect gathered with every gate open, whatever its
+-- "as long as" clause (CR 611.3a) and whatever removes it (CR 613.1f, 305.7).
+gatherUngated :: GameState -> [Gathered]
+gatherUngated = gatherGiven (\_ _ _ -> False) (const False) alwaysFunctioning Nothing
 
 -- The open "as long as" gate (CR 611.3a): every "as long as" clause answered
 -- true without being looked at. What the seed pass gets, so the list the real
@@ -5495,6 +5501,19 @@ projectAll gs =
       -- when applied to `cands`, so this sharing spans every object on the board.
       forObject = projectFrom cands
    in Map.fromSet (\oid -> forObject oid gs) (GameState.battlefield gs)
+
+-- projectAll for the objects `oids` names, wherever they are, against one gather
+-- too, but each value a thunk until read: for an enumeration that may ask about
+-- any card off the battlefield and usually reads few of them (#6472).
+projectEach :: Set ObjectId -> GameState -> Map ObjectId ProjectedCharacteristics
+projectEach oids gs =
+  let forObject = projectFrom (gather gs)
+   in Map.Lazy.fromSet (\oid -> forObject oid gs) oids
+
+-- One object's characteristics out of a projectEach map of the same state, or
+-- projected afresh for an id the map does not hold.
+projectEachGiven :: Map ObjectId ProjectedCharacteristics -> ObjectId -> GameState -> ProjectedCharacteristics
+projectEachGiven pcs oid gs = Map.findWithDefault (project oid gs) oid pcs
 
 -- One object's characteristics out of a PRE-PROJECTED board, falling back to a
 -- fresh single-object projection for an id the board does not hold. Every

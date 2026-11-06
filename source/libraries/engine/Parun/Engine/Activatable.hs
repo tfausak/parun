@@ -113,14 +113,15 @@ sicknessOkGiven grants pcs pid srcId ability =
 -- activatable's membership check when called the same way. The ENUMERATION path
 -- goes through abilitiesForGiven instead.
 abilitiesFor :: ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)]
-abilitiesFor = abilitiesForGiven Map.empty
+abilitiesFor = abilitiesForGiven Map.empty Map.empty
 
 -- The ...Given half of the pair, and the one the enumeration calls:
--- Action.legalActions hands it the board it projected once, so nothing here
--- re-derives a projection per object. A hand or graveyard object is absent from
--- that board, and Projection.projectGiven projects it afresh.
-abilitiesForGiven :: Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)]
-abilitiesForGiven pcs oid gs = case fmap Object.zone (Game.lookupObject oid gs) of
+-- Action.legalActions hands it the board it projected once, and the
+-- Snapshot.offBoard map of the same state for an object in a hand, a graveyard
+-- or the command zone, so nothing here re-derives a projection per object
+-- (#6472). An object either map lacks is projected afresh.
+abilitiesForGiven :: Map.Map ObjectId PC.ProjectedCharacteristics -> Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)]
+abilitiesForGiven pcs offBoard oid gs = case fmap Object.zone (Game.lookupObject oid gs) of
   -- Filtered by CR 113.6m's "functions ONLY in that zone", exactly as the
   -- graveyard arm below is. For an ability whose COST names another zone the
   -- filter changes nothing observable -- such a cost is unpayable here
@@ -147,7 +148,7 @@ abilitiesForGiven pcs oid gs = case fmap Object.zone (Game.lookupObject oid gs) 
   -- is a copy of another (CR 707.2) offers the copy's. Parun.CopySpec's Synthetic
   -- Mirror of the Fallen pair proves the graveyard arm below, and Parun.ActivateSpec's
   -- Tectonic Reformation pair this one.
-  Just Zone.Hand -> Keyword.handAbilitiesOf (cardKeywords oid) <> zoneAbilitiesOf pcs Zone.Hand oid gs
+  Just Zone.Hand -> Keyword.handAbilitiesOf cardKeywords <> zoneAbilitiesOf offProjected Zone.Hand oid gs
   -- The hand arm's shape one zone over, on TWO rules rather than one: rule 702's
   -- MINTED graveyard abilities (Parun.Engine.Keyword.graveyardAbilitiesOf) plus
   -- the card's own AUTHORED ones that name the graveyard, disjoint by the same
@@ -162,7 +163,7 @@ abilitiesForGiven pcs oid gs = case fmap Object.zone (Game.lookupObject oid gs) 
   -- 702.129a's COSTS exile the card from a graveyard, CR 113.6m's other reading,
   -- which the cost's own payability gate enforces
   -- (Parun.Engine.Keyword.graveyardTokenCopy).
-  Just Zone.Graveyard -> Keyword.graveyardAbilitiesOf (cardKeywords oid) <> zoneAbilitiesOf pcs Zone.Graveyard oid gs
+  Just Zone.Graveyard -> Keyword.graveyardAbilitiesOf cardKeywords <> zoneAbilitiesOf offProjected Zone.Graveyard oid gs
   -- CR 114.4 and CR 902.7's third limb, "its activated abilities may be
   -- activated". The narrowing to the objects rule 113.6p names is inside
   -- zoneAbilitiesOf, so a commander or a dungeon card sharing this zone offers
@@ -172,12 +173,14 @@ abilitiesForGiven pcs oid gs = case fmap Object.zone (Game.lookupObject oid gs) 
   -- The MINTED half is CR 702.49d's commander ninjutsu, the hand arm's ability
   -- functioning here too (Parun.Engine.Keyword.commandZoneAbilitiesOf).
   -- Parun.CommanderSpec's commander ninjutsu pair proves it.
-  Just Zone.Command -> Keyword.commandZoneAbilitiesOf (cardKeywords oid) <> zoneAbilitiesOf pcs Zone.Command oid gs
+  Just Zone.Command -> Keyword.commandZoneAbilitiesOf cardKeywords <> zoneAbilitiesOf offProjected Zone.Command oid gs
   _ -> []
   where
+    -- One projection for both halves of an off-battlefield arm.
+    offProjected = Projection.projectEachGiven offBoard oid gs
     -- None for an object with no card behind it -- a token, an ability.
-    cardKeywords objectId
-      | Maybe.isJust (Game.faceOf objectId gs) = Map.keysSet (Projection.keywordsGiven pcs objectId gs)
+    cardKeywords
+      | Maybe.isJust (Game.faceOf oid gs) = Map.keysSet (PC.keywords offProjected)
       | otherwise = Set.empty
 
 -- CR 113.6j + CR 113.6m + CR 702.178b: the AUTHORED abilities a card outside the
@@ -223,11 +226,10 @@ abilitiesForGiven pcs oid gs = case fmap Object.zone (Game.lookupObject oid gs) 
 --
 -- The VIEW is Projection.fullView, matching Projection.abilitiesGiven: nothing
 -- here is inside the layer fold, so there is no circularity to bound against.
-zoneAbilitiesOf :: Map.Map ObjectId PC.ProjectedCharacteristics -> Zone.Zone -> ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)]
-zoneAbilitiesOf pcs zone oid gs = case (Game.faceOf oid gs, Game.lookupObject oid gs) of
+zoneAbilitiesOf :: PC.ProjectedCharacteristics -> Zone.Zone -> ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)]
+zoneAbilitiesOf projected zone oid gs = case (Game.faceOf oid gs, Game.lookupObject oid gs) of
   (Just _, Just _) ->
-    let projected = Projection.projectGiven pcs oid gs
-        delayed = PC.delayedAbilities projected
+    let delayed = PC.delayedAbilities projected
         -- CR 113.6p, the limb beside CR 113.6b that reads the OBJECT rather than
         -- the ability: an emblem's abilities function in the command zone (CR
         -- 114.4), and a face-up vanguard card's (CR 902.7) and conspiracy's (CR
@@ -337,7 +339,7 @@ activationSourcesGiven grants pcs pid gs =
   let own = Projection.controlsGiven grants pid gs
       mine = Set.fromList own
       openToThem oid ability = ActivatedAbility.activator ability /= Activator.Related PlayerRelation.You && mayActivateGiven grants pid oid ability gs
-      others = filter (\oid -> not (Set.member oid mine) && any (openToThem oid) (abilitiesForGiven pcs oid gs)) (Set.toList (GameState.battlefield gs))
+      others = filter (\oid -> not (Set.member oid mine) && any (openToThem oid) (abilitiesForGiven pcs Map.empty oid gs)) (Set.toList (GameState.battlefield gs))
    in own <> others <> Game.zoneMembers Zone.Hand pid gs <> Game.zoneMembers Zone.Graveyard pid gs <> Game.zoneMembers Zone.Command pid gs
 
 -- CR 606.3 (CR 306.5d says the same for planeswalkers): a loyalty ability may be
@@ -679,7 +681,7 @@ activatable pid srcId ability gs =
 
 activatableGiven :: Target.Pools -> Mana.Sources -> PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> Bool
 activatableGiven pools sources pid srcId ability gs =
-  let Snapshot.MkSnapshot {Snapshot.projected = pcs, Snapshot.grants = grants} = Target.board pools
+  let Snapshot.MkSnapshot {Snapshot.projected = pcs, Snapshot.offBoard = offBoard, Snapshot.grants = grants} = Target.board pools
       modal = ActivatedAbility.modal ability
       fillable = Target.fillableModesGiven StackObjectKind.ActivatedAbility (ActivatedAbility.name ability) pools (Just pid) Map.empty srcId Map.empty modal gs
       -- CR 601.2c's targets do not exist at an offer, so the cost conjunct is
@@ -695,7 +697,7 @@ activatableGiven pools sources pid srcId ability gs =
         -- their sources are the permanents the player controls
         -- (Mana.manaSourcesGiven), always in range by CR 801.2b.
         && Projection.objectInRangeGiven grants pid srcId gs
-        && elem ability (abilitiesForGiven pcs srcId gs)
+        && elem ability (abilitiesForGiven pcs offBoard srcId gs)
         && not (ManaAbility.isManaAbility ability)
         -- CR 702.61a's other limb -- "players can't ... activate abilities that
         -- aren't mana abilities" -- and it sits AFTER the mana conjunct on purpose:

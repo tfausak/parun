@@ -3598,6 +3598,21 @@ hoistDifferentialSpec s registry = do
     Spec.assertEqWith s "the Vampire's sacrifice is offered" (length [oid | A.Activate oid _ <- offered enchanted, oid == vampireId]) 1
     Spec.assertEqWith s "and the hoisted enumeration answers the wrappers action for action" (offered enchanted) (referenceActivations S.alice enchanted)
 
+  -- The off-battlefield arms Snapshot.offBoard serves (#6472): Reassembling
+  -- Skeleton's return from a graveyard and Faerie Macabre's discard from a hand,
+  -- beside a buried Mountain offering nothing.
+  Spec.it s "the enumeration answers the graveyard and hand activations the wrappers answer" $ do
+    swamp <- S.printingOf s registry "Swamp"
+    skeleton <- S.printingOf s registry "Reassembling Skeleton"
+    mountain <- S.printingOf s registry "Mountain"
+    macabre <- S.printingOf s registry "Faerie Macabre"
+    let (skeletonId, buried) = S.addGraveyardCard skeleton S.alice (hoistMixedBoard [swamp] 2)
+        (_, withMountain) = S.addGraveyardCard mountain S.alice buried
+        (macabreId, board) = S.addHandCard macabre S.alice withMountain
+        offered = activationsIn (Action.legalActions S.alice board)
+    Spec.assertEqWith s "the Skeleton and the Macabre each offer their ability" (List.sort [oid | A.Activate oid _ <- offered]) (List.sort [skeletonId, macabreId])
+    Spec.assertEqWith s "and the hoisted enumeration answers the wrappers action for action" offered (referenceActivations S.alice board)
+
 -- CR 101.1 / 602.2b / 601.2c, the two halves of an activation's announced X that
 -- only a card printing both can prove: a ceiling the ABILITY's own words put on
 -- the value, and a target slot whose CR 202.3 computed bound reads the value once

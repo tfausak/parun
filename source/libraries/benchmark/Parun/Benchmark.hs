@@ -91,7 +91,7 @@ castableCount shared land anthem spell n =
       pid = GameState.activePlayer gs
    in if shared
         then length (Cast.castableSpells pid gs)
-        else length (filter (\(oid, name, facing) -> Cast.castable pid oid name facing gs) (Cast.castProposals pid gs))
+        else length (filter (\(oid, name, facing) -> Cast.castable pid oid name facing gs) (Cast.castProposals (const True) pid gs))
 {-# NOINLINE castableCount #-}
 
 -- The redDeck recipe (name -> count), loaded from the registry -- the proof

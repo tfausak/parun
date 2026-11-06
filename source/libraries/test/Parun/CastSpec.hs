@@ -1619,7 +1619,7 @@ kickerSpec s registry = Spec.describe s "Kicker" $ do
         (gs, spellId) = S.handOne maw withKopala
         (_, after) = castAndResolve (floodMaws 1 ringId) gs spellId
     Spec.assertEqWith s "CR 601.2f the Sol Ring is in bob's hand" (namesOwned Zone.Hand S.bob after) (cardNames ["Sol Ring"])
-    Spec.assertEqWith s "CR 601.2c and the cast is offered, the gift being still unannounced" (fmap (\(oid, _, _) -> oid) (filter (\(oid, name, facing) -> Cast.castable S.alice oid name facing gs) (Cast.castProposals S.alice gs))) [spellId]
+    Spec.assertEqWith s "CR 601.2c and the cast is offered, the gift being still unannounced" (fmap (\(oid, _, _) -> oid) (filter (\(oid, name, facing) -> Cast.castable S.alice oid name facing gs) (Cast.castProposals (const True) S.alice gs))) [spellId]
   -- CR 702.33a's "an additional cost", singular: kicker is payable once, so an
   -- answer of two is text Burst Lightning does not have. Nine Mountains, which is
   -- {R} plus the {4} twice over, so nothing but the LIMIT can reject this cast --
@@ -5001,7 +5001,7 @@ volcanicHalf = CardName.MkCardName (Text.pack "Synthetic Volcanic Half")
 -- reaches: an instant, a fuse split card, a flashback card in the graveyard, a
 -- bestow creature and a morph creature, under Thalia's tax and an anthem, on a
 -- mana base roomy enough for some casts and too tight for others.
-sharedEnumerationSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+sharedEnumerationSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 sharedEnumerationSpec s registry = Spec.describe s "SharedEnumeration" $ do
   Spec.it s "#435 castableSpells agrees with the per-card castable on a mixed hand" $ do
     let named = S.printingOf s registry
@@ -5017,13 +5017,40 @@ sharedEnumerationSpec s registry = Spec.describe s "SharedEnumeration" $ do
               GameState.activePlayer = S.alice,
               GameState.priority = Just S.alice
             }
-        plain gs = filter (\(oid, name, facing) -> Cast.castable S.alice oid name facing gs) (Cast.castProposals S.alice gs)
+        plain gs = filter (\(oid, name, facing) -> Cast.castable S.alice oid name facing gs) (Cast.castProposals (const True) S.alice gs)
         roomy = board (replicate 3 mountain <> replicate 2 island)
         tight = board [mountain, island]
     Spec.assertEqWith s "with five lands the shared enumeration offers what the plain one does" (Cast.castableSpells S.alice roomy) (plain roomy)
     Spec.assertEqWith s "and with two" (Cast.castableSpells S.alice tight) (plain tight)
     -- The boards discriminate: each offers some casts and refuses others.
-    Spec.assertBool s (not (null (plain tight)) && length (plain tight) < length (plain roomy) && length (plain roomy) < length (Cast.castProposals S.alice roomy)) "some casts are offered and some refused on each board"
+    Spec.assertBool s (not (null (plain tight)) && length (plain tight) < length (plain roomy) && length (plain roomy) < length (Cast.castProposals (const True) S.alice roomy)) "some casts are offered and some refused on each board"
+
+  -- #6472: castableSpells skips a graveyard card printing nothing under an
+  -- anthem alone (Cast.unpermittedInGraveyard), and must skip none that
+  -- Muldrotha's CastFrom row or Lier's granted flashback opens.
+  Spec.it s "#6472 castableSpells skips no graveyard card a permission could name" $ do
+    let named = S.printingOf s registry
+    lands <- traverse named ["Mountain", "Mountain", "Mountain", "Island", "Island"]
+    anthem <- named "Glorious Anthem"
+    buried <- traverse named ["Mountain", "Hill Giant", "Divination", "Think Twice"]
+    muldrotha <- named "Muldrotha, the Gravetide"
+    lier <- named "Lier, Disciple of the Drowned"
+    let place f printings gs = List.foldl' (\g p -> snd (f p S.alice g)) gs printings
+        board extra =
+          (place S.addGraveyardCard buried (place S.addPermanent (anthem : extra <> lands) (Setup.emptyGame S.bothPlayers)))
+            { GameState.phase = Phase.PrecombatMain,
+              GameState.activePlayer = S.alice,
+              GameState.priority = Just S.alice
+            }
+        plain gs = filter (\(oid, name, facing) -> Cast.castable S.alice oid name facing gs) (Cast.castProposals (const True) S.alice gs)
+        offered gs = Set.fromList [S.nameOf card | (oid, _, _) <- Cast.castableSpells S.alice gs, Just card <- [Game.cardOf oid gs]]
+        names = Set.fromList . fmap (CardName.MkCardName . Text.pack)
+    Spec.assertEqWith s "under the anthem alone only Think Twice is cast from the graveyard" (offered (board [])) (names ["Think Twice"])
+    Spec.assertEqWith s "and the enumeration offers what the plain one does" (Cast.castableSpells S.alice (board [])) (plain (board []))
+    Spec.assertEqWith s "Muldrotha's row opens Hill Giant" (offered (board [muldrotha])) (names ["Hill Giant", "Think Twice"])
+    Spec.assertEqWith s "and the enumeration offers what the plain one does" (Cast.castableSpells S.alice (board [muldrotha])) (plain (board [muldrotha]))
+    Spec.assertEqWith s "Lier's flashback opens Divination" (offered (board [lier])) (names ["Divination", "Think Twice"])
+    Spec.assertEqWith s "and the enumeration offers what the plain one does" (Cast.castableSpells S.alice (board [lier])) (plain (board [lier]))
 
 -- CR 613.1f / 113.6e: Patriar's Humiliation's perpetual "loses all abilities"
 -- follows the card Unsummon returns to alice's hand
