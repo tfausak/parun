@@ -161,8 +161,8 @@ data Object = MkObject
     -- window when the card changes zones.
     revealed :: Set.Set RevealWindow.RevealWindow,
     -- | CR 701.24a: whether this object's id has reached a seat -- a reveal or
-    -- look of it, a view showing it atop its library, a search offering it --
-    -- so a shuffle re-mints it (Parun.Engine.Event.forgetShown) and no seat can
+    -- look of it, or a view showing it atop its library -- so a shuffle
+    -- re-mints it (Parun.Engine.Event.forgetShown) and no seat can
     -- follow it through.
     --
     -- Per-incarnation: reset by newIncarnation (CR 400.7), the new object's id

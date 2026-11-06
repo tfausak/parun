@@ -856,9 +856,7 @@ search settle performManaAbility runSubgame resolving source controller legal (S
                     ask rejected = do
                       given <- ListUtils.nubOrd . filter (`List.elem` matches) <$> Game.choose (Prompt.Search decider searcher matches capHere)
                       if admissible given || Set.member given rejected then pure given else ask (Set.insert given rejected)
-                -- CR 701.24a: the offer names each match to the searcher, so
-                -- the shuffle after re-mints it (Event.expose).
-                answer <- if Set.null searchedZones then pure [] else State.modify' (\g -> Foldable.foldl' (flip Event.expose) g matches) >> ask Set.empty
+                answer <- if Set.null searchedZones then pure [] else ask Set.empty
                 -- CR 701.23a: every card found is one the filter admits.
                 -- Filtered, not trusted, deduplicated, and truncated to the cap:
                 -- an inadmissible answer is still taken when repeated.

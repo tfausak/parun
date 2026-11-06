@@ -130,7 +130,6 @@ import qualified Parun.Types.HybridPhyrexian as HybridPhyrexian
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.LoggedEvent as LoggedEvent
-import qualified Parun.Types.Looked as Looked
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.Mana as Mana.Type
 import qualified Parun.Types.ManaAbilityPerformer as ManaAbilityPerformer
@@ -172,7 +171,6 @@ import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.ReturnPermanents as ReturnPermanents
 import qualified Parun.Types.RevealCause as RevealCause
 import qualified Parun.Types.RevealWindow as RevealWindow
-import qualified Parun.Types.Revealed as Revealed
 import qualified Parun.Types.Rounding as Rounding
 import Parun.Types.RowSource (RowSource)
 import qualified Parun.Types.Sacrifice as Sacrifice

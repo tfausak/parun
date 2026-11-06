@@ -7340,8 +7340,8 @@ stayPut oid obj requestedDest position shuffling = case Object.zone obj of
 -- live CR 701.20a window, or a Revealed entry) or looked at (CR 701.20e's
 -- Looked) -- re-minted where it lies (remint). CR 701.24a's "no player knows
 -- their order" widens it to every card whose id reached a seat
--- (Object.exposed): one shown on an earlier turn, a top card shown to its owner
--- alone, a search's offer. Answers the id the card now has.
+-- (Object.exposed): one shown on an earlier turn, or a top card shown to its
+-- owner alone. Answers the id the card now has.
 -- Parun.PlayerViewSpec's CR 701.24a cases prove the widening.
 forgetShown :: ObjectId -> GameState -> (ObjectId, GameState)
 forgetShown oid gs = case Game.lookupObject oid gs of
