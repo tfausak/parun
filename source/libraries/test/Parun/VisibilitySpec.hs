@@ -324,7 +324,7 @@ specialActionTopSpec s registry =
     walker <- labelled "walker"
     top <- labelled "top"
     let note :: String -> GameState.GameState -> State.State (Bool, [(String, Visibility.Type.Visibility)]) ()
-        note label g = State.modify' (\(shuffled, seen) -> (shuffled, seen <> foldMap (\oid -> [(label, Visibility.sees S.bob oid g)]) (Game.topOf Zone.Library S.alice g)))
+        note label g = State.modify' (\(shuffled, notes) -> (shuffled, notes <> foldMap (\oid -> [(label, Visibility.sees S.bob oid g)]) (Game.topOf Zone.Library S.alice g)))
         answer :: Asked.Asked r -> State.State (Bool, [(String, Visibility.Type.Visibility)]) r
         answer asked = do
           shuffled <- State.gets fst
@@ -340,7 +340,7 @@ specialActionTopSpec s registry =
             Prompt.ChooseExtraManaSource {} -> pure Nothing
             Prompt.ChooseSacrifices {} -> pure (Set.singleton colossus)
             Prompt.Shuffle cards -> do
-              State.modify' (\(_, seen) -> (True, seen))
+              State.modify' (\(_, notes) -> (True, notes))
               pure (filter (/= top) cards <> filter (== top) cards)
             p -> pure (S.identityAnswer p)
         ((_, after), (_, seen)) = State.runState (Engine.runGameAsked answer (Staged.state built) Engine.priorityLoop) (False, [])
