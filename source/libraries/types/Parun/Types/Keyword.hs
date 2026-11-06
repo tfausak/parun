@@ -957,6 +957,9 @@ data Keyword
     -- that creature's power, and exile the card instead of putting it anywhere
     -- else it would go from the stack.
     Harmonize (Cost.Cost Keyword)
+  | -- | 702.196a: beam me up [cost] -- flashback's two static abilities, the
+    -- graveyard cost also returning a creature you control to its owner's hand.
+    BeamMeUp (Cost.Cost Keyword)
   deriving (Eq, Ord, Show)
 
 -- Devoid takes TWO routes, decided by where the instance came from. A PRINTED one

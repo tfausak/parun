@@ -3977,6 +3977,7 @@ keywordPayloadFilters keyword = case keyword of
   -- candidate Parun.Engine.Cost.candidateCostsGiven mints, retrace's position.
   Keyword.Disturb cost -> costFilters cost
   Keyword.Harmonize cost -> costFilters cost
+  Keyword.BeamMeUp cost -> costFilters cost
   -- CR 702.167a's payload is a Cost AND the [materials] criterion, which no
   -- other keyword's is: rule 702.167a writes the materials into the ability's
   -- cost, so both halves are the card's own words.
