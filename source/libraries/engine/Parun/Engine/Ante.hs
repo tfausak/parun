@@ -45,7 +45,7 @@ ownerChanged obj = any (\(_, identity) -> CardIdentity.startingOwner identity /=
 -- | CR 108.3 / 407.3: every card whose owner is not the player who began the
 -- game owning it, one row per card: each card of an object in the game, owned
 -- by the object's owner, the one owner parun keeps for a merged or melded
--- permanent, and each card that left the game with that owner (CR 800.4a,
+-- permanent, and each card that left the game with its owner (CR 800.4a,
 -- GameState.departedCards). The scenario "CR 108.3 / 730.2 a merged permanent
 -- on the battlefield reports the card whose owner changed" proves the merged
 -- case, and "CR 800.4a Tempest Efreet's new owner concedes and the report still

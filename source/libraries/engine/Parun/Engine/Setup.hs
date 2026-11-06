@@ -1107,8 +1107,9 @@ restartGame perform exempt starter = do
             -- outside it.
             GameState.outsideObjects = GameState.outsideObjects gs,
             GameState.broughtIn = GameState.broughtIn gs,
-            -- CR 727.2: a card that left with its owner stays out, and so does
-            -- the ownership change it carried.
+            -- CR 727.2 involves only the cards in the game as it ended, so a
+            -- card that left with its owner stays out, its ownership change
+            -- still on record.
             GameState.departedCards = GameState.departedCards gs,
             -- The id, printing and timestamp supplies, so reused cards keep
             -- unique ids, and what is keyed by them.

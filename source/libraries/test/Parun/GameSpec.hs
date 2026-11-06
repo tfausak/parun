@@ -48,6 +48,7 @@ import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.Card as Card.Type
+import qualified Parun.Types.CardIdentity as CardIdentity
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.CombatStep as CombatStep
@@ -941,8 +942,8 @@ ruleSpec s registry = Spec.describe s "Rules" $ do
   -- CR 407.3 / 800.4a / 729.5: a Shahrazad subgame played for ante, in which
   -- alice casts Darkpact on bob's ante card (darkpactAnswer), so it goes to
   -- her subgame library, and then concedes. The card leaves the subgame with
-  -- her; bob outlasts carol and wins. It comes home to alice's main-game
-  -- library, and the report lists it.
+  -- her; bob outlasts carol, wins, and takes the subgame's ante (CR 407.2).
+  -- It comes home to alice's main-game library, and the report lists it.
   Spec.it s "CR 729.5 gameplay: a card that left a subgame with its new owner goes to their main-game library" $ do
     mountain <- S.printingOf s registry "Mountain"
     swamp <- S.printingOf s registry "Swamp"
@@ -951,10 +952,9 @@ ruleSpec s registry = Spec.describe s "Rules" $ do
     darkpact <- S.printingOf s registry "Darkpact"
     let after = castDarkpactInShahrazad mountain swamp plains shahrazad darkpact
         libraryOf pid = length (Game.zoneMembers Zone.Library pid after)
-    Spec.assertEqWith s "CR 729.5 alice's main-game library holds her twelve and bob's ante card" (libraryOf S.alice) 13
-    Spec.assertEqWith s "CR 729.5 bob's is one short" (libraryOf S.bob) 11
-    Spec.assertEqWith s "and carol's is whole" (libraryOf S.carol) 10
-    Spec.assertEqWith s "CR 108.3 the report lists it, from bob to alice" (changesOf after) [(S.bob, S.alice)]
+    Spec.assertEqWith s "CR 729.5 alice's main-game library holds one card bob began the game with" (length (filter (\oid -> fmap CardIdentity.startingOwner (Game.lookupObject oid after >>= Object.identity) == Just S.bob) (Game.zoneMembers Zone.Library S.alice after))) 1
+    Spec.assertEqWith s "CR 407.2 / 729.5 the libraries: alice's ten and bob's card, bob's eleven and the three ante cards he won, carol's nine" (fmap libraryOf [S.alice, S.bob, S.carol]) [11, 14, 9]
+    Spec.assertEqWith s "CR 108.3 the report lists it, from bob to alice, beside the ante bob won" (List.sort (changesOf after)) [(S.alice, S.bob), (S.alice, S.bob), (S.bob, S.alice), (S.carol, S.bob)]
   -- The drawn board (CR 104.4a): all three leave, nobody is paid, and each
   -- library comes back whole, its ante card in it.
   Spec.it s "CR 104.4a/729.5 gameplay: a drawn Shahrazad subgame pays out no ante card" $ do
