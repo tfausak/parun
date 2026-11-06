@@ -12,34 +12,50 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
-import qualified Parun.Codec.GameEvent as Codec.GameEvent
-import qualified Parun.Codec.Reply as Codec.Reply
 import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
-import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.Types.AbilityView as AbilityView
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
+import qualified Parun.Types.Ballot as Ballot
+import qualified Parun.Types.BallotChoice as BallotChoice
+import qualified Parun.Types.BecameAttached as BecameAttached
 import qualified Parun.Types.BecameBlocking as BecameBlocking
+import qualified Parun.Types.BecameDesignated as BecameDesignated
+import qualified Parun.Types.BecameUnattached as BecameUnattached
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ClassLevel as ClassLevel
+import qualified Parun.Types.ClassLevelChange as ClassLevelChange
+import qualified Parun.Types.CoinFlipped as CoinFlipped
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.CombatStep as CombatStep
+import qualified Parun.Types.ControlChanged as ControlChanged
+import qualified Parun.Types.Convoking as Convoking
+import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.CountersPlaced as CountersPlaced
+import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
+import qualified Parun.Types.DamagePrevented as DamagePrevented
 import qualified Parun.Types.Defense as Defense
+import qualified Parun.Types.Designation as Designation
+import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.Drew as Drew
 import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.Exploited as Exploited
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.GameEvent as GameEvent
+import qualified Parun.Types.HalfUnlocked as HalfUnlocked
 import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.HybridPhyrexian as HybridPhyrexian
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LandPlayed as LandPlayed
+import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Looked as Looked
@@ -47,23 +63,39 @@ import qualified Parun.Types.Loyalty as Loyalty
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
+import qualified Parun.Types.ManifestedDread as ManifestedDread
+import qualified Parun.Types.Mentored as Mentored
 import qualified Parun.Types.Milled as Milled
 import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.MulliganDecision as MulliganDecision
 import qualified Parun.Types.MulliganDeclared as MulliganDeclared
 import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.ObjectSnapshot as ObjectSnapshot
 import qualified Parun.Types.ObjectView as ObjectView
+import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.PlanarDieFace as PlanarDieFace
+import qualified Parun.Types.PlanarDieRolled as PlanarDieRolled
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerView as PlayerView
 import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Parun.Types.Recipient as Recipient
-import qualified Parun.Types.Reply as R
 import qualified Parun.Types.Result as Result
 import qualified Parun.Types.Revealed as Revealed
+import qualified Parun.Types.Saddling as Saddling
 import qualified Parun.Types.SeatView as SeatView
+import qualified Parun.Types.SideDeck as SideDeck
+import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellWasCast as SpellWasCast
+import qualified Parun.Types.SpellWasCopied as SpellWasCopied
+import qualified Parun.Types.StickerKind as StickerKind
+import qualified Parun.Types.StickerPut as StickerPut
 import qualified Parun.Types.TapState as TapState
+import qualified Parun.Types.Transformed as Transformed
+import qualified Parun.Types.TurnedFaceUp as TurnedFaceUp
+import qualified Parun.Types.TurnedUpOffDeck as TurnedUpOffDeck
+import qualified Parun.Types.VentureMarkerEntered as VentureMarkerEntered
+import qualified Parun.Types.Voted as Voted
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChange as ZoneChange
 
@@ -148,7 +180,7 @@ describe view o =
       status =
         [Text.pack "tapped" | ObjectView.tapped o == TapState.Tapped]
           <> [Text.pack (show (ObjectView.damage o) <> " damage") | ObjectView.damage o > 0]
-          <> [count (sum (ObjectView.counters o)) "counter" | not (Map.null (ObjectView.counters o))]
+          <> [counters n kind | (kind, n) <- Map.toList (ObjectView.counters o), n > 0]
    in nameOf view o <> Maybe.fromMaybe Text.empty pt <> if null status then Text.empty else Text.pack " (" <> Text.intercalate (Text.pack ", ") status <> Text.pack ")"
 
 -- | CR 708.2a: a face-down object has no name, and a hidden one shows none;
@@ -336,8 +368,8 @@ events view = concatMap sentences . List.groupBy (\a b -> Maybe.isJust (drawer a
 
 -- | A witnessed entry as a sentence naming its cards, players and amounts, or
 -- nothing for the bookkeeping a seat can read off the board (a step, a tap,
--- mana, a trigger) or another entry already tells (a cast's, land play's,
--- discard's or mill's move, a block's per-attacker records).
+-- mana, a trigger) or another entry already tells (a spell's move to the
+-- stack, a land play's, discard's or mill's move, a block's per-attacker records).
 event :: PlayerView.PlayerView -> LoggedEvent.LoggedEvent -> Maybe Text.Text
 event view logged = case LoggedEvent.event logged of
   GameEvent.SpellCast c -> said [player (SpellWasCast.player c), Text.pack "casts", snapshotName (SpellWasCast.characteristics c)]
@@ -350,6 +382,12 @@ event view logged = case LoggedEvent.event logged of
   GameEvent.LifeGained l -> said [player (LifeChange.player l), Text.pack "gains", Text.pack (show (LifeChange.amount l)), Text.pack "life"]
   GameEvent.Moved m
     | any (`Set.member` told view) (Moved.arrivals m) -> Nothing
+    -- CR 601.2a: a spell's move to the stack begins its cast, which the
+    -- SpellCast entry tells once the cast is complete.
+    | to == Zone.Stack -> Nothing
+    -- CR 111.1: a token's creation is logged as a move from the battlefield
+    -- to it.
+    | from == Zone.Battlefield && to == Zone.Battlefield -> said [snapshotName (Moved.characteristics m), Text.pack "is created"]
     | to == Zone.Graveyard -> said [snapshotName (Moved.characteristics m), Text.pack "is put into a graveyard from", zone from]
     | otherwise -> said [snapshotName (Moved.characteristics m), Text.pack "moves from", zone from, Text.pack "to", zone to]
     where
@@ -382,10 +420,66 @@ event view logged = case LoggedEvent.event logged of
   GameEvent.BecameTarget {} -> Nothing
   GameEvent.PermanentActed {} -> Nothing
   GameEvent.PlayerActed {} -> Nothing
-  other -> Just (kindOf other)
+  -- CR 702.26b / 702.26n: a phased-out card's arrival in exile, which no seat sees.
+  GameEvent.ArrivedUnseen {} -> Nothing
+  GameEvent.DamagePrevented p ->
+    said
+      [ Text.intercalate (Text.pack " and ") [Text.pack (show n <> " damage ") <> name source <> Text.pack " would deal to " <> recipient r | (source, toward) <- Map.toList (DamagePrevented.amounts p), (r, n) <- Map.toList toward],
+        Text.pack "is prevented"
+      ]
+  GameEvent.SpellCopied c -> said [player (SpellWasCopied.player c), Text.pack "copies", name (SpellWasCopied.copy c)]
+  GameEvent.BecameMonarch pid -> said [player pid, Text.pack "becomes the monarch"]
+  GameEvent.TookInitiative pid -> said [player pid, Text.pack "takes the initiative"]
+  GameEvent.Voted v -> said [ballot (Voted.ballot v)]
+  GameEvent.VotesRevealed ballots -> said [Text.pack "The votes are revealed:", listing (fmap ballot (Foldable.toList ballots))]
+  GameEvent.AbilityCountered c -> said [name (Countering.countered c), Text.pack "is countered"]
+  GameEvent.CountersPut c -> said [player (CountersPlaced.putter c), Text.pack "puts", counters (CountersPlaced.after c `less` CountersPlaced.before c) (CountersPlaced.kind c), Text.pack "on", name (CountersPlaced.object c)]
+  GameEvent.CountersRemoved c ->
+    let n = CounterChange.before c `less` CounterChange.after c
+     in said [counters n (CounterChange.kind c), Text.pack (if n == 1 then "is removed from" else "are removed from"), name (CounterChange.object c)]
+  GameEvent.HalfUnlocked h -> said [player (HalfUnlocked.actor h), Text.pack "unlocks", CardName.unwrap (HalfUnlocked.name h)]
+  GameEvent.TurnedFaceUp t -> said [name (TurnedFaceUp.object t), Text.pack "is turned face up"]
+  GameEvent.Transformed t -> said [name (Transformed.object t), Text.pack "transforms"]
+  GameEvent.BecameDesignated d -> said [name (BecameDesignated.object d), designation (BecameDesignated.designation d)]
+  GameEvent.Mentored m -> said [name (Mentored.mentor m), Text.pack "mentors", name (Mentored.mentored m)]
+  GameEvent.Exploited e -> said [name (Exploited.exploiter e), Text.pack "exploits", name (Exploited.exploited e)]
+  GameEvent.Convoked c -> by (Convoking.convokedBy c) "convokes" "convoke" (Convoking.spell c)
+  GameEvent.Crewed c -> by (Crewing.crewedBy c) "crews" "crew" (Crewing.vehicle c)
+  GameEvent.BecameCrewed c -> said [name (Crewing.vehicle c), Text.pack "becomes crewed"]
+  GameEvent.Saddled c -> by (Saddling.saddledBy c) "saddles" "saddle" (Saddling.mount c)
+  GameEvent.PermanentSacrificed p -> said [player (PermanentWasSacrificed.player p), Text.pack "sacrifices", name (PermanentWasSacrificed.permanent p)]
+  GameEvent.ControlChanged c -> said [player (ControlChanged.after c), Text.pack "gains control of", name (ControlChanged.object c)]
+  GameEvent.VentureMarkerEntered v -> said [player (VentureMarkerEntered.player v), Text.pack "moves their venture marker in", name (VentureMarkerEntered.dungeon v)]
+  GameEvent.BecameAttached a -> said [name (BecameAttached.attachment a), Text.pack "becomes attached to", recipient (BecameAttached.host a)]
+  GameEvent.BecameUnattached a -> said [name (BecameUnattached.attachment a), Text.pack "becomes unattached from", recipient (BecameUnattached.host a)]
+  GameEvent.LeftTheGame l -> said [name (LeftTheGame.object l), Text.pack "leaves the game"]
+  GameEvent.LostTheGame pid -> said [player pid, Text.pack "loses the game"]
+  GameEvent.ManifestedDread d -> said [player (ManifestedDread.player d), Text.pack "manifests dread"]
+  GameEvent.DieResultSettled r -> said [player (DieResult.roller r), Text.pack "rolls", Text.pack (show (DieResult.result r))]
+  GameEvent.RolledToVisit r -> said [player (DieResult.roller r), Text.pack "rolls", Text.pack (show (DieResult.result r)), Text.pack "to visit their Attractions"]
+  GameEvent.PlanarDieRolled r -> said [player (PlanarDieRolled.roller r), Text.pack "rolls", planarFace (PlanarDieRolled.face r), Text.pack "on the planar die"]
+  GameEvent.TurnedUpOffDeck t -> said [player (TurnedUpOffDeck.player t), Text.pack "turns up", name (TurnedUpOffDeck.card t), Text.pack "from their", sideDeck (TurnedUpOffDeck.deck t)]
+  GameEvent.ChaosEnsued -> said [Text.pack "Chaos ensues"]
+  GameEvent.ClassLevelSet c -> said [name (ClassLevelChange.object c), Text.pack "becomes level", Text.pack (show (ClassLevel.unwrap (ClassLevelChange.after c)))]
+  GameEvent.Plotted oid -> said [name oid, Text.pack "becomes plotted"]
+  GameEvent.CoinFlipped c ->
+    said
+      ( [player (CoinFlipped.flipper c), Text.pack "flips a coin"]
+          <> foldMap (\won -> [Text.pack (if won then "and wins the flip" else "and loses the flip")]) (CoinFlipped.won c)
+      )
+  GameEvent.StickerPut p -> said [player (StickerPut.placer p), Text.pack "puts", sticker (StickerPut.kind p), Text.pack "on", name (StickerPut.object p)]
   where
     name = named view
     said parts = Just (Text.unwords parts <> Text.pack ".")
+    less a b = if a > b then a - b else 0
+    by actors one many object =
+      let named' = fmap name (Set.toList actors)
+       in said [listing named', Text.pack (if length named' == 1 then one else many), name object]
+    ballot b =
+      player (Ballot.voter b) <> Text.pack " votes for " <> case Ballot.choice b of
+        BallotChoice.ForObject o -> snapshotName (ObjectSnapshot.characteristics o)
+        BallotChoice.ForWord w -> SlotName.unwrap w
+        BallotChoice.ForPlayer pid -> player pid
     attacked target = case target of
       AttackTarget.OfPlayer pid -> player pid
       AttackTarget.OfPlaneswalker oid -> name oid
@@ -412,11 +506,54 @@ told view =
       GameEvent.Milled m -> Foldable.toList (Milled.cards m)
       _ -> []
 
--- | An entry by its kind: "SpellCast" as "spell cast".
-kindOf :: GameEvent.GameEvent -> Text.Text
-kindOf e = case Codec.Reply.fromValue (Codec.encode Codec.GameEvent.codec e) of
-  Right (R.Object pairs) | Just (R.Text kind) <- List.lookup (Text.pack "type") pairs -> spaced kind
-  _ -> Text.pack "something happened"
+-- | "1 +1/+1 counter", "2 stun counters".
+counters :: Natural -> CounterKind.CounterKind Keyword.Keyword -> Text.Text
+counters n kind = Text.pack (show n) <> Text.pack " " <> counterName kind <> Text.pack (if n == 1 then " counter" else " counters")
+
+-- | Names joined as a list: "A", "A and B", "A, B and C".
+listing :: [Text.Text] -> Text.Text
+listing names = case reverse names of
+  [] -> Text.empty
+  [only] -> only
+  final : rest -> Text.intercalate (Text.pack ", ") (reverse rest) <> Text.pack " and " <> final
+
+-- | What gaining a designation does to a permanent, as a predicate.
+designation :: Designation.Designation -> Text.Text
+designation d = Text.pack $ case d of
+  Designation.Renowned -> "becomes renowned"
+  Designation.Monstrous -> "becomes monstrous"
+  Designation.Suspected -> "becomes suspected"
+  Designation.Solved -> "becomes solved"
+  Designation.Saddled -> "becomes saddled"
+  Designation.Prepared -> "becomes prepared"
+  Designation.Harnessed -> "becomes harnessed"
+  Designation.Embalmed -> "becomes embalmed"
+  Designation.AlphaSector -> "is assigned to the alpha sector"
+  Designation.BetaSector -> "is assigned to the beta sector"
+  Designation.GammaSector -> "is assigned to the gamma sector"
+  Designation.Sprocket1 -> "is assigned to sprocket 1"
+  Designation.Sprocket2 -> "is assigned to sprocket 2"
+  Designation.Sprocket3 -> "is assigned to sprocket 3"
+
+planarFace :: PlanarDieFace.PlanarDieFace -> Text.Text
+planarFace f = Text.pack $ case f of
+  PlanarDieFace.Blank -> "a blank"
+  PlanarDieFace.Chaos -> "the chaos symbol"
+  PlanarDieFace.Planeswalker -> "the planeswalker symbol"
+
+sideDeck :: SideDeck.SideDeck -> Text.Text
+sideDeck d = Text.pack $ case d of
+  SideDeck.Attraction -> "Attraction deck"
+  SideDeck.Contraption -> "Contraption deck"
+  SideDeck.Planar -> "planar deck"
+  SideDeck.Scheme -> "scheme deck"
+
+sticker :: StickerKind.StickerKind -> Text.Text
+sticker k = Text.pack $ case k of
+  StickerKind.Name -> "a name sticker"
+  StickerKind.Ability -> "an ability sticker"
+  StickerKind.PowerToughness -> "a power and toughness sticker"
+  StickerKind.Art -> "an art sticker"
 
 zone :: Zone.Zone -> Text.Text
 zone z = Text.pack $ case z of
