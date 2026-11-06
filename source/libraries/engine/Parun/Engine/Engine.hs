@@ -1852,7 +1852,8 @@ wouldHaveBegun pid gs = expireLastTurn pid (Phasing.orphanSchedule pid (Expiry.d
 -- CR 500.11: a seat whose turn a skip takes becomes the walk's new start, with
 -- the whole bound again, so its teammates are passed with it (CR 805.8) and a
 -- skip may land on the seat the walk began from. Each skip spends a Uses.Once
--- row, which is what ends that walk.
+-- row, which is what ends that walk (Parun.EffectLintSpec's "no card skips a
+-- turn without limit").
 walkToNextTurn :: Int -> PlayerId -> PlayerId -> Game ()
 walkToNextTurn seatsLeft anchor seat = do
   gs <- State.get
