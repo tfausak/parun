@@ -77,6 +77,7 @@ import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.MoveSpread as MoveSpread
 import qualified Parun.Types.MulliganDecision as MulliganDecision
 import qualified Parun.Types.MulliganOffer as MulliganOffer
+import qualified Parun.Types.NumberFloor as NumberFloor
 import qualified Parun.Types.ObjectCount as ObjectCount
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OptionalDecision as OptionalDecision
@@ -397,7 +398,7 @@ combatReplaySpec s =
           Spec.assertEqWith s "a short transcript looks" (Replay.defaultAnswer p) OptionalDecision.Exercises
         -- CR 107.1c: any number, zero included, and not a paid-energy answer.
         Spec.it s "ChooseNumber records and replays a Natural, and rejects a paid-energy answer" $ do
-          let p = Prompt.ChooseNumber decider S.alice oid 0 Nothing
+          let p = Prompt.ChooseNumber decider S.alice oid 0 NumberFloor.Least Nothing
           Spec.assertEqWith s "round trip" (Replay.decode p (Replay.encode p 7)) (Just (7 :: Natural.Natural))
           Spec.assertEqWith s "a paid-energy answer is not an answer to it" (Replay.decode p (Response.ChosePaidEnergy 7)) Nothing
           Spec.assertEqWith s "a short transcript names zero" (Replay.defaultAnswer p) 0

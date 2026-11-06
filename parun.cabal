@@ -1121,6 +1121,8 @@ library codec
     Parun.Codec.NinjutsuSpec
     Parun.Codec.NinjutsuVariant
     Parun.Codec.NinjutsuVariantSpec
+    Parun.Codec.NumberFloor
+    Parun.Codec.NumberFloorSpec
     Parun.Codec.Object
     Parun.Codec.ObjectCount
     Parun.Codec.ObjectCountSpec
@@ -3014,6 +3016,7 @@ library types
     Parun.Types.NextStepOf
     Parun.Types.Ninjutsu
     Parun.Types.NinjutsuVariant
+    Parun.Types.NumberFloor
     Parun.Types.Object
     Parun.Types.ObjectCount
     Parun.Types.ObjectId

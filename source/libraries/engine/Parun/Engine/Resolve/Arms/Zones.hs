@@ -116,6 +116,7 @@ import qualified Parun.Types.Mill as Mill
 import qualified Parun.Types.MillTally as MillTally
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.MoveToZone as MoveToZone
+import qualified Parun.Types.NumberFloor as NumberFloor
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import Parun.Types.ObjectRef (ObjectRef)
@@ -2224,7 +2225,7 @@ vote resolving source controller legal (Vote.MkVote starter choices secret) = do
 -- A bid is a number with no ceiling: Illicit Auction's ruling has the high
 -- bidder LOSE that much life rather than pay it, so a bid past the bidder's
 -- life total is legal. Through Prompt.ChooseNumber with the high bid as its
--- floor; an answer at or below it declines to top it.
+-- floor (NumberFloor.HighBid); an answer at or below it declines to top it.
 --
 -- Nothing on the board changes while the seats bid, so the roster and the
 -- deciders are read off this one `gs`.
@@ -2244,7 +2245,7 @@ bid resolving source controller legal (Bid.MkBid opening highBidSlot highBidderS
       auction high holder waiting = case waiting of
         [] -> pure (high, holder)
         bidder : rest -> do
-          answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor bidder gs) bidder resolving high Nothing)
+          answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor bidder gs) bidder resolving high NumberFloor.HighBid Nothing)
           if answer > high
             then auction answer bidder (after bidder)
             else auction high holder rest

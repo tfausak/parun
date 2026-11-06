@@ -1132,7 +1132,7 @@ defaultAnswer p = case p of
   Prompt.ChoosePaidEnergy {} -> 0
   -- CR 107.1c: the floor is always a number the player may choose -- zero for
   -- "any number", and for a bid the high bid, which lets it stand.
-  Prompt.ChooseNumber _ _ _ least _ -> least
+  Prompt.ChooseNumber _ _ _ least _ _ -> least
   -- CR 702.155b's range opens at one, and Parun.Engine.Event never raises this
   -- prompt for a Saga whose final chapter number is 0, so the floor is always
   -- legal. The smallest answer, for ChooseX's reason.

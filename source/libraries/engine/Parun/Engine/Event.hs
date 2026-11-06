@@ -214,6 +214,7 @@ import qualified Parun.Types.Milled as Milled
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.MutateSide as MutateSide
+import qualified Parun.Types.NumberFloor as NumberFloor
 import Parun.Types.Object (Object)
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
@@ -5304,7 +5305,7 @@ chooseQuality quality chooser acquisition oid = case quality of
         then pure most
         else do
           gs <- State.get
-          answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor chooser gs) chooser oid least (Just most))
+          answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor chooser gs) chooser oid least NumberFloor.Least (Just most))
           pure (max least (min most answer))
     let pick chosen _ = do
           picked <- Game.chooseAmong (\decider who -> Prompt.ChooseColor decider who oid) chooser (filter (`Set.notMember` chosen) [minBound .. maxBound :: Color.Color])
@@ -5317,7 +5318,7 @@ chooseQuality quality chooser acquisition oid = case quality of
     gs <- State.get
     let least = ChooseBetween.least range
         most = ChooseBetween.most range
-    answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor chooser gs) chooser oid least (Just most))
+    answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor chooser gs) chooser oid least NumberFloor.Least (Just most))
     State.modify' (Game.recordChoice Chosen.Number acquisition (const (Just (max least (min most answer)))) oid)
   where
     subtype prompt = do

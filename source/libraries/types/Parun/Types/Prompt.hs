@@ -60,6 +60,7 @@ import qualified Parun.Types.MoveSpread as MoveSpread
 import qualified Parun.Types.MulliganDecision as MulliganDecision
 import qualified Parun.Types.MulliganOffer as MulliganOffer
 import qualified Parun.Types.MutateSide as MutateSide
+import qualified Parun.Types.NumberFloor as NumberFloor
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.OutsideCard as OutsideCard
@@ -343,10 +344,10 @@ data Prompt r where
   ChoosePaidEnergy :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt Natural.Natural
   -- | CR 107.1c / 608.2d: the number an Effect.ChooseNumber binds as the object
   -- resolves, an Effect.Bid's bid, or how many colours a ChosenQuality.Colors
-  -- range picks (CR 105.4); the Natural is its floor and the Maybe its
-  -- bound, the answer clamped to the bound. A bid's floor is the high bid, and
-  -- an answer not above it declines to top it. Answers as Response.ChoseNumber.
-  ChooseNumber :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Maybe Natural.Natural -> Prompt Natural.Natural
+  -- range picks (CR 105.4); the Natural is its floor, the NumberFloor what
+  -- that floor means, and the Maybe its bound, the answer clamped to the
+  -- bound. Answers as Response.ChoseNumber.
+  ChooseNumber :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> NumberFloor.NumberFloor -> Maybe Natural.Natural -> Prompt Natural.Natural
   -- | CR 702.155b / 714.3b: which chapter a Saga with read ahead enters on; the
   -- Natural is the final chapter (CR 714.2d), the answer clamped into the
   -- range. Not raised for a range of one, nor for a bound of 0.
