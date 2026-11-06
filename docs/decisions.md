@@ -1032,6 +1032,27 @@ Entries are ordered by the first rule each cites.
   active player its target names".
 - **Issue**: #5458.
 
+## Who owns a face-up card off the communal planar deck
+
+- **Question**: Under the single planar deck option the planar controller owns
+  every card in the planar deck (CR 901.15b). Who owns a plane or phenomenon
+  once it is turned face up, and so is no longer in the deck? It decides what
+  leaves with a departing player (CR 800.4a, 901.10).
+- **Rules**: CR 901.6, 901.10, 901.15b, 312.5, 800.4a, 800.4p; CR of
+  2026-09-25. No ruling.
+- **Decision**: The player who moved it off the deck, the planar controller
+  then. It keeps that owner while face up: nothing transfers ownership on the
+  way off the deck, and CR 901.15b names only cards in the deck.
+- **Rejected**: (a) Whoever is planar controller now, so a face-up card never
+  leaves with a departing player: CR 901.15b's reach is the deck, which CR 312.5
+  says the card has moved off. (b) CR 901.6's "the player who started the game
+  with it in their planar deck", read as the first planar controller: it makes
+  the starting player own a card a later player turned up and has never held.
+- **Site**: `Parun.Engine.Planechase.turnUpTop`, proved by
+  `Parun.PlanechaseSpec`'s "CR 901.15b a face-up card is owned by the planar
+  controller who turned it up".
+- **Issue**: #5061.
+
 ## A silenced entry silences its departure
 
 - **Question**: Hushwing Gryff's "creatures entering don't cause abilities to

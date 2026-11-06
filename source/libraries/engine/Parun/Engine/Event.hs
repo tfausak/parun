@@ -56,6 +56,7 @@ import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword
 import qualified Parun.Engine.ManaRider as ManaRider
+import qualified Parun.Engine.Plane as Plane
 import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Players as Players
 import qualified Parun.Engine.Projection as Projection
@@ -11194,19 +11195,20 @@ revealResolving resolving pid oid = do
   stampReveal (RevealWindow.WhileOnStack resolving) oid
 
 -- | Susan Foreman's rewrite of CR 701.31b: this player looks at the top two
--- cards of their planar deck and puts the one they choose on top and the other
--- on the bottom, on behalf of the object `source`. With fewer than two there is
--- nothing to put anywhere.
+-- cards of their planar deck (CR 901.15c: the communal one) and puts the one
+-- they choose on top and the other on the bottom, on behalf of the object
+-- `source`. With fewer than two there is nothing to put anywhere.
 arrangeTopTwo :: ObjectId -> PlayerId -> Game ()
 arrangeTopTwo source pid = do
   gs <- State.get
-  case Game.sideDeckOf SideDeck.Planar pid gs of
+  let holder = Plane.planarDeckHolder pid gs
+  case Game.sideDeckOf SideDeck.Planar holder gs of
     first : second : rest -> do
       Monad.mapM_ (look pid) [first, second]
       chosen <- Game.chooseAmong (\decider asked -> Prompt.ChooseCardFromAmong decider asked source) pid [first, second]
       let top = Maybe.fromMaybe first chosen
           bottom = if top == first then second else first
-      State.modify' (Game.overSideDecks SideDeck.Planar (Map.insert pid (Seq.fromList (top : rest <> [bottom]))))
+      State.modify' (Game.overSideDecks SideDeck.Planar (Map.insert holder (Seq.fromList (top : rest <> [bottom]))))
     _ -> pure ()
 
 -- | CR 701.20e: a player looks at a card, shown to them and, per CR 723.4, to

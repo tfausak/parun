@@ -501,15 +501,17 @@ createInCommandZone pid printingId = do
 
 -- CR 717.2 / 901.3 / 904.3: mint one of this player's cards onto the bottom of
 -- their supplementary deck of this kind, createInCommandZone's hand-written move
--- and for its reason.
+-- and for its reason. CR 901.15a: a planar card under the single planar deck
+-- option joins the communal deck, whoever brought it.
 createInSideDeck :: SideDeck.SideDeck -> PlayerId -> PrintingId.PrintingId -> Game ()
 createInSideDeck kind pid printingId = do
   oid <- createCard pid printingId
   State.modify' $ \gs ->
     let moved = Game.removeFromZones oid gs
+        holder = if kind == SideDeck.Planar then Plane.planarDeckHolder pid gs else pid
      in Game.overSideDecks
           kind
-          (Map.insertWith (flip (Seq.><)) pid (Seq.singleton oid))
+          (Map.insertWith (flip (Seq.><)) holder (Seq.singleton oid))
           moved
             { GameState.objects = Map.adjust (\o -> o {Object.zone = Zone.Command}) oid (GameState.objects moved)
             }
@@ -524,11 +526,18 @@ newGame perform matchup = do
     State.modify' (\g -> (Archenemy.setUp archenemy g) {GameState.turnOrder = rotateTo archenemy (GameState.turnOrder g), GameState.activePlayer = archenemy})
   -- CR 103.3: build and shuffle every library before any opening hand is drawn,
   -- so CR 103.5's declaration round sees settled libraries.
+  communal <- State.gets (GameSettings.singlePlanarDeck . GameState.settings)
+  let ownDecks = filter (\kind -> not (communal && kind == SideDeck.Planar)) [minBound .. maxBound]
   Monad.forM_ (NonEmpty.toList matchup) $ \(pid, deck) -> do
     createDeck pid deck
     Event.shuffleLibrary pid
     -- CR 717.2 / 901.3 / 904.3 / 103.3a.
-    Monad.forM_ [minBound .. maxBound] (`Game.shuffleSideDeck` pid)
+    Monad.forM_ ownDecks (`Game.shuffleSideDeck` pid)
+  -- CR 901.15a / 103.3a: the communal planar deck, once every seat's cards are
+  -- in it.
+  Monad.when communal $ do
+    holder <- State.gets (Plane.planarDeckHolder (fst (NonEmpty.head matchup)))
+    Game.shuffleSideDeck SideDeck.Planar holder
   -- CR 809.4 and CR 808.4, ahead of CR 103.1c's claim.
   randomEmperorFirst
   randomTeamFirst
@@ -775,6 +784,8 @@ startGameFromCards perform exemptions = do
     Monad.forM_ (filter (\oid -> fmap Object.owner (Map.lookup oid rebuilt) == Just pid) (Set.toAscList conspiracyIds)) (Conspiracy.hideAgenda pid)
     chooseConspiracies pid
   Monad.forM_ owners Event.shuffleLibrary
+  -- CR 901.15c: the rebuild regrouped the planar cards by owner.
+  State.modify' Planechase.gather
   -- CR 103.3a / 729.2a.
   Monad.forM_ owners (\pid -> Monad.forM_ [minBound .. maxBound] (`Game.shuffleSideDeck` pid))
   -- CR 103.1c after CR 727.1a's determination: a conspiracy stays in the
@@ -1569,6 +1580,11 @@ funnelBack finalSub parent =
       planarBack = backTo subPlanar Plane.isPlanarCard
       schemesBack = backTo subSchemes Scheme.isScheme
       ownedIn pool pid = Seq.fromList (Map.keys (Map.filter (\obj -> Object.owner obj == pid) pool))
+      -- CR 901.15c: the communal planar deck takes back every planar card,
+      -- whoever turned it up last (Planechase.turnUpTop).
+      planarDecksBack
+        | GameSettings.singlePlanarDeck (GameState.settings parent) = fmap (const (Seq.fromList (Map.keys planarBack))) (Game.sideDecksOf SideDeck.Planar parent)
+        | otherwise = Map.mapWithKey (\pid _ -> ownedIn planarBack pid) (Game.sideDecksOf SideDeck.Planar parent)
       backKind oid = Game.sideDeckBack oid finalSub Applicative.<|> Game.sideDeckBack oid parent
       backedDecks kind = Map.filter (not . Seq.null) (Map.fromList [(pid, ownedIn (Map.filterWithKey (\oid _ -> backKind oid == Just kind) backedBack) pid) | pid <- GameState.turnOrder parent])
       -- A commander whose owner departed INSIDE the subgame is recovered to the
@@ -1686,7 +1702,7 @@ funnelBack finalSub parent =
               ( Map.fromList
                   [ (SideDeck.Attraction, backedDecks SideDeck.Attraction),
                     (SideDeck.Contraption, backedDecks SideDeck.Contraption),
-                    (SideDeck.Planar, Map.mapWithKey (\pid _ -> ownedIn planarBack pid) (Game.sideDecksOf SideDeck.Planar parent)),
+                    (SideDeck.Planar, planarDecksBack),
                     (SideDeck.Scheme, Map.mapWithKey (\pid _ -> ownedIn schemesBack pid) (Game.sideDecksOf SideDeck.Scheme parent))
                   ]
               ),

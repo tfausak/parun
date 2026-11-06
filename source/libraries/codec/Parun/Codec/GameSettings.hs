@@ -32,6 +32,7 @@ codec = Fields.object $ do
   twoHeadedGiant <- Fields.required "twoHeadedGiant" Common.boolean GameSettings.twoHeadedGiant
   alternatingTeams <- Fields.required "alternatingTeams" Common.boolean GameSettings.alternatingTeams
   ante <- Fields.required "ante" Common.boolean GameSettings.ante
+  singlePlanarDeck <- Fields.required "singlePlanarDeck" Common.boolean GameSettings.singlePlanarDeck
   pure
     GameSettings.MkGameSettings
       { GameSettings.brawl = brawl,
@@ -44,5 +45,6 @@ codec = Fields.object $ do
         GameSettings.emperors = emperors,
         GameSettings.twoHeadedGiant = twoHeadedGiant,
         GameSettings.alternatingTeams = alternatingTeams,
-        GameSettings.ante = ante
+        GameSettings.ante = ante,
+        GameSettings.singlePlanarDeck = singlePlanarDeck
       }
