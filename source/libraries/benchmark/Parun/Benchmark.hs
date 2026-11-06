@@ -303,9 +303,9 @@ loadPluralBoard registry = do
   star <- fetchOrThrow registry "Chromatic Star"
   pure ([ogre, ogre, drum, altar, star] <> replicate 4 elves)
 
--- What that relaxation cannot refuse: it ignores claims, so it counts the Drum's
--- mana on top of all eight Elves', where the Drum's tap takes one of them. A {9}
--- still walks every board (#595).
+-- What a claim-blind relaxation could not refuse: it counted the Drum's mana on
+-- top of all eight Elves', where the Drum's tap takes one of them, so a {9}
+-- walked every board until the relaxation counted the objects claims contend for.
 loadDrumBoard :: Registry.Registry IO -> IO [Printing.Printing]
 loadDrumBoard registry = do
   drum <- fetchOrThrow registry "Springleaf Drum"

@@ -2642,6 +2642,19 @@ pluralBoardSpec s registry = Spec.describe s "plural sources" $ do
     Spec.assertBool s (pays (blues 2)) "CR 106.1a the Drum and the Star make {U}{U}"
     Spec.assertBool s (not (pays (blues 3))) "CR 118.3 and nothing makes a third {U}"
 
+  -- Parun.Benchmark's drum board: the Drum's tap takes one of the Elves (CR
+  -- 118.3), so eight Elves and a Drum make eight mana. The relaxation counts the
+  -- objects the claims contend for, so the {9} is refused before the walk; on
+  -- twenty Elves that walk is 2^21 boards, which this would not outlive.
+  Spec.it s "CR 118.3 a Springleaf Drum beside Llanowar Elves taps one of them" $ do
+    drum <- S.printingOf s registry "Springleaf Drum"
+    elves <- S.printingOf s registry "Llanowar Elves"
+    let boardOf n = Foldable.foldl' (\board printing -> snd (S.addPermanent printing S.alice board)) (Setup.emptyGame S.bothPlayers) (drum : replicate n elves)
+        pays n = Mana.canPay Cost.manaActivations S.alice (ManaCost.MkManaCost [ManaSymbol.Generic n])
+    Spec.assertBool s (pays 8 (boardOf 8)) "eight Elves, or seven and the Drum, make {8}"
+    Spec.assertBool s (not (pays 9 (boardOf 8))) "CR 118.3 but not a {9}"
+    Spec.assertBool s (not (pays 21 (boardOf 20))) "nor twenty Elves a {21}"
+
 -- alice, active, in her precombat main phase: one Transmogrant Altar, one Goblin
 -- Piker for the sacrifice to take, and optionally a Swamp to pay the {B} and a
 -- pair of spells in her hand. Returns the Altar and whichever spells were dealt.
