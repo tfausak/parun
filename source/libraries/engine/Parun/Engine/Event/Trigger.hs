@@ -280,7 +280,7 @@ onBattlefieldOf =
 -- The trigger sources an event scan reads off the game as it stands rather
 -- than off an event: the zones CR 113.6 lets a non-permanent's abilities
 -- function in. Each is a function of the board alone, so many scans of one
--- board share one (Mana.triggeredYields, #6515).
+-- board share one (Mana.triggeredYields).
 data Standing = MkStanding
   { standingGraveyards :: Map.Map ObjectId (PlayerId, [(TriggerCondition, TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))]),
     standingExile :: Map.Map ObjectId (PlayerId, [(TriggerCondition, TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))]),

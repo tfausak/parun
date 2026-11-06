@@ -4330,7 +4330,7 @@ manaFlareSpec s registry = Spec.describe s "Mana Flare" $ do
         second = S.runPure (making Color.Blue) untapped (S.tapForMana tundraId)
     Spec.assertEqWith s "the first tap's {W} and Mana Flare's" (poolTypes S.alice first) [ManaType.Colored Color.White, ManaType.Colored Color.White]
     Spec.assertEqWith s "then the second's {U} and Mana Flare's" (poolTypes S.alice second) [ManaType.Colored Color.White, ManaType.Colored Color.White, ManaType.Colored Color.Blue, ManaType.Colored Color.Blue]
-  -- What a source's measure scans (#6515): the Flare, and not Young
+  -- What a source's measure scans: the Flare, and not Young
   -- Pyromancer, whose trigger is no mana ability, nor the Forest it measures.
   Spec.it s "CR 605.1b a supply's trigger scan watches the Flare alone" $ do
     flare <- S.printingOf s registry "Mana Flare"

@@ -319,11 +319,11 @@ legalActions pid gs =
       -- whole chain -- until measuring bytes was judged too compiler-specific
       -- to keep. A regression here fails nothing (gap #578).
       --
-      -- Not implemented: an O(1) per-object path. Each mana source's
-      -- triggered-yield measure scans every permanent's triggers, a graveyard
-      -- card Cast.unpermittedInGraveyard cannot rule out is projected against
-      -- the whole board per proposal, and a mode whose slots read each other
-      -- and demand a target builds every slot's whole legal set (#6515).
+      -- Not implemented: an O(1) per-object path. Each ability's mana payment
+      -- walks every source, a graveyard card Cast.unpermittedInGraveyard
+      -- cannot rule out is projected against the whole board per proposal,
+      -- and a mode whose slots read each other and demand a target builds
+      -- every slot's whole legal set (#6532).
       grants = Projection.controlGrants gs
       pcs = Projection.projectAll gs
       -- ONE mana-source sweep of each kind for the whole enumeration. Each is a

@@ -775,7 +775,7 @@ manaSuppliesGiven xCeiling capacity watch rewritesOf pcs pid borrowed oid gs =
 -- What Parun.Engine.Mana.triggeredYields reads of one board, taken once for
 -- every source a sweep measures: the CR 603.10 sample, the trigger scan's
 -- standing sources, and the objects among either holding an ability CR 605.1b
--- could make a triggered mana ability (#6515). The scan offers the holders
+-- could make a triggered mana ability. The scan offers the holders
 -- alone, so a source's measure does not walk the board; the three events a
 -- mana ability records name no object for the scan to recover, so the sample
 -- and the standing sources are every candidate it has.
