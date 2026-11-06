@@ -44,6 +44,7 @@ import qualified Parun.Engine.EndEffect as EndEffect
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Event.Trigger as Event.Trigger
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Keyword as Keyword
 import qualified Parun.Engine.Ledger as Ledger
 import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.Modal as Modal
@@ -89,6 +90,7 @@ import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Concession as Concession
 import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.CostOffer as CostOffer
 import qualified Parun.Types.CountIs as CountIs
 import qualified Parun.Types.CountersAre as CountersAre
 import qualified Parun.Types.DamageIs as DamageIs
@@ -1363,13 +1365,12 @@ answerActionChoice key verb choices asked =
                   updateChoices (\current -> current {Choices.x = Nothing})
                   pure x
             _ -> unexpected
-        Prompt.Type.ChooseCost _ _ _ candidates _ -> case Choices.cost choices of
-          Just wanted -> case filter ((== Just wanted) . Cost.mana . CandidateCost.cost) candidates of
-            [cost] -> do
-              updateChoices (\current -> current {Choices.cost = Nothing})
-              pure cost
-            _ -> unexpected
-          Nothing -> unexpected
+        Prompt.Type.ChooseCost _ _ _ candidates _ -> case filter (namedCandidate choices) candidates of
+          [cost]
+            | Maybe.isJust (Choices.cost choices) || Maybe.isJust (Choices.costOffer choices) -> do
+                updateChoices (\current -> current {Choices.cost = Nothing, Choices.costOffer = Nothing})
+                pure cost
+          _ -> unexpected
         -- A PERMUTATION is the only legal answer, so the order is checked
         -- against the printed indices rather than trusted: one naming an index
         -- twice would pay one component twice and skip another.
@@ -1390,6 +1391,18 @@ answerActionChoice key verb choices asked =
               pure option
             _ -> unexpected
         _ -> unexpected
+
+-- | CR 601.2b: whether a candidate cost is the one a move's `cost` and
+-- `costOffer` name, each read only where given.
+namedCandidate :: Choices.Choices -> CandidateCost.CandidateCost -> Bool
+namedCandidate choices candidate =
+  all ((== Cost.mana (CandidateCost.cost candidate)) . Just) (Choices.cost choices)
+    && all offered (Choices.costOffer choices)
+  where
+    offered offer = case (offer, CandidateCost.keyword candidate) of
+      (CostOffer.ByKeyword designator, Just keyword) -> Keyword.designates designator keyword
+      (CostOffer.ByNoKeyword, Nothing) -> True
+      _ -> False
 
 -- | Whether a refused action left the state as it found it: the stack and the
 -- acting player's hand and battlefield unchanged.

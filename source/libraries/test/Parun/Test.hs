@@ -228,6 +228,7 @@ import qualified Parun.Codec.CostComponentSpec
 import qualified Parun.Codec.CostDirectionSpec
 import qualified Parun.Codec.CostKeywordSpec
 import qualified Parun.Codec.CostModifierSpec
+import qualified Parun.Codec.CostOfferSpec
 import qualified Parun.Codec.CostReductionSpec
 import qualified Parun.Codec.CostScaleSpec
 import qualified Parun.Codec.CostSpec
@@ -1226,6 +1227,7 @@ spec s registry corpus = do
   Parun.Codec.CostDirectionSpec.spec s
   Parun.Codec.CostKeywordSpec.spec s
   Parun.Codec.CostModifierSpec.spec s
+  Parun.Codec.CostOfferSpec.spec s
   Parun.Codec.CostReductionSpec.spec s
   Parun.Codec.CostScaleSpec.spec s
   Parun.Codec.CostSpec.spec s
