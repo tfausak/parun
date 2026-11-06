@@ -188,6 +188,9 @@ withoutAnnouncement before entry closed = do
   enteredWith <- mapOf GameState.enteredWith
   exilePiles <- mapOf GameState.exilePiles
   extraTurns <- listOf GameState.extraTurns
+  -- Written at the turn handoff and by a departure, neither of which an
+  -- announcement spans.
+  turnMarkers <- one GameState.turnMarkers
   -- CR 100.6a: a monotone tally, so the closed window's value is the newest --
   -- nextTimestamp's treatment. Nothing a CR 733.1 reversal undoes can reach it.
   subgamesThisMatch <- newest GameState.subgamesThisMatch
@@ -322,6 +325,7 @@ withoutAnnouncement before entry closed = do
         GameState.enteredWith = enteredWith,
         GameState.exilePiles = exilePiles,
         GameState.extraTurns = extraTurns,
+        GameState.turnMarkers = turnMarkers,
         GameState.subgamesThisMatch = subgamesThisMatch,
         GameState.gamesThisMatch = gamesThisMatch,
         GameState.gameNumber = gameNumber,

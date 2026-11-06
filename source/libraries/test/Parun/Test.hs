@@ -768,6 +768,7 @@ import qualified Parun.Codec.TriggerSourceSpec
 import qualified Parun.Codec.TriggeredAbilitySourceSpec
 import qualified Parun.Codec.TriggeredAbilitySpec
 import qualified Parun.Codec.TurnFaceDownSpec
+import qualified Parun.Codec.TurnMarkerSpec
 import qualified Parun.Codec.TurnRoleSpec
 import qualified Parun.Codec.TurnScopeSpec
 import qualified Parun.Codec.TurnUpEventSpec
@@ -866,6 +867,7 @@ import qualified Parun.ForageSpec
 import qualified Parun.FragmentedSpec
 import qualified Parun.GameSpec
 import qualified Parun.GoadSpec
+import qualified Parun.GrandMeleeSpec
 import qualified Parun.HarnessSpec
 import qualified Parun.HealSpec
 import qualified Parun.IngestSpec
@@ -1774,6 +1776,7 @@ spec s registry corpus = do
   Parun.Codec.TriggerSourceSpec.spec s
   Parun.Codec.TurnedFaceUpSpec.spec s
   Parun.Codec.TurnFaceDownSpec.spec s
+  Parun.Codec.TurnMarkerSpec.spec s
   Parun.Codec.TurnRoleSpec.spec s
   Parun.Codec.TurnScopeSpec.spec s
   Parun.Codec.TurnUpEventSpec.spec s
@@ -1880,6 +1883,7 @@ spec s registry corpus = do
   Parun.FragmentedSpec.spec s registry
   Parun.GameSpec.spec s registry
   Parun.GoadSpec.spec s registry
+  Parun.GrandMeleeSpec.spec s registry
   Parun.HarnessSpec.spec s registry
   Parun.HealSpec.spec s registry
   Parun.IngestSpec.spec s corpus

@@ -243,7 +243,8 @@ representatives pcs gs candidates =
 --     GameState.control (keyed by a player, and every PlayerControl on the stack
 --     names a Decider, a lifetime and rule 723.7's restriction -- no object),
 --     GameState.monarch, GameState.initiative, GameState.drewFromEmpty,
---     GameState.loopInvolvement, GameState.extraTurns and the per-player
+--     GameState.loopInvolvement, GameState.extraTurns, GameState.turnMarkers
+--     and the per-player
 --     counters (landsPlayed, departedThisTurn, turnsBegun,
 --     spellsCastLastTurn, resolvedNames) are keyed by or valued
 --     at a PLAYER and name no object.

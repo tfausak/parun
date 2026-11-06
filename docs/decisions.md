@@ -994,6 +994,48 @@ Entries are ordered by the first rule each cites.
   a later one.
 - **Issue**: none.
 
+## Whether a Grand Melee game keeps a turn marker
+
+- **Question**: CR 807.4a gives one turn marker for each full four players, so
+  fewer than four players have none. Does a game below four players stop?
+- **Rules**: CR 807.4, 807.4a, 807.4e, 807.4g; CR of 2026-09-25.
+- **Decision**: No. At least one marker remains: the count is never below one,
+  and the last marker is never removed.
+- **Rejected**: No markers, which leaves nobody able to begin a turn and a game
+  that can't end.
+- **Site**: `Parun.Engine.GrandMelee.markersFor` and `remove`. No test reaches
+  fewer than four players.
+- **Issue**: #3003.
+
+## Which seats Grand Melee's three-seat window counts
+
+- **Question**: CR 807.4d stops a player beginning their turn while a marker is
+  in "the three seats to their left". Does a departed player's seat count as
+  one of the three?
+- **Rules**: CR 801.2c, 807.4d, 807.4h; CR of 2026-09-25.
+- **Decision**: No. The window is the three nearest players still in the game.
+- **Rejected**: Counting departed seats, which lets markers bunch up as the
+  table empties. CR 807.4d's purpose is to keep each holder's range of
+  influence (CR 807.2a) clear of the others, and range closes up over a departed
+  seat (CR 801.2c, 807.4h).
+- **Site**: `Parun.Engine.GrandMelee.crowded`. `Parun.GrandMeleeSpec`'s "CR
+  807.4d a marker waits while another is within three seats on its left".
+- **Issue**: #3003.
+
+## When a departed Grand Melee player's turn would have begun
+
+- **Question**: CR 800.4m ends a departed player's "until your next turn"
+  effects when that turn would have begun. In Grand Melee, which turns are in
+  progress depends on the markers (CR 807.4c, 807.4d), so when is that?
+- **Rules**: CR 800.4k, 800.4m, 807.4c, 807.4d; CR of 2026-09-25.
+- **Decision**: When the marker that passed their seat begins its next turn,
+  for the next player to their left.
+- **Rejected**: As they leave, which ends the effect before any turn would
+  have begun.
+- **Site**: `Parun.Engine.Engine.takeMarkedTurn`'s `skipped`. No test reaches
+  it.
+- **Issue**: #3003.
+
 ## Whether Alternating Teams teammates review hands across an emptied seat
 
 - **Question**: CR 811.5 lets teammates review each other's hands only while
