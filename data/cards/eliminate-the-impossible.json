@@ -129,24 +129,27 @@
                     }
                   },
                   {
-                    "type": "Unsuspect",
+                    "type": "Undesignate",
                     "value": {
-                      "type": "EachMatching",
-                      "value": {
-                        "type": "And",
-                        "value": [
-                          {
-                            "type": "HasCardType",
-                            "value": "Creature"
-                          },
-                          {
-                            "type": "HeldBy",
-                            "value": {
-                              "holder": "Controller",
-                              "relation": "Opponent"
+                      "designation": "Suspected",
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": "Creature"
+                            },
+                            {
+                              "type": "HeldBy",
+                              "value": {
+                                "holder": "Controller",
+                                "relation": "Opponent"
+                              }
                             }
-                          }
-                        ]
+                          ]
+                        }
                       }
                     }
                   }
