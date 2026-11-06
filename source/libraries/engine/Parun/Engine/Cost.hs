@@ -394,21 +394,6 @@ frontFaceKeywords oid card gs =
   let front o = o {Object.face = Just (Face.name (Card.frontFace card)), Object.facing = Facing.FaceUp, Object.exiledFaceDown = False}
    in Map.keysSet (Projection.keywordsOf oid gs {GameState.objects = Map.adjust front oid (GameState.objects gs)})
 
--- CR 113.6d / 613.1f: the face being cast, less the cost abilities it prints
--- where a layer-6 wipe reaches the SPELL (`spell`, asSpellProjected): a
--- perpetual one does, one confined to graveyards does not. Its additional costs
--- (CR 118.8, choices included) and alternative costs (CR 118.9) are abilities
--- functioning on the stack (CR 113.1a, 113.6d), where CR 601.2f totals the
--- cost. Parun.CostSpec's "CR 118.8 a Demon of Catastrophes that perpetually
--- lost all abilities is cast without a sacrifice", "CR 118.9 an
--- Asmoranomardicadaistinaculdacar that perpetually lost all abilities has no
--- alternative cost" and "CR 113.6d under Yixlid Jailer a Fireblast cast from
--- the graveyard still sacrifices two Mountains" prove it.
-spellFace :: PC.ProjectedCharacteristics -> Face.Face card -> Face.Face card
-spellFace spell face
-  | PC.lostAllAbilities spell = face {Face.additionalCosts = [], Face.additionalCostChoices = [], Face.alternativeCosts = []}
-  | otherwise = face
-
 -- CR 118.8 / 601.2b: one candidate per way of paying this face's CHOICE costs --
 -- Caustic Exhale's "behold a Dragon or pay {1}". Folded into every candidate
 -- rather than into the printed cost alone, `withAdditional`'s reason one field
@@ -534,7 +519,7 @@ candidateCostsGiven permitted pid name oid gs =
           let -- CR 707.2: the costs are copiable values, so a card carrying a
               -- copy stamp or a conjured duplicate's values is priced off those
               -- (Game.castingFaceOf).
-              face = spellFace spell (Game.castingFaceNamed obj card name)
+              face = Projection.wipedFace spell (Game.castingFaceNamed obj card name)
               printed = Cost.MkCost {Cost.mana = Face.manaCost face, Cost.components = Face.additionalCosts face}
               -- CR 118.9d: an alternative replaces only the MANA cost; every
               -- additional cost still applies. CR 702.34a's last sentence sends
@@ -560,7 +545,7 @@ candidateCostsGiven permitted pid name oid gs =
                     oid
                     cond
               -- CR 113.6d: a printed alternative cost is an ability that
-              -- functions on the stack, so `spellFace` has dropped it where a
+              -- functions on the stack, so `Projection.wipedFace` has dropped it where a
               -- layer-6 wipe reaches the spell. A GRANTED one (Mine Security's
               -- perpetual "You may pay {0} rather than pay this spell's mana
               -- cost") is read off `spell` too, CR 113.6d's standing; the
@@ -2010,7 +1995,8 @@ componentDemandGrowsWith slot component = case component of
 -- CR 101.1: the ceiling this face's own words put on CR 601.2b's announced X --
 -- Soul Immolation's "X can't be greater than the greatest toughness among
 -- creatures you control". Nothing where the face states none, which is every
--- other printing in `data/cards/`.
+-- other printing in `data/cards/`. Less a layer-6 wipe reaching the spell
+-- (CR 113.6e, Projection.wipedFace).
 --
 -- The LEAST of them where the face states more than one, which CR 101.2 settles
 -- rather than this function: each sentence is a "can't" and beats the permission
@@ -2030,7 +2016,7 @@ componentDemandGrowsWith slot component = case component of
 -- 101.2 makes the printed "can't" beat the permission, so an unreadable ceiling
 -- refuses rather than permits.
 maximumX :: PlayerId -> ObjectId -> Face.Face card -> GameState -> Maybe Natural
-maximumX pid oid face = ceilingOf Nothing pid oid (Face.maximumX face)
+maximumX pid oid face gs = ceilingOf Nothing pid oid (Face.maximumX (Projection.wipedFace (asSpellProjected pid oid gs) face)) gs
 
 -- The same reduction over ceilings a caller has already gathered, shared with
 -- Parun.Engine.Activate: CR 602.2b routes an activation through rule 601.2b, so an
@@ -4380,14 +4366,14 @@ aimingSignature pid oid gs cost
           capacity = Mana.supplyCapacity (midPayment (manaActivationsGiven (PlayerEffect.applying pid gs)))
           borrowed = PlayerEffect.tapForManaGrants pid gs
           pcs = Projection.projectAll gs
-          sample = Trigger.battlefieldCandidates gs
+          watch = Mana.watchOf gs
           rewritesOf = Replacement.manaRewrites gs
           -- A route announcing an X is read at X = 0 alone: what it claims is
           -- the same at every X.
           supplies =
             if Set.null axes
               then []
-              else [(source, supply) | source <- Mana.manaSourcesGiven Set.empty capacity (Projection.controlGrants gs) pcs pid gs, supply <- Mana.manaSuppliesGiven 0 capacity sample rewritesOf pcs pid (borrowed source) source gs]
+              else [(source, supply) | source <- Mana.manaSourcesGiven Set.empty capacity (Projection.controlGrants gs) pcs pid gs, supply <- Mana.manaSuppliesGiven 0 capacity watch rewritesOf pcs pid (borrowed source) source gs]
           -- The yield's OWN claims, narrowed per sacrifice candidate where the
           -- supply prices one (Mana.manaSuppliesGiven's fourth element).
           relevant (_, _, _, own) = filter ((`Set.member` axes) . Claim.Type.axis) (Activations.claims own)

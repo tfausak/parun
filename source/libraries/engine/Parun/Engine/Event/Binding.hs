@@ -148,7 +148,7 @@ import qualified Parun.Types.ZoneChange as ZoneChange
 --
 -- THE FOURTH AND FIFTH ARGUMENTS are the bearer and CR 109.5 / 603.3a's "you",
 -- the ability's controller -- matchesTriggerGiven's own second and third
--- arguments, and read the same way at both call sites (eventTriggers' `oid` and
+-- arguments, and read the same way at both call sites (eventTriggersGiven's `oid` and
 -- `ctrl`, delayedPending's `DelayedTrigger.source` and
 -- `DelayedTrigger.controller`). Most arms never read them; DamageToPlayerPrevented
 -- below reads "you", to re-ask the condition's relation of a record a wider

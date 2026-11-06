@@ -113,9 +113,12 @@ isLandType subtype = case subtype of
 creatureTypeWord :: Subtype.Subtype -> Maybe Text.Text
 creatureTypeWord subtype = case subtype of
   Subtype.Advisor -> Just (Text.pack "Advisor")
+  Subtype.Aenar -> Just (Text.pack "Aenar")
   Subtype.Aetherborn -> Just (Text.pack "Aetherborn")
   Subtype.Alien -> Just (Text.pack "Alien")
   Subtype.Ally -> Just (Text.pack "Ally")
+  Subtype.Andorian -> Just (Text.pack "Andorian")
+  Subtype.Android -> Just (Text.pack "Android")
   Subtype.Angel -> Just (Text.pack "Angel")
   Subtype.Antelope -> Just (Text.pack "Antelope")
   Subtype.Ape -> Just (Text.pack "Ape")
@@ -132,6 +135,7 @@ creatureTypeWord subtype = case subtype of
   Subtype.Avatar -> Just (Text.pack "Avatar")
   Subtype.Azra -> Just (Text.pack "Azra")
   Subtype.Badger -> Just (Text.pack "Badger")
+  Subtype.Bajoran -> Just (Text.pack "Bajoran")
   Subtype.Balloon -> Just (Text.pack "Balloon")
   Subtype.Barbarian -> Just (Text.pack "Barbarian")
   Subtype.Bard -> Just (Text.pack "Bard")
@@ -143,16 +147,21 @@ creatureTypeWord subtype = case subtype of
   Subtype.Beeble -> Just (Text.pack "Beeble")
   Subtype.Beholder -> Just (Text.pack "Beholder")
   Subtype.Berserker -> Just (Text.pack "Berserker")
+  Subtype.Betazoid -> Just (Text.pack "Betazoid")
   Subtype.Bird -> Just (Text.pack "Bird")
   Subtype.Bison -> Just (Text.pack "Bison")
   Subtype.Blinkmoth -> Just (Text.pack "Blinkmoth")
   Subtype.Boar -> Just (Text.pack "Boar")
+  Subtype.Bolian -> Just (Text.pack "Bolian")
   Subtype.Borg -> Just (Text.pack "Borg")
+  Subtype.Brikar -> Just (Text.pack "Brikar")
   Subtype.Bringer -> Just (Text.pack "Bringer")
   Subtype.Brushwagg -> Just (Text.pack "Brushwagg")
+  Subtype.Caitian -> Just (Text.pack "Caitian")
   Subtype.Camarid -> Just (Text.pack "Camarid")
   Subtype.Camel -> Just (Text.pack "Camel")
   Subtype.Capybara -> Just (Text.pack "Capybara")
+  Subtype.Cardassian -> Just (Text.pack "Cardassian")
   Subtype.Caribou -> Just (Text.pack "Caribou")
   Subtype.Carrier -> Just (Text.pack "Carrier")
   Subtype.Cat -> Just (Text.pack "Cat")
@@ -177,6 +186,7 @@ creatureTypeWord subtype = case subtype of
   Subtype.Dauthi -> Just (Text.pack "Dauthi")
   Subtype.Demigod -> Just (Text.pack "Demigod")
   Subtype.Demon -> Just (Text.pack "Demon")
+  Subtype.Denobulan -> Just (Text.pack "Denobulan")
   Subtype.Deserter -> Just (Text.pack "Deserter")
   Subtype.Detective -> Just (Text.pack "Detective")
   Subtype.Devil -> Just (Text.pack "Devil")
@@ -193,8 +203,10 @@ creatureTypeWord subtype = case subtype of
   Subtype.Dryad -> Just (Text.pack "Dryad")
   Subtype.Dwarf -> Just (Text.pack "Dwarf")
   Subtype.Echidna -> Just (Text.pack "Echidna")
+  Subtype.Edosian -> Just (Text.pack "Edosian")
   Subtype.Efreet -> Just (Text.pack "Efreet")
   Subtype.Egg -> Just (Text.pack "Egg")
+  Subtype.ElAurian -> Just (Text.pack "El-Aurian")
   Subtype.Elder -> Just (Text.pack "Elder")
   Subtype.Eldrazi -> Just (Text.pack "Eldrazi")
   Subtype.Elemental -> Just (Text.pack "Elemental")
@@ -203,8 +215,10 @@ creatureTypeWord subtype = case subtype of
   Subtype.Elk -> Just (Text.pack "Elk")
   Subtype.Employee -> Just (Text.pack "Employee")
   Subtype.Eternal -> Just (Text.pack "Eternal")
+  Subtype.Excalbian -> Just (Text.pack "Excalbian")
   Subtype.Eye -> Just (Text.pack "Eye")
   Subtype.Faerie -> Just (Text.pack "Faerie")
+  Subtype.Ferengi -> Just (Text.pack "Ferengi")
   Subtype.Ferret -> Just (Text.pack "Ferret")
   Subtype.Fish -> Just (Text.pack "Fish")
   Subtype.Flagbearer -> Just (Text.pack "Flagbearer")
@@ -227,6 +241,7 @@ creatureTypeWord subtype = case subtype of
   Subtype.God -> Just (Text.pack "God")
   Subtype.Golem -> Just (Text.pack "Golem")
   Subtype.Gorgon -> Just (Text.pack "Gorgon")
+  Subtype.Gorn -> Just (Text.pack "Gorn")
   Subtype.Graveborn -> Just (Text.pack "Graveborn")
   Subtype.Gremlin -> Just (Text.pack "Gremlin")
   Subtype.Griffin -> Just (Text.pack "Griffin")
@@ -240,6 +255,7 @@ creatureTypeWord subtype = case subtype of
   Subtype.Hero -> Just (Text.pack "Hero")
   Subtype.Hippo -> Just (Text.pack "Hippo")
   Subtype.Hippogriff -> Just (Text.pack "Hippogriff")
+  Subtype.Hirogen -> Just (Text.pack "Hirogen")
   Subtype.Homarid -> Just (Text.pack "Homarid")
   Subtype.Homunculus -> Just (Text.pack "Homunculus")
   Subtype.Horror -> Just (Text.pack "Horror")
@@ -248,6 +264,7 @@ creatureTypeWord subtype = case subtype of
   Subtype.Hydra -> Just (Text.pack "Hydra")
   Subtype.Hyena -> Just (Text.pack "Hyena")
   Subtype.Illusion -> Just (Text.pack "Illusion")
+  Subtype.Illyrian -> Just (Text.pack "Illyrian")
   Subtype.Imp -> Just (Text.pack "Imp")
   Subtype.Incarnation -> Just (Text.pack "Incarnation")
   Subtype.Inhuman -> Just (Text.pack "Inhuman")
@@ -256,9 +273,11 @@ creatureTypeWord subtype = case subtype of
   Subtype.Insect -> Just (Text.pack "Insect")
   Subtype.Jackal -> Just (Text.pack "Jackal")
   Subtype.Jellyfish -> Just (Text.pack "Jellyfish")
+  Subtype.JemHadar -> Just (Text.pack "Jem'Hadar")
   Subtype.Juggernaut -> Just (Text.pack "Juggernaut")
   Subtype.Kangaroo -> Just (Text.pack "Kangaroo")
   Subtype.Kavu -> Just (Text.pack "Kavu")
+  Subtype.Kelpien -> Just (Text.pack "Kelpien")
   Subtype.Kirin -> Just (Text.pack "Kirin")
   Subtype.Kithkin -> Just (Text.pack "Kithkin")
   Subtype.Klingon -> Just (Text.pack "Klingon")
@@ -267,6 +286,8 @@ creatureTypeWord subtype = case subtype of
   Subtype.Kor -> Just (Text.pack "Kor")
   Subtype.Kraken -> Just (Text.pack "Kraken")
   Subtype.Kree -> Just (Text.pack "Kree")
+  Subtype.Kwejian -> Just (Text.pack "Kwejian")
+  Subtype.Lanthanite -> Just (Text.pack "Lanthanite")
   Subtype.Llama -> Just (Text.pack "Llama")
   Subtype.Lamia -> Just (Text.pack "Lamia")
   Subtype.Lammasu -> Just (Text.pack "Lammasu")
@@ -279,6 +300,8 @@ creatureTypeWord subtype = case subtype of
   Subtype.Lobster -> Just (Text.pack "Lobster")
   Subtype.Manticore -> Just (Text.pack "Manticore")
   Subtype.Masticore -> Just (Text.pack "Masticore")
+  Subtype.Medusan -> Just (Text.pack "Medusan")
+  Subtype.Melkotian -> Just (Text.pack "Melkotian")
   Subtype.Mercenary -> Just (Text.pack "Mercenary")
   Subtype.Merfolk -> Just (Text.pack "Merfolk")
   Subtype.Metathran -> Just (Text.pack "Metathran")
@@ -297,6 +320,7 @@ creatureTypeWord subtype = case subtype of
   Subtype.Mutant -> Just (Text.pack "Mutant")
   Subtype.Myr -> Just (Text.pack "Myr")
   Subtype.Mystic -> Just (Text.pack "Mystic")
+  Subtype.Nakuhl -> Just (Text.pack "Na'kuhl")
   Subtype.Nautilus -> Just (Text.pack "Nautilus")
   Subtype.Necron -> Just (Text.pack "Necron")
   Subtype.Nephilim -> Just (Text.pack "Nephilim")
@@ -307,12 +331,15 @@ creatureTypeWord subtype = case subtype of
   Subtype.Noggle -> Just (Text.pack "Noggle")
   Subtype.Nomad -> Just (Text.pack "Nomad")
   Subtype.Nymph -> Just (Text.pack "Nymph")
+  Subtype.Ocampa -> Just (Text.pack "Ocampa")
   Subtype.Octopus -> Just (Text.pack "Octopus")
+  Subtype.Officer -> Just (Text.pack "Officer")
   Subtype.Ogre -> Just (Text.pack "Ogre")
   Subtype.Ooze -> Just (Text.pack "Ooze")
   Subtype.Orb -> Just (Text.pack "Orb")
   Subtype.Orc -> Just (Text.pack "Orc")
   Subtype.Orgg -> Just (Text.pack "Orgg")
+  Subtype.Orion -> Just (Text.pack "Orion")
   Subtype.Otter -> Just (Text.pack "Otter")
   Subtype.Ouphe -> Just (Text.pack "Ouphe")
   Subtype.Ox -> Just (Text.pack "Ox")
@@ -337,6 +364,7 @@ creatureTypeWord subtype = case subtype of
   Subtype.Primarch -> Just (Text.pack "Primarch")
   Subtype.Prism -> Just (Text.pack "Prism")
   Subtype.Processor -> Just (Text.pack "Processor")
+  Subtype.Q -> Just (Text.pack "Q")
   Subtype.Qu -> Just (Text.pack "Qu")
   Subtype.Rabbit -> Just (Text.pack "Rabbit")
   Subtype.Raccoon -> Just (Text.pack "Raccoon")
@@ -348,6 +376,7 @@ creatureTypeWord subtype = case subtype of
   Subtype.Rigger -> Just (Text.pack "Rigger")
   Subtype.Robot -> Just (Text.pack "Robot")
   Subtype.Rogue -> Just (Text.pack "Rogue")
+  Subtype.Romulan -> Just (Text.pack "Romulan")
   Subtype.Sable -> Just (Text.pack "Sable")
   Subtype.Salamander -> Just (Text.pack "Salamander")
   Subtype.Samurai -> Just (Text.pack "Samurai")
@@ -400,15 +429,23 @@ creatureTypeWord subtype = case subtype of
   Subtype.Survivor -> Just (Text.pack "Survivor")
   Subtype.Symbiote -> Just (Text.pack "Symbiote")
   Subtype.Synth -> Just (Text.pack "Synth")
+  Subtype.Talaxian -> Just (Text.pack "Talaxian")
+  Subtype.Talosian -> Just (Text.pack "Talosian")
+  Subtype.Tamarian -> Just (Text.pack "Tamarian")
+  Subtype.Tellarite -> Just (Text.pack "Tellarite")
   Subtype.Tentacle -> Just (Text.pack "Tentacle")
   Subtype.Tetravite -> Just (Text.pack "Tetravite")
   Subtype.Thalakos -> Just (Text.pack "Thalakos")
+  Subtype.Tholian -> Just (Text.pack "Tholian")
   Subtype.Thopter -> Just (Text.pack "Thopter")
   Subtype.Thrull -> Just (Text.pack "Thrull")
   Subtype.Tiefling -> Just (Text.pack "Tiefling")
   Subtype.TimeLord -> Just (Text.pack "Time Lord")
+  Subtype.Tosk -> Just (Text.pack "Tosk")
   Subtype.Toy -> Just (Text.pack "Toy")
   Subtype.Treefolk -> Just (Text.pack "Treefolk")
+  Subtype.Tribble -> Just (Text.pack "Tribble")
+  Subtype.Trill -> Just (Text.pack "Trill")
   Subtype.Trilobite -> Just (Text.pack "Trilobite")
   Subtype.Triskelavite -> Just (Text.pack "Triskelavite")
   Subtype.Troll -> Just (Text.pack "Troll")
@@ -418,9 +455,12 @@ creatureTypeWord subtype = case subtype of
   Subtype.Utrom -> Just (Text.pack "Utrom")
   Subtype.Vampire -> Just (Text.pack "Vampire")
   Subtype.Varmint -> Just (Text.pack "Varmint")
+  Subtype.VauNAkat -> Just (Text.pack "Vau-N'Akat")
   Subtype.Vedalken -> Just (Text.pack "Vedalken")
   Subtype.Villain -> Just (Text.pack "Villain")
   Subtype.Volver -> Just (Text.pack "Volver")
+  Subtype.Vorta -> Just (Text.pack "Vorta")
+  Subtype.Vulcan -> Just (Text.pack "Vulcan")
   Subtype.Wall -> Just (Text.pack "Wall")
   Subtype.Walrus -> Just (Text.pack "Walrus")
   Subtype.Warlock -> Just (Text.pack "Warlock")
@@ -436,6 +476,7 @@ creatureTypeWord subtype = case subtype of
   Subtype.Worm -> Just (Text.pack "Worm")
   Subtype.Wraith -> Just (Text.pack "Wraith")
   Subtype.Wurm -> Just (Text.pack "Wurm")
+  Subtype.Xindi -> Just (Text.pack "Xindi")
   Subtype.Yeti -> Just (Text.pack "Yeti")
   Subtype.Zombie -> Just (Text.pack "Zombie")
   Subtype.Zubera -> Just (Text.pack "Zubera")
@@ -464,7 +505,8 @@ everyCreatureType = Set.fromList (filter isCreatureType [minBound ..])
 -- A SET rather than one card type, because two families are shared: CR 205.3m
 -- gives the creature types to creatures and kindreds alike, and CR 205.3k the
 -- spell types to instants and sorceries. A single answer would have to pick one
--- and would strip a Kindred permanent's creature types.
+-- and would strip a Kindred permanent's creature types. Spacecraft is the one
+-- word two unshared families both list (CR 205.3g, 205.3n).
 --
 -- The two big families delegate rather than restate. isCreatureType and
 -- isLandType already hold CR 205.3m's and CR 205.3i's lists, and everyCreatureType
@@ -474,8 +516,8 @@ everyCreatureType = Set.fromList (filter isCreatureType [minBound ..])
 -- The fallthrough answers with the EMPTY set, which the caller reads as "no
 -- family known, so no card type can strip it" -- the conservative direction, and
 -- isLandType's own posture toward a subtype it does not name. Unreachable today:
--- CR 205.3g through 205.3q partition Parun.Types.Subtype, and the arms below plus
--- the two guards cover every constructor.
+-- the arms below plus the two guards cover every constructor, and
+-- Parun.SubtypeSpec holds each family to its CR 205.3 list.
 correlatedCardTypes :: Subtype.Subtype -> Set.Set CardType.CardType
 correlatedCardTypes subtype
   | isCreatureType subtype = Set.fromList [CardType.Creature, CardType.Kindred]
@@ -487,11 +529,13 @@ correlatedCardTypes subtype
       Subtype.Bobblehead -> Set.singleton CardType.Artifact
       Subtype.Book -> Set.singleton CardType.Artifact
       Subtype.Clue -> Set.singleton CardType.Artifact
+      Subtype.Communicator -> Set.singleton CardType.Artifact
       Subtype.Contraption -> Set.singleton CardType.Artifact
       Subtype.Equipment -> Set.singleton CardType.Artifact
       Subtype.Food -> Set.singleton CardType.Artifact
       Subtype.Fortification -> Set.singleton CardType.Artifact
       Subtype.Gold -> Set.singleton CardType.Artifact
+      Subtype.Heartwood -> Set.singleton CardType.Artifact
       Subtype.Incubator -> Set.singleton CardType.Artifact
       Subtype.Infinity -> Set.singleton CardType.Artifact
       Subtype.Junk -> Set.singleton CardType.Artifact
@@ -499,7 +543,8 @@ correlatedCardTypes subtype
       Subtype.Map -> Set.singleton CardType.Artifact
       Subtype.Mutagen -> Set.singleton CardType.Artifact
       Subtype.Powerstone -> Set.singleton CardType.Artifact
-      Subtype.Spacecraft -> Set.singleton CardType.Artifact
+      -- CR 205.3n names Spacecraft a planar type too: one word, both families.
+      Subtype.Spacecraft -> Set.fromList [CardType.Artifact, CardType.Plane]
       Subtype.Stone -> Set.singleton CardType.Artifact
       Subtype.Treasure -> Set.singleton CardType.Artifact
       Subtype.Vehicle -> Set.singleton CardType.Artifact
@@ -523,6 +568,7 @@ correlatedCardTypes subtype
       Subtype.Aminatou -> Set.singleton CardType.Planeswalker
       Subtype.Angrath -> Set.singleton CardType.Planeswalker
       Subtype.Arlinn -> Set.singleton CardType.Planeswalker
+      Subtype.Arzakon -> Set.singleton CardType.Planeswalker
       Subtype.Ashiok -> Set.singleton CardType.Planeswalker
       Subtype.Bahamut -> Set.singleton CardType.Planeswalker
       Subtype.Basri -> Set.singleton CardType.Planeswalker
@@ -538,13 +584,16 @@ correlatedCardTypes subtype
       Subtype.Dihada -> Set.singleton CardType.Planeswalker
       Subtype.Domri -> Set.singleton CardType.Planeswalker
       Subtype.Dovin -> Set.singleton CardType.Planeswalker
+      Subtype.Dyfed -> Set.singleton CardType.Planeswalker
       Subtype.Ellywick -> Set.singleton CardType.Planeswalker
       Subtype.Elminster -> Set.singleton CardType.Planeswalker
       Subtype.Elspeth -> Set.singleton CardType.Planeswalker
       Subtype.Estrid -> Set.singleton CardType.Planeswalker
+      Subtype.Feroz -> Set.singleton CardType.Planeswalker
       Subtype.Freyalise -> Set.singleton CardType.Planeswalker
       Subtype.Garruk -> Set.singleton CardType.Planeswalker
       Subtype.Gideon -> Set.singleton CardType.Planeswalker
+      Subtype.Greensleeves -> Set.singleton CardType.Planeswalker
       Subtype.Grist -> Set.singleton CardType.Planeswalker
       Subtype.Guff -> Set.singleton CardType.Planeswalker
       Subtype.Huatli -> Set.singleton CardType.Planeswalker
@@ -576,6 +625,7 @@ correlatedCardTypes subtype
       Subtype.Samut -> Set.singleton CardType.Planeswalker
       Subtype.Sarkhan -> Set.singleton CardType.Planeswalker
       Subtype.Serra -> Set.singleton CardType.Planeswalker
+      Subtype.Sifa -> Set.singleton CardType.Planeswalker
       Subtype.Sivitri -> Set.singleton CardType.Planeswalker
       Subtype.Sorin -> Set.singleton CardType.Planeswalker
       Subtype.Szat -> Set.singleton CardType.Planeswalker
@@ -584,6 +634,7 @@ correlatedCardTypes subtype
       Subtype.Teferi -> Set.singleton CardType.Planeswalker
       Subtype.Teyo -> Set.singleton CardType.Planeswalker
       Subtype.Tezzeret -> Set.singleton CardType.Planeswalker
+      Subtype.Thomil -> Set.singleton CardType.Planeswalker
       Subtype.Tibalt -> Set.singleton CardType.Planeswalker
       Subtype.Tyvar -> Set.singleton CardType.Planeswalker
       Subtype.Ugin -> Set.singleton CardType.Planeswalker
@@ -594,6 +645,7 @@ correlatedCardTypes subtype
       Subtype.Vronos -> Set.singleton CardType.Planeswalker
       Subtype.Will -> Set.singleton CardType.Planeswalker
       Subtype.Windgrace -> Set.singleton CardType.Planeswalker
+      Subtype.Worzel -> Set.singleton CardType.Planeswalker
       Subtype.Wrenn -> Set.singleton CardType.Planeswalker
       Subtype.Xenagos -> Set.singleton CardType.Planeswalker
       Subtype.Yanggu -> Set.singleton CardType.Planeswalker

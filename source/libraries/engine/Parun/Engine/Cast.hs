@@ -1753,7 +1753,7 @@ inCastableZone pid oid name gs =
 -- card lacks a projection in the hand or graveyard it is asked from -- CR 613.1
 -- names no zone and Projection.viewOfObject reaches every one of them. The two
 -- can differ only for an effect granting or removing a supertype there (CR
--- 205.4b) -- the off-battlefield printed read (gap #4707), which no card in the
+-- 205.4b) -- the off-battlefield printed read (gap #6529), which no card in the
 -- pool reaches.
 legendaryRestrictionOk :: PlayerId -> ObjectId -> CardName.CardName -> GameState -> Bool
 legendaryRestrictionOk pid oid name gs = case proposedFace oid name gs of
@@ -1783,9 +1783,11 @@ controlsLegendaryCreatureOrPlaneswalker pid gs =
 -- Troops' "only during the declare attackers step and only if you've been
 -- attacked this step".
 --
--- The exact counterweight to Parun.Engine.Cost.permissionsOf, but read off the
--- card rather than through the projection (CR 113.6e; an effect granting or
--- removing a printed restriction there is missed, #4707).
+-- The exact counterweight to Parun.Engine.Cost.permissionsOf, read off the face
+-- being cast less a layer-6 wipe reaching the spell (CR 113.6e, 613.1f;
+-- Projection.wipedFace). The scenario
+-- patriars-humiliation/cr-113-6e-a-humiliated-serra-avenger-is-cast-on-turn-one
+-- proves it.
 -- ALL of them must hold, which is what CR 601.3's "no ... prohibits"
 -- means; one permission, by contrast, suffices.
 --
@@ -1801,15 +1803,15 @@ controlsLegendaryCreatureOrPlaneswalker pid gs =
 printedRestrictionsOk :: PlayerId -> ObjectId -> CardName.CardName -> GameState -> Bool
 printedRestrictionsOk pid oid name gs = case proposedFace oid name gs of
   Nothing -> False
-  Just face -> not (Card.isLand face) && all (restrictionMet pid oid gs) (Face.castingRestrictions face)
+  Just face -> not (Card.isLand face) && all (restrictionMet pid oid gs) (Face.castingRestrictions (Projection.wipedFace (Cost.asSpellProjected pid oid gs) face))
 
 -- The symbol a printed "Spend only [colour] mana on X" pays the spell's X as
--- (CastingRestriction.SpendOnlyOnX), read off the card as
--- `printedRestrictionsOk` reads the rest.
+-- (CastingRestriction.SpendOnlyOnX), read as `printedRestrictionsOk` reads the
+-- rest.
 xConfinement :: ObjectId -> GameState -> Maybe ManaSymbol.ManaSymbol
 xConfinement oid gs = do
   face <- Game.faceOf oid gs
-  Maybe.listToMaybe [symbol | CastingRestriction.SpendOnlyOnX symbol <- Face.castingRestrictions face]
+  Maybe.listToMaybe [symbol | CastingRestriction.SpendOnlyOnX symbol <- Face.castingRestrictions (Projection.wipedFace (Projection.project oid gs) face)]
 
 -- Does the game state satisfy this one printed clause?
 restrictionMet :: PlayerId -> ObjectId -> GameState -> CastingRestriction.CastingRestriction -> Bool
@@ -3774,10 +3776,8 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
                   -- named at this step and no later rule revisits it, so a
                   -- creature that leaves in response cannot shrink it.
                   --
-                  -- Off the FACE being cast, never through the projection, which
-                  -- is printedRestrictionsOk's reading and carries its caveat --
-                  -- an effect granting or removing the sentence is missed
-                  -- (CR 113.6e, #4707).
+                  -- Off the FACE being cast less a layer-6 wipe (CR 113.6e,
+                  -- Cost.maximumX), printedRestrictionsOk's reading.
                   mCeiling = Cost.maximumX pid sid face bestowedGs
               -- CR 601.2b's announcement is free of the board -- any Natural --
               -- but the player making it is told what the board can pay, and
