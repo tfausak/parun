@@ -11,9 +11,6 @@ These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at; "verify" marks a clause the
 census did not settle.
 
-- Aerid Konstrari: `_CreatableToken:HeartwoodToken`; needs the Heartwood
-  artifact type in `Parun.Types.Subtype` (CR 205.3g, 111.10x)
-
 - Afterthought Sentry: `_Target:UptoOneTargetGraveyardCard`
 
 - Ajani Resolute: `field: Loyalty`
@@ -22,7 +19,13 @@ census did not settle.
 
 - Apex Witchstalker: `_Rule:TypeCycling`
 
+- Arcane Amphisbaena: not yet run through `parun translate` since empower Jace
+  landed (#6507)
+
 - Arni, Renowned Champion: `_LayerEffect:AdjustPTX`
+
+- Avatar of Burgeoning Echoes: not yet run through `parun translate` since
+  empower Jace landed (#6507)
 
 - Awaken the Inferno: `_Rule:TypeCycling`
 
@@ -47,6 +50,9 @@ census did not settle.
 - Clash of Elements: `_Action:PlayerMayCost`
 
 - Compel Brutality: `_GameNumber:LoyaltyOfPermanent`
+
+- Countersculpt: not yet run through `parun translate` since empower Jace landed
+  (#6507)
 
 - Craftwork Crusher: `_Actions:Modal_ChooseTwo`
 
@@ -98,6 +104,9 @@ census did not settle.
 - Face Yourself: `_CreatableToken:TokenCopyOfEachPermanent`
 
 - Fatehold Annex: `_ReplacementActionWouldEnter:Unless`
+
+- Fatehold Charm: not yet run through `parun translate` since empower Jace
+  landed (#6507)
 
 - Fatehold Chronologist: translate skips preparation cards; verify the clauses
   besides "enters prepared"
@@ -158,16 +167,12 @@ census did not settle.
 
 - Heartstring Puller: `_CreatableToken:NamedTokenWithPT`
 
-- Heartwood Crafter: translate skips preparation cards; verify the clauses
-  besides "enters prepared"; needs the Heartwood artifact type in
-  `Parun.Types.Subtype` (CR 205.3g)
+- Hexhaven Battalion: not yet run through `parun translate` since empower Jace
+  landed (#6507)
 
 - Hexhaven Dueling Arena: `_Permanents:AttackedThisTurn`
 
 - Hexhaven Invigorator: `_Trigger:WhenAPermanentIsDealtDamage`
-
-- Hungering Puppetbeast: `_CreatableToken:HeartwoodToken`; needs the Heartwood
-  artifact type
 
 - Hunter's Axe: `_Rule:TriggerA`
 
@@ -180,6 +185,15 @@ census did not settle.
 
 - Innovative Commons: `_ReplacementActionWouldEnter:Unless`
 
+- Inspired Tethermage: not yet run through `parun translate` since empower Jace
+  landed (#6507)
+
+- Jace's Machinations: not yet run through `parun translate` since empower Jace
+  landed (#6507)
+
+- Jace, Reality Sculptor: not yet run through `parun translate` since empower
+  Jace landed (#6507)
+
 - Jiang Yanggu, Alone: `_Trigger:WhenACreatureAttacksAPlayerAlone`
 
 - Jiang Yanggu, Never Alone: `_CreatableToken:NamedTokenWithPT`
@@ -188,6 +202,9 @@ census did not settle.
   `_Rule:PermanentsEnteringTheBattlefieldDontCauseAbilitiesToTrigger`
 
 - Karn, Gilded Guardian: `_GameNumber:NumColorsAmongPermanents`
+
+- Keeper of the Quiet Hour: not yet run through `parun translate` since empower
+  Jace landed (#6507)
 
 - Kindred Judgment: `_Action:ChooseACreatureType`
 
@@ -198,10 +215,6 @@ census did not settle.
 - Konstrari Annex: `_ReplacementActionWouldEnter:Unless`
 
 - Konstrari Charm: `_Actions:Modal_ChooseOne`
-
-- Konstrari Improviser: translate skips preparation cards; verify the clauses
-  besides "enters prepared"; needs the Heartwood artifact type in
-  `Parun.Types.Subtype` (CR 205.3g)
 
 - Koth, the Geomancer: `_Action:If`
 
@@ -235,15 +248,24 @@ census did not settle.
 
 - Mind Meanderer: `_Permanents:IsPlaneswalkerType`
 
+- Mindseeker Oculus: not yet run through `parun translate` since empower Jace
+  landed (#6507)
+
 - Multiply by Zero: `_LayerEffect:SetPT`
 
 - Murmuring Volume: `_Cost:DiscardACard`
+
+- No Admittance: not yet run through `parun translate` since empower Jace landed
+  (#6507)
 
 - Null Summoner: `_Condition:EnteringPermanentPassesFilter`
 
 - Omnipresence: `_Rule:PlayerEffect`
 
 - Overgrown Farmland: `_ReplacementActionWouldEnter:Unless`
+
+- Overwrite the Multiverse: not yet run through `parun translate` since empower
+  Jace landed (#6507)
 
 - Paradox Shaper // Omit Variables: translate skips preparation cards
 
@@ -253,6 +275,9 @@ census did not settle.
 
 - Pia, Determined Rebuilder: `_LayerEffect:AdjustPTX`
 
+- Plan for All Outcomes: not yet run through `parun translate` since empower
+  Jace landed (#6507)
+
 - Primal Witchstalker: `_Action:Reflexive_Mill_WhenYouDo`
 
 - Proft, Consulting Detective: `_Trigger:Or`
@@ -260,6 +285,9 @@ census did not settle.
 - Proft, Sinister Mastermind: `_Rule:CastEffect`
 
 - Prophesied End: `_Action:If`
+
+- Protege's Awakening: not yet run through `parun translate` since empower Jace
+  landed (#6507)
 
 - Prudent Fateseer: translate skips preparation cards; verify the clauses
   besides "enters prepared"
@@ -273,10 +301,16 @@ census did not settle.
 
 - Refute Destiny: `_Action:Surveil`
 
+- Repurposed Enforcer: not yet run through `parun translate` since empower Jace
+  landed (#6507)
+
 - Restore with Empathy: `_CardsInGraveyards:IsPermanent`
 
 - Return to the Light Realms:
   `_Action:ReturnEachCardFromPlayersGraveyardToBattlefield`
+
+- Rewrite Regrets: not yet run through `parun translate` since empower Jace
+  landed (#6507)
 
 - Rise of the Deathbringer: `_GameNumber:TheGreatestPowerAmongPermanents`
 
@@ -295,6 +329,9 @@ census did not settle.
 
 - Samut, Tyrant of Naktamun: `_Rule:StackSpellsEffect`
 
+- Sanctum Lurker: not yet run through `parun translate` since empower Jace
+  landed (#6507)
+
 - Seasoned Cryomancer:
   `_Action:Reflexive_Discard_WhenYouDiscardOneOrMoreCardsOfTypeThisWay`
 
@@ -308,6 +345,9 @@ census did not settle.
 - Solarium Sentry: `_Spells:ManaValueIs`
 
 - Solitary Cell: `_Permanents:ManaValueIs`
+
+- Solve for Disappointment: not yet run through `parun translate` since empower
+  Jace landed (#6507)
 
 - Something Worth Saving: `_Action:PutACardFromGraveyardIntoHand`
 
@@ -330,7 +370,8 @@ census did not settle.
 
 - Surgical Precision: `_Permanents:ToughnessIs`
 
-- Tenured Tethermage: `_Action:CreateTokens`; needs the Heartwood artifact type
+- Tam's Resistance: not yet run through `parun translate` since empower Jace
+  landed (#6507)
 
 - Tether Technician: `_Action:Reflexive_Discard_WhenYouDo`
 
@@ -345,6 +386,12 @@ census did not settle.
 - The Echoverse Fulcrum: `_Cost:Exile`
 
 - Theoretical Necromancer: `_Rule:FromGraveyard`
+
+- Theorist's Proxy: not yet run through `parun translate` since empower Jace
+  landed (#6507)
+
+- Theorist's Sanctum: not yet run through `parun translate` since empower Jace
+  landed (#6507)
 
 - Theorix Annex: `_ReplacementActionWouldEnter:Unless`
 
@@ -392,8 +439,14 @@ census did not settle.
 
 - Vinelasher Adept: `_Rule:TypeCycling`
 
+- Violent Echoes: not yet run through `parun translate` since empower Jace
+  landed (#6507)
+
 - Void Extrapolator: translate skips preparation cards; verify the clauses
   besides "enters prepared"
+
+- Vraska's Final Mercy: not yet run through `parun translate` since empower Jace
+  landed (#6507)
 
 - Vraska, Soul of Stone: `_Rule:Activated`
 
@@ -402,13 +455,37 @@ census did not settle.
 - Warrior's Blades: `_Rule:EquipWithModifiers`; verify a reduction counting
   counters on the target (Dwarven Mauler shows targets reach it)
 
+- Way of the Cryomancer: not yet run through `parun translate` since empower
+  Jace landed (#6507)
+
+- Way of the Deathbringer: not yet run through `parun translate` since empower
+  Jace landed (#6507)
+
+- Way of the Healer: not yet run through `parun translate` since empower Jace
+  landed (#6507)
+
+- Way of the Mind Sculptor: not yet run through `parun translate` since empower
+  Jace landed (#6507)
+
+- Way of the Necromancer: not yet run through `parun translate` since empower
+  Jace landed (#6507)
+
+- Way of the Paradox: not yet run through `parun translate` since empower Jace
+  landed (#6507)
+
+- Way of the Pyromancer: not yet run through `parun translate` since empower
+  Jace landed (#6507)
+
+- Way of the Warlord: not yet run through `parun translate` since empower Jace
+  landed (#6507)
+
+- Way of the Wildspeaker: not yet run through `parun translate` since empower
+  Jace landed (#6507)
+
 - Whiplash Wordsmith: translate skips preparation cards; verify the clauses
   besides "enters prepared"
 
 - Winter, Tormented Loner: `_Action:Reflexive_Sacrifice_WhenYouDo`
-
-- Woodwork Prodigy // Soul Tether: translate skips preparation cards; Soul
-  Tether needs the Heartwood artifact type
 
 - Wrath of the Bloodmane: `_Rule:CastEffect`
 
@@ -429,21 +506,10 @@ census did not settle.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #6485: Academic Ascent; Arcane Amphisbaena; Avatar of Burgeoning Echoes;
-  Campus Crier; Countersculpt; Fatehold Charm; Hexhaven Battalion; Inspired
-  Tethermage; Jace's Machinations; Jace, Reality Sculptor; Keeper of the Quiet
-  Hour; Mindseeker Oculus; No Admittance; Overwrite the Multiverse; Plan for All
-  Outcomes; Protege's Awakening; Repurposed Enforcer; Rewrite Regrets; Sanctum
-  Lurker; Solve for Disappointment; Tam's Resistance; Theorist's Proxy;
-  Theorist's Sanctum; Violent Echoes; Vraska's Final Mercy; Way of the
-  Cryomancer; Way of the Deathbringer; Way of the Healer; Way of the Mentor; Way
-  of the Mind Sculptor; Way of the Necromancer; Way of the Paradox; Way of the
-  Pyromancer; Way of the Warlord; Way of the Wildspeaker. No keyword action
-  creates or empowers a Jace planeswalker token (CR 701.71a); amass is the
-  sibling.
-
-- #6494: Tomik, Orzhov Lawmage. An attack limit scopes to players, never to one
-  planeswalker (CR 508.1c).
-
-- #6496: Loot, the Anomaly. `CombatDamageAmount` can't treat a negative power as
-  positive (CR 510.1a, 107.1b).
+- #6526: Aerid Konstrari; Heartwood Crafter // Soul Tether; Hungering
+  Puppetbeast; Konstrari Improviser // Soul Tether; Tenured Tethermage; Woodwork
+  Prodigy // Soul Tether. No Heartwood artifact type in `Parun.Types.Subtype`
+  (CR 205.3g, 111.10x); besides it, Aerid Konstrari stops at
+  `_CreatableToken:HeartwoodToken`, Tenured Tethermage at
+  `_Action:CreateTokens`, and translate skips the three preparation cards
+  (verify the clauses besides "enters prepared").
