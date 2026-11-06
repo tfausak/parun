@@ -32,6 +32,21 @@ Each entry gives:
 
 Entries are ordered by the first rule each cites.
 
+## Who is the active player while a turn is skipped
+
+- **Question**: CR 732.3 has the active player break a fragmented loop, and CR
+  102.1 makes that the player whose turn it is. Two tapped Time Vaults can skip
+  every turn in a row, with no turn under way. Who is the active player then?
+- **Rules**: CR 102.1, 500.11, 614.10, 732.3; CR of 2026-09-25. Time Vault's
+  rulings don't say.
+- **Decision**: The player whose turn last ended, until another turn begins.
+- **Rejected**: The player whose turn is being skipped: a skipped turn never
+  begins (CR 500.11), so it is never theirs. Turn order from the starting
+  player (CR 103.1): it ignores where the game has got to.
+- **Site**: `Parun.Engine.Event`'s `PhaseR` arm for `MaySkipFor`, proved by the
+  scenario `cr-732-3-two-time-vaults-skipping-each-turn-loop-and-alice-breaks-it`.
+- **Issue**: #6204.
+
 ## Whether a mulligan-time action can be repeated before declaring
 
 - **Question**: CR 103.5b ends "If the player performs the action, they then

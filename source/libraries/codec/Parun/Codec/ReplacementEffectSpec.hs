@@ -33,6 +33,7 @@ import qualified Parun.Types.DrawCountR as DrawCountR
 import qualified Parun.Types.DrawCountRewrite as DrawCountRewrite
 import qualified Parun.Types.DrawR as DrawR
 import qualified Parun.Types.DrawRewrite as DrawRewrite
+import qualified Parun.Types.Effect as Effect.Type
 import qualified Parun.Types.EntryOption as EntryOption
 import qualified Parun.Types.EntryR as EntryR
 import qualified Parun.Types.EntryRewrite as EntryRewrite
@@ -53,6 +54,8 @@ import qualified Parun.Types.ManaR as ManaR
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhasePattern as PhasePattern
+import qualified Parun.Types.PhaseR as PhaseR
+import qualified Parun.Types.PhaseRewrite as PhaseRewrite
 import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
@@ -328,13 +331,13 @@ spec s =
             codec
             (ReplacementEffect.TokenR (TokenR.MkTokenR TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.And [], TokenPattern.effectsOnly = False} (Just (Scaling.Multiply 2)) Nothing))
             " {\"type\":\"TokenR\",\"value\":{\"matching\":{\"whose\":{\"type\":\"You\"}},\"scaling\":{\"type\":\"Multiply\",\"value\":2}}} "
-        -- CR 614.1b: a skip carries a pattern and no rewrite, so the payload is the
-        -- pattern itself rather than the usual two-element array.
+        -- CR 614.1b: the payload is the pattern's keys, and a plain skip's
+        -- defaulted `rewrite` key is left off.
         Spec.it s "PhaseR (Eon Hub, symmetric skip)" $
           Common.assertCodec
             s
             codec
-            (ReplacementEffect.PhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = SkipWindow.PartOfTurn (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)), PhasePattern.whosePhase = ControllerRelation.Related PlayerRelation.AnyPlayer})
+            (ReplacementEffect.PhaseR (PhaseR.MkPhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = SkipWindow.PartOfTurn (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)), PhasePattern.whosePhase = ControllerRelation.Related PlayerRelation.AnyPlayer} PhaseRewrite.Skip))
             " {\"type\":\"PhaseR\",\"value\":{\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":\"Upkeep\"}}}} "
         -- The baked player-scoped whosePhase = Among, which only Resolve's
         -- SkipPhase arm produces and no card authors (#437). The codec has to
@@ -343,7 +346,7 @@ spec s =
           Common.assertCodec
             s
             codec
-            (ReplacementEffect.PhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = SkipWindow.PartOfTurn (PhaseSelector.Step (Phase.Beginning BeginningStep.DrawStep)), PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (PlayerId.MkPlayerId 1))})
+            (ReplacementEffect.PhaseR (PhaseR.MkPhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = SkipWindow.PartOfTurn (PhaseSelector.Step (Phase.Beginning BeginningStep.DrawStep)), PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (PlayerId.MkPlayerId 1))} PhaseRewrite.Skip))
             " {\"type\":\"PhaseR\",\"value\":{\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":\"DrawStep\"}},\"whosePhase\":{\"type\":\"Among\",\"value\":[1]}}} "
         -- The whole-phase selector, once Resolve has baked the player its resolution
         -- named -- the shape a bare Phase cannot spell (CR 500.1).
@@ -351,8 +354,16 @@ spec s =
           Common.assertCodec
             s
             codec
-            (ReplacementEffect.PhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = SkipWindow.PartOfTurn PhaseSelector.CombatPhase, PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (PlayerId.MkPlayerId 1))})
+            (ReplacementEffect.PhaseR (PhaseR.MkPhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = SkipWindow.PartOfTurn PhaseSelector.CombatPhase, PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (PlayerId.MkPlayerId 1))} PhaseRewrite.Skip))
             " {\"type\":\"PhaseR\",\"value\":{\"whichPhase\":{\"type\":\"CombatPhase\"},\"whosePhase\":{\"type\":\"Among\",\"value\":[1]}}} "
+        -- CR 614.10b: Time Vault's optional whole-turn skip and its action, the
+        -- rewrite beside the pattern's keys.
+        Spec.it s "PhaseR (Time Vault, optional skip with an action)" $
+          Common.assertCodec
+            s
+            codec
+            (ReplacementEffect.PhaseR (PhaseR.MkPhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = SkipWindow.WholeTurn, PhasePattern.whosePhase = ControllerRelation.Related PlayerRelation.You} (PhaseRewrite.MaySkipFor (Seq.singleton Effect.Type.Proliferate))))
+            " {\"type\":\"PhaseR\",\"value\":{\"whichPhase\":{\"type\":\"Turn\"},\"whosePhase\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"MaySkipFor\",\"value\":[{\"type\":\"Proliferate\"}]}}} "
         -- CR 614.1e / 702.37b: megamorph's "as this permanent is turned face up, put a
         -- +1/+1 counter on it". Minted by Parun.Engine.Keyword rather than written by a
         -- card, and it round-trips anyway -- every arm of this type does.

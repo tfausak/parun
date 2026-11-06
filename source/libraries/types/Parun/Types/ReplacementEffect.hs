@@ -15,7 +15,7 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LifeGainR as LifeGainR
 import qualified Parun.Types.LifeLossR as LifeLossR
 import qualified Parun.Types.ManaR as ManaR
-import qualified Parun.Types.PhasePattern as PhasePattern
+import qualified Parun.Types.PhaseR as PhaseR
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.TokenR as TokenR
 import qualified Parun.Types.TurnUpR as TurnUpR
@@ -62,11 +62,8 @@ import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 -- scoped by the moving object's OWNER (CR 400.3), and Filter.HeldBy Holder.Controller asks
 -- who controls it -- a different player for anything stolen.
 --
--- PhaseR carries a pattern but NO rewrite, which is the rule rather than an
--- omission: CR 614.1b and CR 614.10 make a skip a replacement with NOTHING, so
--- there is nothing for a PhaseRewrite to choose between. (CR 614.10b's "skip,
--- then take another action" is a separate ability alongside the skip, and has no
--- producer.)
+-- PhaseR's rewrite is a skip (CR 614.1b), mandatory or, with CR 614.10b's action
+-- after it, optional (Parun.Types.PhaseRewrite).
 --
 -- Nor does the pattern say "next": CR 614.10a's once-and-gone skip (Fatigue) is
 -- Uses.Once on the ActiveReplacement holding it, which is what lets a permanent's
@@ -205,5 +202,5 @@ data ReplacementEffect card ability effect
     -- CR 605.3b resolves the ability inline, so Parun.Engine.Mana reads the rows
     -- into the mana a route offers (Parun.Engine.Replacement.manaRewrites).
     ManaR ManaR.ManaR
-  | PhaseR PhasePattern.PhasePattern
+  | PhaseR (PhaseR.PhaseR effect)
   deriving (Eq, Ord, Show)

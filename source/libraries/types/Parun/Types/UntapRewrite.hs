@@ -9,8 +9,7 @@ import qualified Parun.Types.Keyword as Keyword
 -- A type rather than a bare Parun.Types.ReplacementEffect arm without a payload,
 -- for the reason that type's own comment gives: a replacement effect is
 -- classified by the event class it intercepts AND the rewrite shape it applies,
--- and this rewrite is not nothing. (PhaseR is the one arm with no rewrite, and
--- CR 614.1b is why -- a skip really does replace the event with nothing.)
+-- and this rewrite is not nothing.
 data UntapRewrite
   = -- | CR 122.1d: "instead remove a stun counter from it". Engine-minted from
     -- the counters (Parun.Engine.Projection.stunOf), never authored -- the card

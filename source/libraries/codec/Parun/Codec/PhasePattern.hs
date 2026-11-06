@@ -16,7 +16,11 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 -- round-trips a baked pattern through it. A corpus lint is what keeps the pool
 -- honest instead, the same treatment SetController's PlayerId gets.
 codec :: Codec.Codec PhasePattern.PhasePattern
-codec = Fields.object $ do
+codec = Fields.object fields
+
+-- | The keys, for Parun.Codec.PhaseR to spell beside its own.
+fields :: Fields.Fields PhasePattern.PhasePattern PhasePattern.PhasePattern
+fields = do
   whichPhase <- Fields.required "whichPhase" SkipWindow.codec PhasePattern.whichPhase
   whosePhase <- Fields.defaulted "whosePhase" (ControllerRelation.Related PlayerRelation.AnyPlayer) ControllerRelationCodec.codec PhasePattern.whosePhase
   pure

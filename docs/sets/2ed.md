@@ -14,7 +14,6 @@ Every expressible Unlimited Edition card has been added to `data/cards/`.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #6204: Time Vault. A skip can't be optional with a rider.
 - #5005: False Orders. Nothing makes a blocked attacker unblocked or a removed
   creature block again.
 - #6371: Forcefield. A next-instance shield can't be confined to combat

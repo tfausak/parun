@@ -205,6 +205,8 @@ import qualified Parun.Types.OrElse as OrElse
 import qualified Parun.Types.PayGate as PayGate
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PhasePattern as PhasePattern
+import qualified Parun.Types.PhaseR as PhaseR
+import qualified Parun.Types.PhaseRewrite as PhaseRewrite
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Parun.Types.PlayerCounters as PlayerCounters
@@ -1990,7 +1992,7 @@ overRelations f re = case re of
   ReplacementEffect.ManaR _ -> pure re
   ReplacementEffect.GameLossR r -> (\w -> ReplacementEffect.GameLossR r {GameLossR.whose = w}) <$> f (GameLossR.whose r)
   ReplacementEffect.PlaneswalkR r -> (\w -> ReplacementEffect.PlaneswalkR r {PlaneswalkR.whose = w}) <$> f (PlaneswalkR.whose r)
-  ReplacementEffect.PhaseR r -> (\w -> ReplacementEffect.PhaseR r {PhasePattern.whosePhase = w}) <$> f (PhasePattern.whosePhase r)
+  ReplacementEffect.PhaseR r -> (\w -> ReplacementEffect.PhaseR r {PhaseR.phases = (PhaseR.phases r) {PhasePattern.whosePhase = w}}) <$> f (PhasePattern.whosePhase (PhaseR.phases r))
   -- CR 109.5's relation rides EntryR's Filter (Filter.HeldBy Holder.Controller) and DamageR's
   -- PlayerRelation; the other four name no player at all.
   ReplacementEffect.EntryR _ -> pure re
@@ -2048,7 +2050,8 @@ replacementRowEffects re = case re of
   -- CR 614.1a's "instead [do something]" for a loss of the game (Lich's Mirror).
   ReplacementEffect.GameLossR (GameLossR.MkGameLossR _ effects) -> Foldable.toList effects
   ReplacementEffect.PlaneswalkR r -> (case PlaneswalkR.rewrite r of PlaneswalkRewrite.ArrangeTopTwo -> []; PlaneswalkRewrite.RunEffects effects -> Foldable.toList effects)
-  ReplacementEffect.PhaseR _ -> []
+  -- CR 614.10b's action after a skip (Time Vault).
+  ReplacementEffect.PhaseR r -> (case PhaseR.rewrite r of PhaseRewrite.Skip -> []; PhaseRewrite.MaySkipFor effects -> Foldable.toList effects)
 
 -- The program an ENTRY rewrite runs. entryRewriteReads' discipline: no wildcard,
 -- so a second arm that nests one is asked here rather than losing its reads.

@@ -115,6 +115,7 @@ import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.PendingSkipEffect as PendingSkipEffect
 import qualified Parun.Types.PendingTrigger as PendingTrigger
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhaseSelector as PhaseSelector
@@ -1851,9 +1852,10 @@ wouldHaveBegun pid gs = expireLastTurn pid (Phasing.orphanSchedule pid (Expiry.d
 --
 -- CR 500.11: a seat whose turn a skip takes becomes the walk's new start, with
 -- the whole bound again, so its teammates are passed with it (CR 805.8) and a
--- skip may land on the seat the walk began from. Each skip spends a Uses.Once
--- row, which is what ends that walk (Parun.EffectLintSpec's "no card skips a
--- turn without limit").
+-- skip may land on the seat the walk began from. A mandatory skip spends a
+-- Uses.Once row (Parun.EffectLintSpec's "no card skips a turn without limit");
+-- an optional one ends on a decline, which CR 732.3 forces in a loop
+-- (Parun.Engine.Event's PhaseR arm).
 walkToNextTurn :: Int -> PlayerId -> PlayerId -> Game ()
 walkToNextTurn seatsLeft anchor seat = do
   gs <- State.get
@@ -2264,6 +2266,12 @@ runStepThatBegan phase = do
   -- 805.4d's once-per-player fan-out is the trigger scan's
   -- (Parun.Engine.Event.Trigger.stepTriggerPlayers).
   State.modify' (\gs -> Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan phase (GameState.activePlayer gs))) gs)
+  -- CR 614.10b: an action a skip put after it is the first thing that happens
+  -- during the next step, phase or turn to actually occur, which begins here
+  -- (Time Vault's ruling: "before anything else happens in the next turn").
+  skipped <- State.gets GameState.pendingSkipEffects
+  State.modify' (\gs -> gs {GameState.pendingSkipEffects = Seq.empty})
+  Foldable.traverse_ (Resolve.runDamageRewriteEffect playSubgame . PendingSkipEffect.pending) skipped
   -- CR 702.30a's clock, advanced HERE and not in `runTurnBasedActions`: CR 503.1
   -- gives the upkeep step no turn-based actions, and this is bookkeeping rather
   -- than one of CR 703.4's list in any case. It must run

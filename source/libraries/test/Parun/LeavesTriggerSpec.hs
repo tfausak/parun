@@ -88,6 +88,8 @@ import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.PendingTrigger as PendingTrigger
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhasePattern as PhasePattern
+import qualified Parun.Types.PhaseR as PhaseR
+import qualified Parun.Types.PhaseRewrite as PhaseRewrite
 import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PlayerActsOn as PlayerActsOn
 import qualified Parun.Types.PlayerId as PlayerId
@@ -3787,9 +3789,13 @@ ivoryGargoyleSpec s registry =
             "CR 614.10 and the skip of alice's next draw step is installed"
             (fmap ActiveReplacement.effect (GameState.replacements after))
             [ ReplacementEffect.PhaseR
-                PhasePattern.MkPhasePattern
-                  { PhasePattern.whichPhase = SkipWindow.PartOfTurn (PhaseSelector.Step (Phase.Beginning BeginningStep.DrawStep)),
-                    PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton S.alice)
+                PhaseR.MkPhaseR
+                  { PhaseR.phases =
+                      PhasePattern.MkPhasePattern
+                        { PhasePattern.whichPhase = SkipWindow.PartOfTurn (PhaseSelector.Step (Phase.Beginning BeginningStep.DrawStep)),
+                          PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton S.alice)
+                        },
+                    PhaseR.rewrite = PhaseRewrite.Skip
                   }
             ]
         -- The negative, and the same board differing in ONE thing: the graveyard

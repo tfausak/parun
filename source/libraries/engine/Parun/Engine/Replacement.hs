@@ -130,6 +130,8 @@ import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.PermanentCandidate as PermanentCandidate
 import qualified Parun.Types.PhasePattern as PhasePattern
+import qualified Parun.Types.PhaseR as PhaseR
+import qualified Parun.Types.PhaseRewrite as PhaseRewrite
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Parun.Types.Player as Player
@@ -959,7 +961,7 @@ matchesPrinted viewOf gs event candidate =
         --
         -- CR 805.8: under the shared team turns option a skip naming any player
         -- on the active team is that team's, so a teammate's row matches too.
-        (ReplacementEffect.PhaseR pat, ProposedEvent.WouldBeginPhase selector pid) ->
+        (ReplacementEffect.PhaseR (PhaseR.MkPhaseR pat _), ProposedEvent.WouldBeginPhase selector pid) ->
           PhasePattern.whichPhase pat == selector
             && any
               (\other -> Turn.sharesTurn gs pid other && matchesPlayer gs candidate (PhasePattern.whosePhase pat) other)
@@ -2504,7 +2506,10 @@ readsApplier re = case re of
   -- CR 614.10: a skip replaces the step, phase or turn with nothing, whoever
   -- applies it; whether a row's "you" is the player it is ABOUT was settled by
   -- `applies`.
-  ReplacementEffect.PhaseR _ -> False
+  ReplacementEffect.PhaseR (PhaseR.MkPhaseR _ PhaseRewrite.Skip) -> False
+  -- CR 109.5: the row's controller decides and the effects run under them,
+  -- GameLossR's answer.
+  ReplacementEffect.PhaseR (PhaseR.MkPhaseR _ (PhaseRewrite.MaySkipFor _)) -> True
 
 -- CR 614.6: does applying this effect replace a coin flip with a die roll or a
 -- roll with a flip (Pokey, the Scallywagg), so the funnel that proposed one has
@@ -2640,7 +2645,9 @@ readsSource effect = case effect of
   -- The arrangement reads no source; the effects are GameLossR's.
   ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ PlaneswalkRewrite.ArrangeTopTwo) -> False
   ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ (PlaneswalkRewrite.RunEffects _)) -> True
-  ReplacementEffect.PhaseR _ -> False
+  ReplacementEffect.PhaseR (PhaseR.MkPhaseR _ PhaseRewrite.Skip) -> False
+  -- The effects run from the row's source, GameLossR's answer.
+  ReplacementEffect.PhaseR (PhaseR.MkPhaseR _ (PhaseRewrite.MaySkipFor _)) -> True
 
 -- CR 616.1: the affected object's controller (or its owner if it has none), or
 -- the affected player, chooses one to apply. Anything not elided below prompts.
@@ -4663,11 +4670,15 @@ installTurnSkips entry gs =
               ActiveReplacement.MkActiveReplacement
                 { ActiveReplacement.effect =
                     ReplacementEffect.PhaseR
-                      PhasePattern.MkPhasePattern
-                        { PhasePattern.whichPhase = SkipWindow.PartOfTurn selector,
-                          -- The turn's taker, which for a step or phase OF that
-                          -- turn is also whose step it is (see PhasePattern).
-                          PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (ExtraTurn.taker entry))
+                      PhaseR.MkPhaseR
+                        { PhaseR.phases =
+                            PhasePattern.MkPhasePattern
+                              { PhasePattern.whichPhase = SkipWindow.PartOfTurn selector,
+                                -- The turn's taker, which for a step or phase OF that
+                                -- turn is also whose step it is (see PhasePattern).
+                                PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (ExtraTurn.taker entry))
+                              },
+                          PhaseR.rewrite = PhaseRewrite.Skip
                         },
                   -- CR 113.7: the source of the effect that created the turn.
                   ActiveReplacement.source = ExtraTurn.source entry,

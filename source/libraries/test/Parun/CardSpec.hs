@@ -335,6 +335,8 @@ import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDea
 import qualified Parun.Types.PermissionLimit as PermissionLimit
 import qualified Parun.Types.PermissionPool as PermissionPool
 import qualified Parun.Types.PermissionVerb as PermissionVerb
+import qualified Parun.Types.PhaseR as PhaseR
+import qualified Parun.Types.PhaseRewrite as PhaseRewrite
 import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
@@ -2316,7 +2318,8 @@ replacementRewriteEffects replacement = case replacement of
   -- CR 614.1a's instead for a loss of the game (Lich's Mirror's reset).
   ReplacementEffect.GameLossR (GameLossR.MkGameLossR _ effects) -> Foldable.toList effects
   ReplacementEffect.PlaneswalkR r -> (case PlaneswalkR.rewrite r of PlaneswalkRewrite.ArrangeTopTwo -> []; PlaneswalkRewrite.RunEffects effects -> Foldable.toList effects)
-  ReplacementEffect.PhaseR _ -> []
+  ReplacementEffect.PhaseR (PhaseR.MkPhaseR _ PhaseRewrite.Skip) -> []
+  ReplacementEffect.PhaseR (PhaseR.MkPhaseR _ (PhaseRewrite.MaySkipFor effects)) -> Foldable.toList effects
 
 -- CR 615.5: the additional effect a replacement PRINTS -- DamageR's riders, and
 -- nothing else, since no other arm has a field to carry one. The card-authored

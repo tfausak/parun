@@ -129,6 +129,8 @@ import Parun.Types.ObjectRef (ObjectRef)
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PhasePattern as PhasePattern
+import qualified Parun.Types.PhaseR as PhaseR
+import qualified Parun.Types.PhaseRewrite as PhaseRewrite
 import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerAction as PlayerAction
 import Parun.Types.PlayerId (PlayerId)
@@ -1310,12 +1312,16 @@ skipPhase resolving source controller legal (SkipPhase.MkSkipPhase ref selector 
                 ActiveReplacement.MkActiveReplacement
                   { ActiveReplacement.effect =
                       ReplacementEffect.PhaseR
-                        PhasePattern.MkPhasePattern
-                          { PhasePattern.whichPhase = selector,
-                            -- The player the resolution named, baked now. Card
-                            -- data cannot name one (see
-                            -- Parun.Types.PhasePattern).
-                            PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton pid)
+                        PhaseR.MkPhaseR
+                          { PhaseR.phases =
+                              PhasePattern.MkPhasePattern
+                                { PhasePattern.whichPhase = selector,
+                                  -- The player the resolution named, baked now. Card
+                                  -- data cannot name one (see
+                                  -- Parun.Types.PhasePattern).
+                                  PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton pid)
+                                },
+                            PhaseR.rewrite = PhaseRewrite.Skip
                           },
                     ActiveReplacement.source = source,
                     -- CR 109.5: the resolution's controller, not `pid` above,

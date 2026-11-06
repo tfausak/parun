@@ -67,6 +67,7 @@ import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.ObjectSnapshot as ObjectSnapshot
 import qualified Parun.Types.PastActivation as PastActivation
+import qualified Parun.Types.PendingSkipEffect as PendingSkipEffect
 import qualified Parun.Types.PhasedOut as PhasedOut
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Recipient as Recipient
@@ -362,6 +363,7 @@ namedByStored oid gs =
     || any (Monoid.getAny . Mentions.activeLaterPaymentNames (searched oid)) (GameState.laterPayments gs)
     || any (Monoid.getAny . Mentions.preventionNames (searched oid)) (GameState.pendingPreventionRiders gs)
     || any (Monoid.getAny . Mentions.pendingDamageEffectNames (searched oid)) (GameState.pendingReplacementEffects gs)
+    || any (Monoid.getAny . Mentions.pendingDamageEffectNames (searched oid) . PendingSkipEffect.pending) (GameState.pendingSkipEffects gs)
     || any (Monoid.getAny . Mentions.pendingEntryEffectNames (searched oid)) (GameState.pendingEntryEffects gs)
 
 -- The question asked of a row that stores the environment its slots read --
