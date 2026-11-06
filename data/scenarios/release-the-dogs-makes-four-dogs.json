@@ -71,19 +71,6 @@
       "turn": 1
     },
     {
-      "do": {
-        "OrderTimestamps": [
-          "Dog Token",
-          "Dog Token#2",
-          "Dog Token#3",
-          "Dog Token#4"
-        ]
-      },
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
       "check": {
         "Count": {
           "card": "Dog Token",

@@ -292,17 +292,6 @@
       "turn": 3
     },
     {
-      "do": {
-        "OrderTimestamps": [
-          "Soldier Token",
-          "Soldier Token#2"
-        ]
-      },
-      "player": "alice",
-      "step": "DeclareAttackers",
-      "turn": 3
-    },
-    {
       "check": {
         "Attackers": {
           "attackers": {

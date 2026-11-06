@@ -43,7 +43,6 @@
     { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCardFromAmong", "with": "Craw Wurm" } } },
     { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Names": { "object": "$giant", "names": ["Craw Wurm"] } } },
     { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseMutateSide", "with": "Under" } } },
-    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": { "Answer": { "prompt": "OrderTimestamps", "with": [0, 1] } } },
     {
       "turn": 1,
       "step": "PostcombatMain",

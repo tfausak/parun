@@ -175,17 +175,6 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Rat Token",
-          "Rat Token#2"
-        ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Count": {
           "player": "alice",
@@ -240,17 +229,6 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": "Pass"
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Rat Token#3",
-          "Rat Token#4"
-        ]
-      }
     },
     {
       "turn": 1,

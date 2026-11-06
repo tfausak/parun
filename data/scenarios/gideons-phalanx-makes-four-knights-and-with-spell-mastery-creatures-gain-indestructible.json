@@ -146,19 +146,6 @@
       "turn": 1
     },
     {
-      "do": {
-        "OrderTimestamps": [
-          "Knight Token",
-          "Knight Token#2",
-          "Knight Token#3",
-          "Knight Token#4"
-        ]
-      },
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
       "check": {
         "Count": {
           "card": "Knight Token",
@@ -234,19 +221,6 @@
     },
     {
       "do": "Pass",
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
-      "do": {
-        "OrderTimestamps": [
-          "Knight Token#5",
-          "Knight Token#6",
-          "Knight Token#7",
-          "Knight Token#8"
-        ]
-      },
       "player": "alice",
       "step": "PrecombatMain",
       "turn": 1

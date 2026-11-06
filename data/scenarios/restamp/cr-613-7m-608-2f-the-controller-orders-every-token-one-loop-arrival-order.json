@@ -172,17 +172,6 @@
           "count": 1
         }
       }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "carol",
-      "do": {
-        "OrderTimestamps": [
-          "Human Token",
-          "Human Token#2"
-        ]
-      }
     }
   ]
 }

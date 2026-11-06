@@ -144,17 +144,6 @@
     },
     {
       "turn": 2,
-      "step": "DeclareAttackers",
-      "player": "bob",
-      "do": {
-        "OrderTimestamps": [
-          "Eldrazi Horror Token",
-          "Eldrazi Horror Token#2"
-        ]
-      }
-    },
-    {
-      "turn": 2,
       "step": "EndOfCombat",
       "player": "bob",
       "check": {

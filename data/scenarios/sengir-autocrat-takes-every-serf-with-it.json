@@ -6,7 +6,6 @@
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$autocrat"}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Serf Token", "Serf Token#2", "Serf Token#3"]}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Serf Token", "count": 3}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Serf Token", "power": 0, "toughness": 1}}},
     {"turn": 1, "step": "BeginningOfCombat", "player": "bob", "do": {"Cast": {"object": "$bolt", "targets": ["Sengir Autocrat"], "mana": ["$mountain"]}}},

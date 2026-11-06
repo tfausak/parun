@@ -24,7 +24,6 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Sleight of Mind", "do": { "ChooseWordSwap": { "from": { "type": "Red" }, "to": { "type": "Blue" } } } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$packbeasts"] } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "OrderTimestamps": ["Warrior Token", "Warrior Token#2", "Warrior Token#3"] } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "View": { "of": "Colors", "object": "Warrior Token", "is": ["Red"] } } }
   ]
 }

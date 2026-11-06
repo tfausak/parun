@@ -1,6 +1,6 @@
 {
   "description": "CR 613.7m / 608.2f the controller orders every token one loop made",
-  "note": "CR 613.7m over CR 608.2f's loop: Mirror Match's tokens enter in one action, so carol, who controls them, orders all their stamps, though the loop's APNAP key put alice's copy first. Shared team turns (CR 805.10a) let alice's Godhead of Awe and her teammate bob's Harmonious Archon attack carol together. carol stamps the Godhead copy last, so alice's Godhead reads its 1/1. OrderTimestamps naming both tokens is the one ask over both. Playing it through resolves the Archon copy's enters trigger, which the fixture left on the stack, so carol also orders its two Human tokens after the checks; the arrival-order file is the pair.",
+  "note": "CR 613.7m over CR 608.2f's loop: Mirror Match's tokens enter in one action, so carol, who controls them, orders all their stamps, though the loop's APNAP key put alice's copy first. Shared team turns (CR 805.10a) let alice's Godhead of Awe and her teammate bob's Harmonious Archon attack carol together. carol stamps the Godhead copy last, so alice's Godhead reads its 1/1. OrderTimestamps naming both tokens is the one ask over both. Playing it through resolves the Archon copy's enters trigger, which the fixture left on the stack after the checks, whose two interchangeable Human tokens ask no order; the arrival-order file is the pair.",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",
@@ -171,17 +171,6 @@
           "card": "Harmonious Archon",
           "count": 1
         }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "carol",
-      "do": {
-        "OrderTimestamps": [
-          "Human Token",
-          "Human Token#2"
-        ]
       }
     }
   ]

@@ -172,19 +172,6 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": {
-        "OrderTimestamps": [
-          "Soldier Token",
-          "Soldier Token#2",
-          "Soldier Token#3",
-          "Soldier Token#4"
-        ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
         "Cast": {
           "object": "$growth",
           "targets": [

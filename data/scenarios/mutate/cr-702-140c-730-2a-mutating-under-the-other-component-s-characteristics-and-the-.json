@@ -63,20 +63,6 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": {
-        "Answer": {
-          "prompt": "OrderTimestamps",
-          "with": [
-            0,
-            1
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
         "Cast": {
           "object": "$cubwarden",
           "targets": [
@@ -110,6 +96,18 @@
           ]
         }
       }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
     },
     {
       "turn": 1,

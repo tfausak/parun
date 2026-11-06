@@ -16,7 +16,6 @@
   },
   "timeline": [
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$zurgo"] } },
-    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "OrderTimestamps": ["Warrior Token", "Warrior Token#2"] } },
     { "turn": 1, "step": "EndStep", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Warrior Token", "count": 2 } } }
   ]

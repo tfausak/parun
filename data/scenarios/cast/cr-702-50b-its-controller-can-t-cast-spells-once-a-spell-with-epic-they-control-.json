@@ -186,21 +186,6 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": {
-        "Answer": {
-          "prompt": "OrderTimestamps",
-          "with": [
-            0,
-            1,
-            2
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
         "Cast": {
           "object": "$endless-swarm",
           "mana": [
@@ -216,6 +201,12 @@
           ]
         }
       }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
     },
     {
       "turn": 1,

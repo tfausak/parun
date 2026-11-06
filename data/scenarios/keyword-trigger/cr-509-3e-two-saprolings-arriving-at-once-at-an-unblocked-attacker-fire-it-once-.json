@@ -122,20 +122,6 @@
     {
       "turn": 1,
       "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Answer": {
-          "prompt": "OrderTimestamps",
-          "with": [
-            0,
-            1
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
       "player": "alice",
       "do": "Pass"
     },

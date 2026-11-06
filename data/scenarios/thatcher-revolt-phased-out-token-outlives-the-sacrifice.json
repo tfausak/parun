@@ -126,18 +126,6 @@
     },
     {
       "do": {
-        "OrderTimestamps": [
-          "Human Token",
-          "Human Token#2",
-          "Human Token#3"
-        ]
-      },
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
-      "do": {
         "Cast": {
           "mana": [
             "$i0",

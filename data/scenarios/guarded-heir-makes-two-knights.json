@@ -77,17 +77,6 @@
       "turn": 1
     },
     {
-      "do": {
-        "OrderTimestamps": [
-          "Knight Token",
-          "Knight Token#2"
-        ]
-      },
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
       "check": {
         "Count": {
           "card": "Knight Token",

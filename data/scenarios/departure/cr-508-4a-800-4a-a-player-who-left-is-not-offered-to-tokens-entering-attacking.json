@@ -73,12 +73,19 @@
       "turn": 1
     },
     {
-      "do": {
-        "OrderTimestamps": [
-          "Human Token",
-          "Human Token#2"
-        ]
-      },
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
       "player": "alice",
       "step": "DeclareAttackers",
       "turn": 1

@@ -96,19 +96,6 @@
     },
     {
       "turn": 1,
-      "step": "CombatDamage",
-      "player": "alice",
-      "do": {
-        "OrderTimestamps": [
-          "Koma's Coil",
-          "Koma's Coil#2",
-          "Koma's Coil#3",
-          "Koma's Coil#4"
-        ]
-      }
-    },
-    {
-      "turn": 1,
       "step": "PostcombatMain",
       "player": "alice",
       "check": {

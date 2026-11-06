@@ -5,7 +5,6 @@
   "timeline": [
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$town", "mana": ["$p1", "$p2", "$p3", "$p4", "$p5", "$p6"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Citizen Token", "Citizen Token#2", "Citizen Token#3", "Citizen Token#4"]}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Citizen Token", "count": 4}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Citizen Token#4", "power": 1, "toughness": 1}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Colors", "object": "Citizen Token", "is": ["White"]}}},

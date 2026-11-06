@@ -116,17 +116,6 @@
       "turn": 1
     },
     {
-      "do": {
-        "OrderTimestamps": [
-          "Elemental Token",
-          "Elemental Token#2"
-        ]
-      },
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
       "check": {
         "Count": {
           "card": "Elemental Token",
