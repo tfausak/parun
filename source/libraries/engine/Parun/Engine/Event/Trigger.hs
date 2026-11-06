@@ -1856,10 +1856,10 @@ eventTriggers events gs =
       -- ONE STANDING SCAN, `inExile`'s shape and for its reason: the card sits
       -- in its zone indefinitely and the event it watches names somebody else.
       -- Gated so the scan does not build a face for every card in every
-      -- library (#1935's cost): Projection.mayStateZone's fold over the printed
-      -- faces first, and a card is projected only when its ability face states
-      -- the zone it is in, or some grantor hands out a triggered ability that
-      -- states a zone (`statedGrantInForce`). That grant limb is a REGRESSION
+      -- library (#1935's cost): Projection.mayStateZone's set of the printings
+      -- whose faces state the zone first, and a card is projected only when its
+      -- ability face states the zone it is in, or some grantor hands out a
+      -- triggered ability that states a zone (`statedGrantInForce`). That grant limb is a REGRESSION
       -- FENCE rather than a proof: no card in data/cards grants a triggered
       -- ability that states its zones, so dropping it leaves the suite green.
       --
@@ -1876,9 +1876,10 @@ eventTriggers events gs =
       -- Not implemented: Arena keeps a covercast trigger from a hidden zone
       -- hidden from opponents; here it is put on the stack in the open (#6391).
       statesHere zone = any (Set.member zone . TriggeredAbility.functionsFrom) . Face.triggeredAbilities
-      statedCandidate zone oid = case Game.lookupObject oid gs of
+      statingIn zone = Projection.statingPrintings (statesHere zone) gs
+      statedCandidate zone stating oid = case Game.lookupObject oid gs of
         Just obj
-          | statedGrantInForce || Projection.mayStateZone (statesHere zone) gs obj,
+          | statedGrantInForce || Projection.mayStateZone stating obj,
             Just face <- Projection.abilityFaceOf oid obj gs,
             statedGrantInForce || statesHere zone face,
             not (zone == Zone.Command && Vanguard.functionsFromCommandZone oid gs) ->
@@ -1897,11 +1898,11 @@ eventTriggers events gs =
           gs
       inStatedZones =
         Map.fromList
-          ( Projection.foldZoneCards GameState.hand (Maybe.maybeToList . statedCandidate Zone.Hand) gs
-              <> Projection.foldZoneCards GameState.library (Maybe.maybeToList . statedCandidate Zone.Library) gs
-              <> Maybe.mapMaybe (statedCandidate Zone.Stack) (GameState.stack gs)
-              <> Maybe.mapMaybe (statedCandidate Zone.Command) (Set.toAscList (GameState.command gs))
-              <> Maybe.mapMaybe (statedCandidate Zone.Ante) (Set.toAscList (GameState.ante gs))
+          ( Projection.foldZoneCards GameState.hand (Maybe.maybeToList . statedCandidate Zone.Hand (statingIn Zone.Hand)) gs
+              <> Projection.foldZoneCards GameState.library (Maybe.maybeToList . statedCandidate Zone.Library (statingIn Zone.Library)) gs
+              <> Maybe.mapMaybe (statedCandidate Zone.Stack (statingIn Zone.Stack)) (GameState.stack gs)
+              <> Maybe.mapMaybe (statedCandidate Zone.Command (statingIn Zone.Command)) (Set.toAscList (GameState.command gs))
+              <> Maybe.mapMaybe (statedCandidate Zone.Ante (statingIn Zone.Ante)) (Set.toAscList (GameState.ante gs))
           )
       -- CR 702.35a's SECOND ability, for the card its first ability exiled:
       -- minted off the madness ability the discard RECORDED as applied
