@@ -43,6 +43,7 @@ import qualified Parun.Engine.Subtype as Subtype.Engine
 import qualified Parun.Extra.Natural as Natural
 import Parun.FilterPositionLintSpec (jsonAtoms)
 import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.Oracle.Normalise as Normalise
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
@@ -3802,20 +3803,40 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertBool s (any ((> 1) . length . Card.Type.faces . Printing.card) ps) "the pool has a multi-face card to lint"
     Spec.assertEqWith s "no card repeats a face name" (fmap (S.nameOf . Printing.card) offenders) []
   -- The other half, across cards: a name answers for one card, so a lookup by
-  -- it is well-defined. A lazy registry parses only the files a
-  -- lookup reaches and so cannot hold this for the whole corpus itself.
-  -- Compared by slug, the key a lookup uses, over every face name.
+  -- it is well-defined. A lazy registry parses only the files a lookup reaches
+  -- and so cannot hold this for the whole corpus itself; Registry.ambiguities
+  -- is the one statement of what a lookup refuses.
   Spec.it s "no two cards claim one name" $ do
-    let claims = Map.fromListWith Set.union $ do
+    let parsed = do
           (path, result) <- corpus
-          card <- case result of Right parsed -> [parsed]; Left _ -> []
-          face <- NonEmpty.toList (Card.Type.faces card)
-          pure (Registry.slugFor (Face.name face), Set.singleton path)
-        offenders = Map.filter (\paths -> Set.size paths > 1) claims
+          card <- case result of Right card -> [card]; Left _ -> []
+          pure (path, card)
+        names = Set.fromList (fmap Registry.slugFor (concatMap (fmap Face.name . NonEmpty.toList . Card.Type.faces . snd) parsed))
     -- The sibling lints' guard: a sweep that never sees a name beyond a file's
     -- own proves nothing about the names a lookup reaches only by fallback.
-    Spec.assertBool s (Map.size claims > length corpus) "the pool has a card with more than one name"
-    Spec.assertEqWith s "no name is claimed by two cards" (fmap (fmap Set.toAscList) (Map.toAscList offenders)) []
+    Spec.assertBool s (Set.size names > length corpus) "the pool has a card with more than one name"
+    Spec.assertEqWith s "no name is claimed by two cards" (Registry.ambiguities parsed) []
+  -- An alternative face sharing a real card's name is that card's text again:
+  -- a prepare spell reprinting it (Encouraging Aviator's Jump), which the
+  -- registry leaves the name to the real card for (Parun.Registry.index). Held
+  -- face for face, reminder text aside, so the two copies cannot drift.
+  Spec.it s "an alternative face named for a card restates that card" $ do
+    let cards = do
+          (_, result) <- corpus
+          either (const []) pure result
+        owned = Map.fromList $ do
+          card <- cards
+          name <- Set.toList (Card.combinedNames card)
+          face <- Maybe.maybeToList (Card.faceNamed name card)
+          pure (name, face)
+        shared = do
+          card <- cards
+          face <- NonEmpty.toList (Card.Type.faces card)
+          if Set.member (Face.name face) (Card.combinedNames card) then [] else Maybe.maybeToList (fmap ((,) face) (Map.lookup (Face.name face) owned))
+        unprinted face = face {Face.oracleText = fmap (Text.strip . Normalise.withoutReminders) (Face.oracleText face)}
+        offenders = [Face.name alternative | (alternative, real) <- shared, unprinted alternative /= unprinted real]
+    Spec.assertBool s (not (null shared)) "the pool has an alternative face named for a card"
+    Spec.assertEqWith s "every such face restates its card" offenders []
   -- CR 710.1a with CR 710.1b: a flip card's frame has a top half and a bottom
   -- half, so a Flip card prints exactly two faces. Held over the pool rather
   -- than by construction, for the pairwise-distinct lint's reason -- a card file
