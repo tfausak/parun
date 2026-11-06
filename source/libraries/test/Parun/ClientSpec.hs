@@ -430,7 +430,7 @@ spec s registry = Spec.describe s "Client" $ do
       (filter (Text.isPrefixOf (Text.pack "Undone: ")) (takeWhile (not . menuHeading) (drop 1 (dropWhile (/= Text.pack "> []") shown))))
       [Text.pack "Undone: Cast Ebony Charm could not be completed (a choice announced for it was illegal), so it was reversed and its payments canceled."]
 
-  Spec.it s "CR 508.1 / 509.1 a declaration asked again after its cost went unpaid is told undone, and why" $ do
+  Spec.it s "CR 508.1 / 509.1 a declaration asked again after its cost went unpaid or it broke a restriction is told undone, and why" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (attacker, g1) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
         (blocker, gs) = S.addPermanent piker S.bob g1
@@ -441,6 +441,8 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "the attackers" (told S.alice unpaid attacking) [Text.pack "Undone: The declaration of attackers could not be completed (its cost was not paid), so it was reversed and its payments canceled."]
     Spec.assertEqWith s "the blockers" (told S.bob unpaid blocking) [Text.pack "Undone: The declaration of blockers could not be completed (its cost was not paid), so it was reversed and its payments canceled."]
     Spec.assertEqWith s "a declaration with nothing undone is told nothing" (told S.alice gs attacking) []
+    let illegal = gs {GameState.undone = Map.singleton S.alice Undoing.IllegalDeclaration}
+    Spec.assertEqWith s "an illegal declaration" (told S.alice illegal attacking) [Text.pack "Undone: The declaration of attackers could not be completed (it broke a restriction or requirement on attacking or blocking), so it was reversed and its payments canceled."]
 
   Spec.it s "CR 732.3 a cast refused for repeating a loop is told undone, and why" $ do
     let gs = (Setup.emptyGame S.bothPlayers) {GameState.undone = Map.singleton S.alice Undoing.RepeatedLoop}
