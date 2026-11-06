@@ -313,7 +313,10 @@ objectsLeaveWith asOf pid gs =
   let -- CR 800.4n: objects the player owns in the ante do not leave the game,
       -- an exception to CR 800.4a.
       -- CR 901.10: nor does an ability from a phenomenon (CR 901.10b).
-      owned = filter (\oid -> Maybe.isNothing (Plane.phenomenonOwnerOf oid gs)) (Map.keys (Map.filter (\obj -> Object.owner obj == pid && Object.zone obj /= Zone.Ante) (GameState.objects gs)))
+      -- CR 901.15b / 800.4p: nor a card of the communal planar deck, which the
+      -- planar controller owns and the designation leaves a departing one first.
+      communal = Planechase.communalDeck gs
+      owned = filter (\oid -> Maybe.isNothing (Plane.phenomenonOwnerOf oid gs) && Set.notMember oid communal) (Map.keys (Map.filter (\obj -> Object.owner obj == pid && Object.zone obj /= Zone.Ante) (GameState.objects gs)))
       -- CR 603.6c's second trigger event: "when a phased-in permanent leaves the
       -- game because its owner leaves the game". Only those, which is CR 702.26k
       -- saying the phased-out ones cause no zone-change ability to trigger --

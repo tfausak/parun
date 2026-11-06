@@ -54,6 +54,7 @@ import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.GameEvent as GameEvent
+import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.InherentTriggerSource as InherentTriggerSource
 import qualified Parun.Types.Keyword as Keyword
@@ -404,6 +405,41 @@ spec s registry = Spec.describe s "Parun.Engine.Planechase" $ do
     Spec.assertEqWith s "CR 311.5 carol controls it" (fmap (`Projection.controllerOf` gone) (Planechase.faceUp gone)) [Just S.carol]
     Spec.assertEqWith s "and alice's planar deck is untouched" (length (Planechase.deckOf S.alice gone), length (Planechase.deckOf S.carol gone)) (2, 1)
 
+  -- CR 901.15a / 901.15c: under the single planar deck option alice's two
+  -- planes and bob's Caldaia make one deck. bob, who brought only the Caldaia,
+  -- turned up alice's Academy as the starting plane and planeswalks from it to
+  -- her Tazeem; his own deck would have turned up the Caldaia. The Academy goes
+  -- to the bottom of the communal deck, not to a deck of bob's.
+  Spec.it s "CR 901.15c a player's planar deck is the communal one" $ do
+    board <- communalBoard s registry S.bob ["Academy at Tolaria West", "Tazeem", "The Caldaia"] [(S.alice, ["Academy at Tolaria West", "Tazeem"]), (S.bob, ["The Caldaia"])]
+    let walked = S.runPure (rolling 6) (inMain S.bob board) (Planechase.roll S.manaPerformer S.bob >> Engine.priorityLoop)
+    Spec.assertEqWith s "CR 901.15a one deck under both seats" (deckNames S.alice board, deckNames S.bob board) ([cardName "Tazeem", cardName "The Caldaia"], [cardName "Tazeem", cardName "The Caldaia"])
+    Spec.assertEqWith s "CR 701.31b bob planeswalks to alice's Tazeem" (faceUpNames walked) [cardName "Tazeem"]
+    Spec.assertEqWith s "CR 901.15c and Academy goes to the bottom of the communal deck" (deckNames S.bob walked) [cardName "The Caldaia", cardName "Academy at Tolaria West"]
+
+  -- CR 901.15b / 800.4p: alice brought the whole communal deck and concedes as
+  -- the active player. The designation passes to bob first, so alice owns no
+  -- card in the deck as she leaves; her face-up Academy leaves with her (CR
+  -- 901.10) and bob turns up Tazeem.
+  Spec.it s "CR 901.15b the communal planar deck stays when the player who brought it leaves" $ do
+    board <- communalBoard s registry S.alice ["Academy at Tolaria West", "Tazeem", "The Caldaia"] [(S.alice, ["Academy at Tolaria West", "Tazeem", "The Caldaia"]), (S.bob, []), (S.carol, [])]
+    let gone = S.runPure (conceding S.alice) (inMain S.alice board) Engine.priorityLoop
+    Spec.assertBool s (notElem S.alice (Game.stillPlaying gone)) "alice has left the game"
+    Spec.assertEqWith s "CR 901.10 bob turns up Tazeem in place of alice's Academy" (faceUpNames gone) [cardName "Tazeem"]
+    Spec.assertEqWith s "CR 901.15b and the Caldaia is still in the deck" (deckNames S.bob gone) [cardName "The Caldaia"]
+
+  -- docs/decisions.md, "Who owns a face-up card off the communal planar deck":
+  -- bob turned up the starting Academy from alice's cards, so it is his, and
+  -- leaves with him when he concedes on carol's turn. carol turns up Tazeem.
+  Spec.it s "CR 901.15b a face-up card is owned by the planar controller who turned it up" $ do
+    board <- communalBoard s registry S.bob ["Academy at Tolaria West", "Tazeem", "The Caldaia"] [(S.alice, ["Academy at Tolaria West", "Tazeem", "The Caldaia"]), (S.bob, []), (S.carol, [])]
+    let gone = S.runPure (conceding S.bob) (inMain S.carol board) Engine.priorityLoop
+        owners gs = fmap (\oid -> fmap Object.owner (Game.lookupObject oid gs)) (Planechase.faceUp gs)
+    Spec.assertEqWith s "bob owns the starting Academy" (owners board) [Just S.bob]
+    Spec.assertBool s (notElem S.bob (Game.stillPlaying gone)) "bob has left the game"
+    Spec.assertEqWith s "CR 901.10 carol turns up Tazeem in place of bob's Academy" (fmap (\oid -> (fmap Face.name (Game.faceOf oid gone), fmap Object.owner (Game.lookupObject oid gone))) (Planechase.faceUp gone)) [(cardName "Tazeem", Just S.carol)]
+    Spec.assertEqWith s "and the Caldaia is still in the deck" (deckNames S.carol gone) [cardName "The Caldaia"]
+
   -- CR 901.10a: bob rolls the Planeswalker symbol, and while his planeswalking
   -- ability is on the stack alice, whose Academy is face up, concedes. bob turns
   -- up his Tazeem (CR 901.10) and the ability ceases to exist, so it does not
@@ -525,6 +561,17 @@ spec s registry = Spec.describe s "Parun.Engine.Planechase" $ do
     Spec.assertEqWith s "CR 614.1a alice planeswalked to Naya" (faceUpNames walked) [cardName "Naya"]
     Spec.assertEqWith s "with Tazeem then Academy below" (deckNames S.alice walked) [cardName "Tazeem", cardName "Academy at Tolaria West"]
     Spec.assertEqWith s "without Susan she planeswalks to Tazeem" (faceUpNames without) [cardName "Tazeem"]
+
+  -- CR 901.15c on Susan Foreman: bob, who brought no planar cards, controls
+  -- Susan and rolls the Planeswalker symbol on his turn. "Your planar deck" is
+  -- the communal one, so he puts Naya above Tazeem and planeswalks to it.
+  Spec.it s "CR 901.15c Susan Foreman arranges the communal planar deck" $ do
+    susan <- S.printingOf s registry "Susan Foreman"
+    board <- communalBoard s registry S.alice ["Academy at Tolaria West", "Tazeem", "Naya"] [(S.alice, ["Academy at Tolaria West", "Tazeem", "Naya"]), (S.bob, [])]
+    let (_, withSusan) = S.addPermanent susan S.bob (inMain S.bob board)
+        walked = S.runPure (rollingKeepingLast 6) withSusan (Planechase.roll S.manaPerformer S.bob >> Engine.priorityLoop)
+    Spec.assertEqWith s "CR 614.1a bob planeswalked to Naya" (faceUpNames walked) [cardName "Naya"]
+    Spec.assertEqWith s "with Tazeem then Academy below" (deckNames S.bob walked) [cardName "Tazeem", cardName "Academy at Tolaria West"]
 
   -- CR 701.31c / 901.10: on bob's turn alice, whose Academy at Tolaria West is
   -- the face-up plane, concedes. bob, the planar controller, controls Susan
@@ -746,6 +793,21 @@ seatedPlanarBoard s registry starter seats = do
       built = S.runPure S.identityAnswer (Setup.emptyGame seated) (mapM_ (uncurry Setup.createDeck) decks)
       rank order oid = maybe (length order) (\face -> Maybe.fromMaybe (length order) (List.elemIndex (Face.name face) (fmap (CardName.MkCardName . Text.pack) order))) (Game.faceOf oid built)
       stacked = Game.overSideDecks SideDeck.Planar (Map.mapWithKey (\pid deck -> maybe deck (\order -> Seq.sortOn (rank order) deck) (List.lookup pid seats))) built
+  pure (S.runPure S.identityAnswer stacked (Planechase.setStartingPlane starter))
+
+-- A board under CR 901.15's single planar deck option, seated in the order
+-- named and each seat bringing the planar cards named, the communal deck stacked
+-- in `order`, top first, and `starter`'s turn-up face up (CR 103.7). Twenty
+-- Forests in each library; no opening hands.
+communalBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> PlayerId.PlayerId -> [String] -> [(PlayerId.PlayerId, [String])] -> m GameState.GameState
+communalBoard s registry starter order seats = do
+  forest <- S.printingOf s registry "Forest"
+  decks <- traverse (\(pid, brought) -> (\planes -> (pid, (Deck.fromCards (Map.singleton forest 20)) {Deck.sideDecks = Map.singleton SideDeck.Planar (Map.fromSet (const 1) (Set.fromList planes))})) <$> traverse (S.printingOf s registry) brought) seats
+  let seated = Maybe.fromMaybe S.threePlayers (NonEmpty.nonEmpty (fmap fst seats))
+      settings = GameSettings.plain {GameSettings.singlePlanarDeck = True}
+      built = S.runPure S.identityAnswer (Setup.gameWith settings seated) (mapM_ (uncurry Setup.createDeck) decks)
+      rank oid = maybe (length order) (\face -> Maybe.fromMaybe (length order) (List.elemIndex (Face.name face) (fmap (CardName.MkCardName . Text.pack) order))) (Game.faceOf oid built)
+      stacked = Game.overSideDecks SideDeck.Planar (fmap (Seq.sortOn rank)) built
   pure (S.runPure S.identityAnswer stacked (Planechase.setStartingPlane starter))
 
 -- `who` concedes when asked; everyone else plays on, and every other prompt is

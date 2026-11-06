@@ -111,7 +111,14 @@ data GameSettings = MkGameSettings
     -- | CR 407.1: whether this game is played for ante. Off by default
     -- ('plain'); read by Parun.Engine.Setup's CR 407.2 step and
     -- Parun.Engine.Ante.barred (CR 407.3).
-    ante :: Bool
+    ante :: Bool,
+    -- | CR 901.15: whether a Planechase game uses one communal planar deck. Off
+    -- by default ('plain'); read by Parun.Engine.Plane.planarDeckHolder,
+    -- Parun.Engine.Planechase and Parun.Engine.Setup.
+    --
+    -- Not implemented: CR 901.15a's deck construction (size, phenomena,
+    -- names), as no deck legality is checked (#4458).
+    singlePlanarDeck :: Bool
   }
   deriving (Eq, Ord, Show)
 
@@ -134,5 +141,6 @@ plain =
       emperors = Emperors.none,
       twoHeadedGiant = False,
       alternatingTeams = False,
-      ante = False
+      ante = False,
+      singlePlanarDeck = False
     }
