@@ -34,7 +34,6 @@ import qualified Parun.Types.CostChoice as CostChoice
 import qualified Parun.Types.CountedDiscard as CountedDiscard
 import qualified Parun.Types.Counter as Counter
 import qualified Parun.Types.CounterKind as CounterKind
-import qualified Parun.Types.CounterName as CounterName
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePart as DamagePart
@@ -771,7 +770,7 @@ effect context e = case e of
       -- (Rhovanion Rampager).
       Target.Stated q -> fmap (\put -> Text.pack "put " <> put <> on) (counters (Target.keyword context) (PutCounters.kind p) q)
       Target.ForEach n each' -> fmap (\put -> Text.pack "put " <> put <> on <> Text.pack " for each " <> each') (counters (Target.keyword context) (PutCounters.kind p) (Quantity.Literal n))
-      Target.EqualTo equal -> fmap (\word -> Text.pack "put a number of " <> word <> Text.pack " counters" <> on <> Text.pack " equal to " <> equal) (counterWord (Target.keyword context) (PutCounters.kind p))
+      Target.EqualTo equal -> fmap (\word -> Text.pack "put a number of " <> word <> Text.pack " counters" <> on <> Text.pack " equal to " <> equal) (Cost.counterWord (Target.keyword context) (PutCounters.kind p))
     MkPredicate Nothing phrase [] (Target.mentions ref <> Target.names a) Nothing False : supported context p
   Effect.Tap (Tap.MkTap r Nothing) -> acted context (Text.pack "tap ") r
   -- "Sacrifice this creature" (CR 701.21a): one object, which the
@@ -930,25 +929,12 @@ owner graveyard number zone = case (graveyard, number) of
 -- | "a +1/+1 counter", "two -1/-1 counters", "a flying counter" (CR 122.1).
 counters :: (Keyword.Keyword -> [Text.Text]) -> CounterKind.CounterKind Keyword.Keyword -> Quantity.Quantity -> [Text.Text]
 counters named kind q = do
-  word <- counterWord named kind
+  word <- Cost.counterWord named kind
   case q of
     Quantity.Literal 1 -> [Prose.article word <> Text.pack " " <> word <> Text.pack " counter"]
     Quantity.Literal n | n > 1 -> [Prose.cardinal n <> Text.pack " " <> word <> Text.pack " counters"]
     Quantity.InSlot s | s == Target.xSlot -> [Text.pack "X " <> word <> Text.pack " counters"]
     _ -> []
-
--- | A counter's kind as the word before "counter": "+1/+1", "flying".
-counterWord :: (Keyword.Keyword -> [Text.Text]) -> CounterKind.CounterKind Keyword.Keyword -> [Text.Text]
-counterWord named kind = case kind of
-  CounterKind.PlusOnePlusOne -> [Text.pack "+1/+1"]
-  CounterKind.MinusOneMinusOne -> [Text.pack "-1/-1"]
-  CounterKind.Keyword k -> named k
-  CounterKind.UnsafePowerToughness p t -> do
-    power <- Continuous.signed (Quantity.Literal t) (Quantity.Literal p)
-    toughness <- Continuous.signed (Quantity.Literal p) (Quantity.Literal t)
-    [power <> Text.pack "/" <> toughness]
-  CounterKind.Named n -> [CounterName.unwrap n]
-  _ -> [Text.toLower (Text.pack (show kind))]
 
 -- | "Support N" (CR 701.41a), the rules' name for putting a +1/+1 counter on
 -- each of up to N other target creatures, or on a spell up to N target
