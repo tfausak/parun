@@ -1,0 +1,187 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": "Red"
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": "Red"
+          }
+        }
+      ],
+      "name": "Face Yourself",
+      "oracleText": "For each creature target player controls, create a token that's a copy of that creature, except it has haste and \"At the beginning of the end step, if you don't control a planeswalker, sacrifice this creature.\"",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ForEach",
+                    "value": {
+                      "body": [
+                        {
+                          "type": "CreateCopy",
+                          "value": {
+                            "exceptions": [
+                              {
+                                "type": "GainKeywords",
+                                "value": [
+                                  {
+                                    "type": "Haste"
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "GainAbility",
+                                "value": {
+                                  "type": "Triggered",
+                                  "value": {
+                                    "condition": {
+                                      "type": "StepBegins",
+                                      "value": {
+                                        "phase": {
+                                          "type": "Ending",
+                                          "value": "EndStep"
+                                        },
+                                        "scope": {
+                                          "type": "PlayersTurn",
+                                          "value": {
+                                            "type": "Relative",
+                                            "value": "AnyPlayer"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "intervening": {
+                                      "type": "Compares",
+                                      "value": {
+                                        "comparison": "Exactly",
+                                        "measured": {
+                                          "type": "Count",
+                                          "value": {
+                                            "aggregation": {
+                                              "type": "Members"
+                                            },
+                                            "filter": {
+                                              "type": "And",
+                                              "value": [
+                                                {
+                                                  "type": "HasCardType",
+                                                  "value": "Planeswalker"
+                                                },
+                                                {
+                                                  "type": "HeldBy",
+                                                  "value": {
+                                                    "holder": "Controller",
+                                                    "relation": "You"
+                                                  }
+                                                }
+                                              ]
+                                            },
+                                            "scope": {
+                                              "type": "InZone",
+                                              "value": {
+                                                "player": {
+                                                  "type": "Relative",
+                                                  "value": "AnyPlayer"
+                                                },
+                                                "zone": "Battlefield"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "threshold": {
+                                          "type": "Literal",
+                                          "value": 0
+                                        }
+                                      }
+                                    },
+                                    "modal": {
+                                      "modes": [
+                                        {
+                                          "clauses": [
+                                            {
+                                              "effects": [
+                                                {
+                                                  "type": "Sacrifice",
+                                                  "value": {
+                                                    "ref": {
+                                                      "type": "InSlot",
+                                                      "value": "self"
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "ref": {
+                              "type": "InSlot",
+                              "value": "creature"
+                            }
+                          }
+                        }
+                      ],
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": "Creature"
+                            },
+                            {
+                              "type": "HeldByBound",
+                              "value": {
+                                "holder": "Controller",
+                                "slot": "target"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "slot": "creature"
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "pool": {
+                  "type": "Players"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          "Sorcery"
+        ]
+      }
+    }
+  ]
+}
