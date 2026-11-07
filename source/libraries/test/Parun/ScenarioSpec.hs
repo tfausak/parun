@@ -42,6 +42,7 @@ import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Discrepancy as Discrepancy
 import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.Entry as Entry
 import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.Game as Game.Type
 import qualified Parun.Types.GameState as GameState
@@ -538,6 +539,23 @@ spec s registry = Spec.describe s "Scenario" $ do
       Left failure -> Spec.assertFailure s (S.renderFailure failure)
       Right _ -> Spec.assertFailure s "a declaration that stood passed as refused"
 
+  -- CR 601.2c: Roaming Ghostlight's "up to one target" admits none, so a refused
+  -- entry omitting the slot names an offered count of 0 and must not be
+  -- passed over as refused already.
+  Spec.it s "a refused announcement omitting an up-to slot names zero targets, which is offered" $ do
+    result <- runJson s registry (ghostlightRefusing "{}")
+    case result of
+      Left (ScenarioFailure.MkUnreachedEntries _ _ entries) ->
+        Spec.assertEqWith s "the refusal stood, unanswered" (fmap Timed.entry (Foldable.toList (Seq.take 1 entries))) [Entry.Refuse (Move.ChooseTargets Map.empty)]
+      Left failure -> Spec.assertFailure s (S.renderFailure failure)
+      Right _ -> Spec.assertFailure s "a refused entry naming an offered count of 0 passed as refused already"
+
+  Spec.it s "the same refusal naming a non-offered target passes" $ do
+    result <- runJson s registry (ghostlightRefusing "{\"target\":[\"$spirit\"]}")
+    case result of
+      Left failure -> Spec.assertFailure s (S.renderFailure failure)
+      Right final -> Spec.assertEqWith s "the Hill Giant returned" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Hill Giant")) S.bob final) 0
+
   -- CR 601.2e / 734.1: a cast the engine finds illegal is reversed, so a script
   -- whose cast is taken and then rejected fails rather than passing on a game
   -- in which nothing was cast. Convoking five creatures for the Loxodon's {4}{W}
@@ -807,6 +825,27 @@ runJson :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> m (Eit
 runJson s registry json = case Common.parse (Text.pack json) >>= Codec.decode Codec.Scenario.codec of
   Left problem -> Spec.assertFailure s (Text.unpack problem)
   Right scenario -> Scenario.run registry scenario
+
+-- alice casts Roaming Ghostlight and its enters trigger refuses `refused`
+-- before returning bob's Hill Giant.
+ghostlightRefusing :: String -> String
+ghostlightRefusing refused =
+  let entry body = "{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\"," <> body <> "}"
+      library = "\"library\":[" <> List.intercalate "," (replicate 5 "{\"card\":\"Island\"}") <> "]"
+   in "{\"description\":\"x\",\"board\":{\"seats\":[{\"name\":\"alice\",\"hand\":[{\"card\":\"Roaming Ghostlight\",\"label\":\"spell\"}],\"manaPool\":\"CCCUU\","
+        <> library
+        <> "},{\"name\":\"bob\",\"battlefield\":[{\"card\":\"Hill Giant\",\"label\":\"giant\",\"ready\":true},{\"card\":\"Roaming Ghostlight\",\"label\":\"spirit\",\"ready\":true}],"
+        <> library
+        <> "}],\"active\":\"alice\",\"step\":\"PrecombatMain\"},\"timeline\":["
+        <> List.intercalate
+          ","
+          [ entry "\"do\":{\"Cast\":{\"object\":\"$spell\"}}",
+            entry "\"do\":\"Pass\"",
+            entry ("\"refuse\":{\"ChooseTargets\":" <> refused <> "}"),
+            entry "\"do\":{\"ChooseTargets\":{\"target\":[\"$giant\"]}}",
+            entry "\"do\":\"Pass\""
+          ]
+        <> "]}"
 
 -- alice casts Venerated Loxodon at once, convoking `taps` from four Goblin
 -- Pikers and a Palace Guard.

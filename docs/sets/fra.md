@@ -155,31 +155,18 @@ census did not settle.
 
 
 
-- Ruric Thar, Magecrusher: `_Rule:FromStack`
-
-- Saheeli, Consul of Oversight: `_Rule:TriggerOnceEachTurn`
-
-- Samut, Tyrant of Naktamun: `_Rule:StackSpellsEffect`
-
-- Sanctum Lurker: `_PermanentRule:ArentPutIntoGraveyardForHaving0Loyalty`
-
-- Seasoned Cryomancer:
-  `_Action:Reflexive_Discard_WhenYouDiscardOneOrMoreCardsOfTypeThisWay`
-
-- Semester Foreseer: `_Action:Surveil`; shares Peer Review
 
 
-- Silence the Echo: `_Rule:CastEffect`
 
-- Solarium Sentry: `_Spells:ManaValueIs`
 
-- Solitary Cell: `_Permanents:ManaValueIs`
 
-- Solve for Disappointment: `_Action:RevealHandAndPlayerChoosesACardToDiscard`
 
-- Something Worth Saving: `_Action:PutACardFromGraveyardIntoHand`
 
-- Sphinx of False Conclusions: `_Permanent:Trigger_ThatPermanent`
+
+
+
+
+
 
 - Sphinx's Approach: `_Cost:Exile`; verify the optional "exile this spell and
   four cards named" step
@@ -310,6 +297,12 @@ census did not settle.
 - Yuriko, Hope from the Shadows: `_LayerEffect:AdjustPTX`
 
 ## Needs a capability
+
+### #6576: no effect exempts planeswalkers from the 0-loyalty state-based action
+
+- Sanctum Lurker: "planeswalkers you control aren't put into their owners'
+  graveyards for having 0 loyalty" has no effect to express it; CR 704.5i
+  buries every planeswalker at 0 loyalty.
 
 ### #6572: a delayed triggered ability can't be a mana ability
 
