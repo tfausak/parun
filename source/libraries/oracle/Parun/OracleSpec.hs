@@ -578,12 +578,16 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let rising = activated (Cost.MkCost (Just (ManaCost.MkManaCost [green])) []) (Effect.MoveToZone (move (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "self"))) Zone.Battlefield) {MoveToZone.origin = Just Zone.Graveyard})
     Spec.assertEq s (Just (Text.pack "{G}: Return Spark from your graveyard to the battlefield.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [rising]})))
 
-  -- CR 110.4a: every permanent type is "permanent", every one but land
-  -- "nonland permanent" (Restoration Seminar).
+  -- CR 110.4a: every permanent type is "permanent", and with land negated
+  -- "nonland permanent" (Restoration Seminar); every type but land is not,
+  -- since it admits an artifact land.
   Spec.it s "render names a permanent card" $ do
-    let permanents = [CardType.Artifact, CardType.Battle, CardType.Creature, CardType.Enchantment, CardType.Planeswalker]
-        seminar = spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Battlefield)]] [(target, graveyard PlayerRelation.You (Just (Filter.Or (fmap Filter.HasCardType permanents))))]
-    Spec.assertEq s (Just (Text.pack "Return target nonland permanent card from your graveyard to the battlefield.")) (Oracle.render seminar)
+    let permanents = [CardType.Artifact, CardType.Battle, CardType.Creature, CardType.Enchantment, CardType.Land, CardType.Planeswalker]
+        seminar f = spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Battlefield)]] [(target, graveyard PlayerRelation.You (Just f))]
+        nonland = Filter.And [Filter.Or (fmap Filter.HasCardType permanents), Filter.Not (Filter.HasCardType CardType.Land)]
+        allButLand = Filter.Or (fmap Filter.HasCardType (filter (/= CardType.Land) permanents))
+    Spec.assertEq s (Just (Text.pack "Return target nonland permanent card from your graveyard to the battlefield.")) (Oracle.render (seminar nonland))
+    Spec.assertBool s (Oracle.render (seminar allButLand) /= Oracle.render (seminar nonland)) "all but land read as nonland"
 
   -- A nonlegendary object reads so (Cytoshape) or as one "that isn't
   -- legendary" (Urza's Ruinous Blast), as printings differ.
