@@ -1,14 +1,11 @@
 {
-  "description": "CR 602.5 Jace, Reality Sculptor's 0 is refused while the Jaces alice controls hold twenty-four loyalty counters",
-  "note": "The board of the exiling sibling with alice's Beleren at 4 rather than 5: 24 counters among alice's Jaces, and bob's Jace's 10 would lift any count that read every Jace past 25.",
   "board": {
+    "active": "alice",
     "seats": [
       {
-        "name": "alice",
         "battlefield": [
           {
             "card": "Jace, Reality Sculptor",
-            "label": "jace",
             "counters": [
               {
                 "key": {
@@ -16,11 +13,11 @@
                 },
                 "value": 20
               }
-            ]
+            ],
+            "label": "jace"
           },
           {
             "card": "Jace Beleren",
-            "label": "beleren",
             "counters": [
               {
                 "key": {
@@ -28,7 +25,8 @@
                 },
                 "value": 4
               }
-            ]
+            ],
+            "label": "beleren"
           }
         ],
         "library": [
@@ -38,14 +36,13 @@
           {
             "card": "Plains"
           }
-        ]
+        ],
+        "name": "alice"
       },
       {
-        "name": "bob",
         "battlefield": [
           {
             "card": "Jace Beleren",
-            "label": "bob-beleren",
             "counters": [
               {
                 "key": {
@@ -53,7 +50,8 @@
                 },
                 "value": 10
               }
-            ]
+            ],
+            "label": "bob-beleren"
           }
         ],
         "library": [
@@ -66,10 +64,10 @@
           {
             "card": "Grizzly Bears"
           }
-        ]
+        ],
+        "name": "bob"
       },
       {
-        "name": "carol",
         "library": [
           {
             "card": "Shock"
@@ -83,40 +81,42 @@
           {
             "card": "Craw Wurm"
           }
-        ]
+        ],
+        "name": "carol"
       }
     ],
-    "active": "alice",
     "step": "PrecombatMain"
   },
+  "description": "CR 602.5 Jace, Reality Sculptor's 0 is refused while the Jaces alice controls hold twenty-four loyalty counters",
+  "note": "The board of the exiling sibling with alice's Beleren at 4 rather than 5: 24 counters among alice's Jaces, and bob's Jace's 10 would lift any count that read every Jace past 25.",
   "timeline": [
     {
-      "turn": 1,
-      "step": "PrecombatMain",
       "player": "alice",
       "refuse": {
         "Activate": {
-          "object": "$jace",
-          "ability": 2
+          "ability": 2,
+          "object": "$jace"
         }
-      }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "View": {
-          "of": "Zone",
-          "player": "bob",
-          "zone": "Library",
           "is": [
             "Hill Giant",
             "Gray Ogre",
             "Grizzly Bears"
-          ]
+          ],
+          "of": "Zone",
+          "player": "bob",
+          "zone": "Library"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     }
   ]
 }

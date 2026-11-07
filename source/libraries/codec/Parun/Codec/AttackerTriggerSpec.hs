@@ -3,6 +3,7 @@ module Parun.Codec.AttackerTriggerSpec where
 import qualified Parun.Codec.AttackerTrigger as AttackerTrigger
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.AloneAmong as AloneAmong
 import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackerTarget as AttackerTarget
 import qualified Parun.Types.AttackerTrigger as AttackerTrigger
@@ -32,7 +33,7 @@ spec s = Spec.describe s "Parun.Codec.AttackerTrigger" $ do
       ( AttackerTrigger.MkAttackerTrigger
           Filter.IsToken
           (AttackerTarget.Defending PlayerRelation.You)
-          AttackCompany.Alone
+          (AttackCompany.Alone AloneAmong.EveryAttacker)
           TriggerFrequency.FirstTimeEachTurn
           (Just (Condition.Compares (Compares.MkCompares (Quantity.Literal 0) Comparison.Exactly (Quantity.Literal 0))))
       )

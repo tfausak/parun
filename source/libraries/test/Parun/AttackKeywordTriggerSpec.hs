@@ -25,6 +25,7 @@ import qualified Parun.Engine.Target as Target
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
+import qualified Parun.Types.AloneAmong as AloneAmong
 import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackTrigger as AttackTrigger
@@ -255,7 +256,7 @@ exaltedSpec s registry =
                   ( AttackTrigger.Attacker
                       AttackerTrigger.defaultValue
                         { AttackerTrigger.creature = Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.HeldBy Holder.Controller PlayerRelation.You],
-                          AttackerTrigger.company = AttackCompany.Alone
+                          AttackerTrigger.company = AttackCompany.Alone AloneAmong.EveryAttacker
                         }
                   )
           Spec.assertEqWith s "two abilities" (length abilities) 2

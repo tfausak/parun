@@ -1,14 +1,11 @@
 {
-  "description": "CR 602.5 / 406.3 Jace, Reality Sculptor's 0 exiles all but the bottom card of each opponent's library once the Jaces alice controls hold twenty-five loyalty counters",
-  "note": "alice's two Jaces hold 20 and 5: exactly 25 (bob's Jace's 10 do not count). bob's library keeps only its Grizzly Bears and carol's only its Craw Wurm; alice's own library is untouched. The sibling scenario with alice's Beleren at 4 refuses the ability.",
   "board": {
+    "active": "alice",
     "seats": [
       {
-        "name": "alice",
         "battlefield": [
           {
             "card": "Jace, Reality Sculptor",
-            "label": "jace",
             "counters": [
               {
                 "key": {
@@ -16,11 +13,11 @@
                 },
                 "value": 20
               }
-            ]
+            ],
+            "label": "jace"
           },
           {
             "card": "Jace Beleren",
-            "label": "beleren",
             "counters": [
               {
                 "key": {
@@ -28,7 +25,8 @@
                 },
                 "value": 5
               }
-            ]
+            ],
+            "label": "beleren"
           }
         ],
         "library": [
@@ -38,14 +36,13 @@
           {
             "card": "Plains"
           }
-        ]
+        ],
+        "name": "alice"
       },
       {
-        "name": "bob",
         "battlefield": [
           {
             "card": "Jace Beleren",
-            "label": "bob-beleren",
             "counters": [
               {
                 "key": {
@@ -53,7 +50,8 @@
                 },
                 "value": 10
               }
-            ]
+            ],
+            "label": "bob-beleren"
           }
         ],
         "library": [
@@ -66,10 +64,10 @@
           {
             "card": "Grizzly Bears"
           }
-        ]
+        ],
+        "name": "bob"
       },
       {
-        "name": "carol",
         "library": [
           {
             "card": "Shock"
@@ -83,101 +81,103 @@
           {
             "card": "Craw Wurm"
           }
-        ]
+        ],
+        "name": "carol"
       }
     ],
-    "active": "alice",
     "step": "PrecombatMain"
   },
+  "description": "CR 602.5 / 406.3 Jace, Reality Sculptor's 0 exiles all but the bottom card of each opponent's library once the Jaces alice controls hold twenty-five loyalty counters",
+  "note": "alice's two Jaces hold 20 and 5: exactly 25 (bob's Jace's 10 do not count). bob's library keeps only its Grizzly Bears and carol's only its Craw Wurm; alice's own library is untouched. The sibling scenario with alice's Beleren at 4 refuses the ability.",
   "timeline": [
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Activate": {
-          "object": "$jace",
-          "ability": 2
+          "ability": 2,
+          "object": "$jace"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "View": {
-          "of": "Zone",
-          "player": "bob",
-          "zone": "Library",
           "is": [
             "Grizzly Bears"
-          ]
+          ],
+          "of": "Zone",
+          "player": "bob",
+          "zone": "Library"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "View": {
-          "of": "Zone",
-          "player": "carol",
-          "zone": "Library",
           "is": [
             "Craw Wurm"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "check": {
-        "Count": {
-          "player": "bob",
-          "zone": "Exile",
-          "card": "Hill Giant",
-          "count": 1
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "check": {
-        "Count": {
+          ],
+          "of": "Zone",
           "player": "carol",
-          "zone": "Exile",
-          "card": "Divination",
-          "count": 1
+          "zone": "Library"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "check": {
+        "Count": {
+          "card": "Hill Giant",
+          "count": 1,
+          "player": "bob",
+          "zone": "Exile"
+        }
+      },
       "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Divination",
+          "count": 1,
+          "player": "carol",
+          "zone": "Exile"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
       "check": {
         "View": {
-          "of": "Zone",
-          "player": "alice",
-          "zone": "Library",
           "is": [
             "Island",
             "Plains"
-          ]
+          ],
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Library"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     }
   ]
 }

@@ -2264,7 +2264,7 @@ rewriteAttackTrigger pairs trigger = case trigger of
           )
           ( case company of
               AttackCompany.AnyCompany -> company
-              AttackCompany.Alone -> company
+              AttackCompany.Alone {} -> company
               AttackCompany.WithAnother f -> AttackCompany.WithAnother (Filter.rewrite pairs f)
           )
           frequency

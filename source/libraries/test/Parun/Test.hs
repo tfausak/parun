@@ -70,6 +70,7 @@ import qualified Parun.Codec.AgainstSlotSpec
 import qualified Parun.Codec.AggregationSpec
 import qualified Parun.Codec.AimedAtSpec
 import qualified Parun.Codec.AimedPlayersSpec
+import qualified Parun.Codec.AloneAmongSpec
 import qualified Parun.Codec.AloneUnlessSpec
 import qualified Parun.Codec.AlternativeActivationCostSpec
 import qualified Parun.Codec.AlternativeCostSpec
@@ -1080,6 +1081,7 @@ spec s registry corpus = do
   Parun.Codec.AffectedSpec.spec s
   Parun.Codec.AffectedUnlessSpec.spec s
   Parun.Codec.AnchorSpec.spec s
+  Parun.Codec.AloneAmongSpec.spec s
   Parun.Codec.AloneUnlessSpec.spec s
   Parun.Codec.AffectPlayersSpec.spec s
   Parun.Codec.AfterObjectTurnSpec.spec s

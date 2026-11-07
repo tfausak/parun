@@ -30,6 +30,7 @@ import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActingPermanent as ActingPermanent
+import qualified Parun.Types.AloneAmong as AloneAmong
 import qualified Parun.Types.AttachDirection as AttachDirection
 import qualified Parun.Types.AttachmentEnd as AttachmentEnd
 import qualified Parun.Types.AttachmentTrigger as AttachmentTrigger
@@ -281,7 +282,14 @@ attackCompanyHolds :: Filter.Context -> GameState -> ObjectId -> ObjectId -> Att
 attackCompanyHolds context gs bearer attacker company d = case company of
   AttackCompany.AnyCompany -> True
   -- "The ONLY creature declared": one number, never a floor.
-  AttackCompany.Alone -> AttackerDeclared.count d == 1
+  AttackCompany.Alone AloneAmong.EveryAttacker -> AttackerDeclared.count d == 1
+  -- CR 506.6: a player, and no other creature declared attacking that player.
+  -- Combat.attackers is the declaration, as for WithAnother below.
+  AttackCompany.Alone AloneAmong.AttackersOfItsPlayer -> case AttackerDeclared.target d of
+    AttackTarget.OfPlayer attacked ->
+      let others = Map.delete attacker (Combat.attackers (GameState.combat gs))
+       in AttackTarget.OfPlayer attacked `notElem` Map.elems others
+    _ -> False
   -- Combat.attackers IS the declaration here: CR 508.2b puts these triggers on
   -- the stack before any player gets priority, so CR 508.4 has had no window to
   -- add a creature, where the turn's log keeps an earlier combat phase's.
