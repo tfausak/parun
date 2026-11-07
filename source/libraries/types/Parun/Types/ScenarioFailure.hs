@@ -85,7 +85,8 @@ data ScenarioFailure
   | -- | Checks whose moment never came: assertions that never ran, which must
     -- never read like ones that ran false.
     MkUnrunChecks Natural Phase.Phase (Seq.Seq Timed.Timed)
-  | -- | A check that ran false, its moment (Nothing for a final check), and
-    -- what was observed instead.
-    MkCheckFailed (Maybe When.When) Check.Check Text.Text
+  | -- | A check that ran false, its moment (Nothing for a final check), what
+    -- was observed instead, and the entries still queued for earlier steps,
+    -- which never ran.
+    MkCheckFailed (Maybe When.When) Check.Check Text.Text (Seq.Seq Timed.Timed)
   deriving (Eq, Ord, Show)

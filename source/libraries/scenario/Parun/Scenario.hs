@@ -1472,13 +1472,19 @@ onEntry unscheduled key kind offers select match = do
 
 -- Checks -----------------------------------------------------------------------
 
--- | Fails the run unless the check holds on this state.
+-- | Fails the run unless the check holds on this state, naming the entries
+-- still queued for an earlier step: the run stops here, so they never ran.
 expect :: Maybe When.When -> GameState.GameState -> Check.Check -> Run ()
 expect key gs check = do
   observed <- observe gs check
   case observed of
     Nothing -> pure ()
-    Just actual -> failWith (Failure.MkCheckFailed key check actual)
+    Just actual -> do
+      remaining <- State.gets queues
+      let step moment = (When.turn moment, When.phase moment)
+          earlier moment = any (\now -> step moment < step now) key
+          skipped = foldMap snd (filter (earlier . fst) (Map.toAscList remaining))
+      failWith (Failure.MkCheckFailed key check actual skipped)
 
 -- | Nothing when the check holds, else what was there instead.
 observe :: GameState.GameState -> Check.Check -> Run (Maybe Text.Text)
@@ -1882,8 +1888,8 @@ renderView gs viewIs =
       texts = fmap (ReplyType.Array . fmap ReplyType.Text)
       named :: Run Label.Label -> Run ReplyType.Reply
       named = fmap (ReplyType.Text . Label.unwrap)
-      needPlayer = maybe (failWith (Failure.MkCheckFailed Nothing (Check.View viewIs) (Text.pack "this view needs a player"))) resolvePlayer (ViewIs.player viewIs)
-      needObject = maybe (failWith (Failure.MkCheckFailed Nothing (Check.View viewIs) (Text.pack "this view needs an object"))) (`resolveObject` gs) (ViewIs.object viewIs)
+      needPlayer = maybe (failWith (Failure.MkCheckFailed Nothing (Check.View viewIs) (Text.pack "this view needs a player") Seq.empty)) resolvePlayer (ViewIs.player viewIs)
+      needObject = maybe (failWith (Failure.MkCheckFailed Nothing (Check.View viewIs) (Text.pack "this view needs an object") Seq.empty)) (`resolveObject` gs) (ViewIs.object viewIs)
    in case ViewIs.view viewIs of
         View.Stack -> texts (describeAll gs (GameState.stack gs))
         View.Step -> pure (ReplyType.Text (Text.pack (Codec.Phase.flatName (GameState.phase gs))))
@@ -1911,7 +1917,7 @@ renderView gs viewIs =
         View.Priority -> maybe (pure ReplyType.Null) (named . labelOf) (GameState.priority gs)
         View.Zone -> do
           pid <- needPlayer
-          zone <- maybe (failWith (Failure.MkCheckFailed Nothing (Check.View viewIs) (Text.pack "this view needs a zone"))) pure (ViewIs.zone viewIs)
+          zone <- maybe (failWith (Failure.MkCheckFailed Nothing (Check.View viewIs) (Text.pack "this view needs a zone") Seq.empty)) pure (ViewIs.zone viewIs)
           texts (describeAll gs (Game.zoneMembers zone pid gs))
         View.Colors -> do
           oid <- needObject
@@ -2070,12 +2076,13 @@ render failure = case failure of
     renderTimeds timed <> Text.pack " never came; the game stopped at " <> renderLocation turn step Nothing
   Failure.MkUnrunChecks turn step timed ->
     renderTimeds timed <> Text.pack " never ran; the game stopped at " <> renderLocation turn step Nothing
-  Failure.MkCheckFailed key check observed ->
+  Failure.MkCheckFailed key check observed skipped ->
     maybe (Text.pack "at the end") renderWhen key
       <> Text.pack ": "
       <> Common.render (Codec.encode Codec.Check.codec check)
       <> Text.pack " failed; it was "
       <> observed
+      <> (if Seq.null skipped then Text.empty else Text.pack "; before it, " <> renderTimeds skipped <> Text.pack " never ran")
 
 renderDiscrepancy :: Discrepancy.Discrepancy -> Text.Text
 renderDiscrepancy discrepancy = case discrepancy of
