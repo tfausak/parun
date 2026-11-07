@@ -97,6 +97,9 @@ data Prompt r where
   ChooseAction :: Decider.Decider -> PlayerId.PlayerId -> [Action.Action] -> Prompt Action.Action
   -- | CR 104.3a. No Decider: CR 724.6 needs the ask to reach the true player.
   Concede :: PlayerId.PlayerId -> Prompt Concession.Concession
+  -- | CR 807.5b: which of these turn markers' stacks, by number, a player with
+  -- priority for each acts on next.
+  ChooseTurnMarker :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty Natural.Natural -> Prompt Natural.Natural
   Shuffle :: [ObjectId.ObjectId] -> Prompt [ObjectId.ObjectId]
   -- | CR 730.2 \/ 103.1c: a starting player drawn at random from these
   -- players -- a subgame's seats, or the players claiming to be the starting

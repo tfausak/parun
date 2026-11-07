@@ -320,6 +320,7 @@ shapeOf :: Prompt.Prompt r -> Shape r
 shapeOf prompt = case prompt of
   Prompt.ChooseAction _ _ offered -> indexed offered
   Prompt.Concede {} -> named [Concession.Concedes, Concession.Continues]
+  Prompt.ChooseTurnMarker {} -> natural
   Prompt.Shuffle {} -> list object
   Prompt.RandomFirstPlayer {} -> player
   Prompt.RandomObject {} -> object

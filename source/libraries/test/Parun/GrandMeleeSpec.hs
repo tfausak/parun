@@ -41,6 +41,7 @@ import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.TurnMarker as TurnMarker
 import qualified Parun.Types.TurnRegisters as TurnRegisters
+import qualified Parun.Types.TurnResume as TurnResume
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "GrandMelee" $ do
@@ -241,6 +242,34 @@ spec s registry = Spec.describe s "GrandMelee" $ do
     Spec.assertEqWith s "a Shock is on each stack" (fmap length [GameState.stack zeroCast, GameState.stack fourCast, Game.allStacks staged]) [1, 1, 2]
     Spec.assertEqWith s "CR 807.5b the target menu" offered [Set.fromList (fmap Recipient.ToObject (GameState.stack fourCast))]
 
+  -- CR 807.5b: with Shocks on both markers' stacks as above, seat 3 holds
+  -- priority in both windows. Reached on seat 0's, it is asked which stack it
+  -- acts on, chooses seat 4's, and its Counterspell goes there.
+  Spec.it s "CR 807.5b a player with priority for several stacks chooses one" $ do
+    forest <- S.printingOf s registry "Forest"
+    island <- S.printingOf s registry "Island"
+    mountain <- S.printingOf s registry "Mountain"
+    shock <- S.printingOf s registry "Shock"
+    counterspell <- S.printingOf s registry "Counterspell"
+    let main = untilPhase Phase.PrecombatMain (melee forest 8)
+        (zeroShock, withZero) = S.addHandCard shock (seat 2) (S.landsFor mountain (seat 2) 1 main)
+        zeroCast = S.runPure S.identityAnswer withZero (S.cast (seat 2) zeroShock)
+        (fourShock, withFour) = S.addHandCard shock (seat 4) (S.landsFor mountain (seat 4) 1 (Engine.workOn 2 zeroCast))
+        fourCast = S.runPure S.identityAnswer withFour (S.cast (seat 4) fourShock)
+        (_, withCounter) = S.addHandCard counterspell (seat 3) (S.landsFor island (seat 3) 2 fourCast)
+        holds r = r {TurnRegisters.priority = Just (seat 3), TurnRegisters.turnResume = TurnResume.InWindow}
+        staged =
+          withCounter
+            { GameState.priority = Just (seat 3),
+              GameState.turnResume = TurnResume.InWindow,
+              GameState.parkedTurns = Map.adjust holds 1 (GameState.parkedTurns withCounter)
+            }
+        ((_, acted), asked) = State.runState (Engine.runGame chooseLast staged Engine.runStep) []
+        stacks gs = Map.insert (Maybe.fromMaybe 0 (Turn.workedMarker gs)) (length (GameState.stack gs)) (fmap (length . TurnRegisters.stack) (GameState.parkedTurns gs))
+    Spec.assertEqWith s "seat 4's turn is worked" (Turn.workedMarker staged) (Just 2)
+    Spec.assertEqWith s "CR 807.5b seat 3 is asked" asked [(seat 3, [1, 2])]
+    Spec.assertEqWith s "CR 807.5b Counterspell is on seat 4's stack" (stacks acted) (Map.fromList [(1, 1), (2, 2)])
+
   -- CR 102.1 / 807.4: seat 4's Gideon Blackblade is a 4/4 creature while
   -- seat 0's turn is worked, seat 4's turn running beside it; seat 2's, whose
   -- turn is not running, is not (docs/decisions.md, "Which turn a Grand Melee
@@ -330,6 +359,15 @@ recordAsked p = case p of
     State.modify' (\(conceding, acting) -> (conceding, acting <> [pid]))
     pure (S.identityAnswer p)
   _ -> pure (S.identityAnswer p)
+
+-- Records who is asked Prompt.ChooseTurnMarker and what it offers, and
+-- answers the last marker offered; casts as S.castAnswer does.
+chooseLast :: Prompt.Prompt r -> State.State [(PlayerId, [Natural])] r
+chooseLast p = case p of
+  Prompt.ChooseTurnMarker _ pid markers -> do
+    State.modify' (<> [(pid, NonEmpty.toList markers)])
+    pure (NonEmpty.last markers)
+  _ -> pure (S.castAnswer p)
 
 -- Records the target menu each Prompt.ChooseTargets offers, every slot's
 -- recipients in one set; everything is answered as S.identityAnswer answers it.

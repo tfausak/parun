@@ -61,6 +61,7 @@ bot = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.ChooseOptional {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
   Prompt.PayLifeForMana {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
   Prompt.ChooseManaYield _ _ _ options -> SplitMix.pick options
+  Prompt.ChooseTurnMarker _ _ markers -> SplitMix.pick markers
   Prompt.ChooseCombatDamageOption {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
   Prompt.OrderTriggers _ _ entries -> order entries
   Prompt.OrderTimestamps _ _ objects -> order objects

@@ -625,6 +625,9 @@ data Response
     -- replaying a transcript against the wrong one would reorder a payment
     -- instead of the two cards.
     OrderedComponentCards [Natural.Natural]
+  | -- | CR 807.5b: the turn marker whose stack a player with priority for
+    -- several chose to act on.
+    ChoseTurnMarker Natural.Natural
   | -- | CR 123.5c: the index of the object the owner chose to keep the stickers.
     ChoseStickerKeeper Natural.Natural
   | -- | CR 608.2f: the relative order a resolving spell's controller chose for the

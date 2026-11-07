@@ -84,6 +84,7 @@ deciderOf :: Prompt.Prompt r -> Maybe PlayerId.PlayerId
 deciderOf prompt = case prompt of
   Prompt.ChooseAction decider _ _ -> Just (Decider.unwrap decider)
   Prompt.Concede pid -> Just pid
+  Prompt.ChooseTurnMarker decider _ _ -> Just (Decider.unwrap decider)
   Prompt.Shuffle {} -> Nothing
   Prompt.RandomFirstPlayer {} -> Nothing
   Prompt.RandomObject {} -> Nothing
