@@ -72,7 +72,9 @@ when a step needs it; a missing file is a fetch, not a blocker.
    capability cards. Then append the census snapshot to the tracker's body:
    the date, the count per place, and the two trend numbers (the first dry
    run's translations, and the cards needing a capability).
-3. **Fan out** ("Mechanics"). Capability issues hardest first, then batches.
+3. **Fan out** ("Mechanics"). Batches first: they overturn census verdicts
+   and uncover capabilities. Label a capability issue only once every batch
+   is closed, then hardest first, so the ones batches filed are ranked too.
 4. **Audit** a merged PR that changes what many games pass through: a
    `GameState` field, a reader every resolution, search, combat or cast
    passes through, a codec shape, or a new `docs/decisions.md` entry. Audit
