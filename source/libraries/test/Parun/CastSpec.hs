@@ -5052,6 +5052,26 @@ sharedEnumerationSpec s registry = Spec.describe s "SharedEnumeration" $ do
     Spec.assertEqWith s "Lier's flashback opens Divination" (offered (board [lier])) (names ["Divination", "Think Twice"])
     Spec.assertEqWith s "and the enumeration offers what the plain one does" (Cast.castableSpells S.alice (board [lier])) (plain (board [lier]))
 
+  -- #6552: a keyword grants a graveyard card no permission unless CR 702 says
+  -- so, so Serra Angel's flying and vigilance leave it ruled out unprojected,
+  -- and Think Twice's flashback and Baithook Angler's disturb do not.
+  Spec.it s "#6552 a buried Serra Angel is ruled out unprojected" $ do
+    let named = S.printingOf s registry
+    lands <- traverse named ["Mountain", "Mountain", "Island", "Island", "Island"]
+    anthem <- named "Glorious Anthem"
+    angel <- named "Serra Angel"
+    thinkTwice <- named "Think Twice"
+    angler <- named "Baithook Angler"
+    let base = snd (S.addPermanent anthem S.alice (List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) (Setup.emptyGame S.bothPlayers) lands))
+        (angelId, g1) = S.addGraveyardCard angel S.alice base
+        (thinkId, g2) = S.addGraveyardCard thinkTwice S.alice g1
+        (anglerId, g3) = S.addGraveyardCard angler S.alice g2
+        gs = g3 {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+        plain = filter (\(oid, name, facing) -> Cast.castable S.alice oid name facing gs) (Cast.castProposals (const True) S.alice gs)
+    Spec.assertEqWith s "the enumeration offers what the plain one does" (Cast.castableSpells S.alice gs) plain
+    Spec.assertBool s (any (\(oid, _, _) -> oid == anglerId) plain && any (\(oid, _, _) -> oid == thinkId) plain) "both the flashback and the disturb cast are offered"
+    Spec.assertEqWith s "Serra Angel is ruled out, Think Twice and the Angler are not" (fmap (Cast.unpermittedInGraveyard gs) [angelId, thinkId, anglerId]) [True, False, False]
+
 -- CR 613.1f / 113.6e: Patriar's Humiliation's perpetual "loses all abilities"
 -- follows the card Unsummon returns to alice's hand
 -- (Parun.SpecialActionSpec.humiliatedBoard), so the flash or morph printed on it

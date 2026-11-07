@@ -365,6 +365,8 @@ main = do
   ants <- fetchOrThrow registry "Carrion Ants"
   vampire <- fetchOrThrow registry "Bloodthrone Vampire"
   hearse <- fetchOrThrow registry "Unlicensed Hearse"
+  shade <- fetchOrThrow registry "Frozen Shade"
+  angel <- fetchOrThrow registry "Serra Angel"
   Bench.defaultMain
     [ Bench.bench "goldfish 2p" $ Bench.whnf (goldfish deck) 0,
       Bench.bench "casting 2p" $ Bench.whnf (casting deck) 0,
@@ -406,5 +408,13 @@ main = do
       -- 0-power Hearse can pay, beside its "from a single graveyard" slots
       -- over as many graveyard cards.
       Bench.bench "legal actions 40 crew" $ Bench.whnf (legalActionCountOf [hearse] [mountain]) 40,
-      Bench.bench "legal actions 80 crew" $ Bench.whnf (legalActionCountOf [hearse] [mountain]) 80
+      Bench.bench "legal actions 80 crew" $ Bench.whnf (legalActionCountOf [hearse] [mountain]) 80,
+      -- #6552's shapes. An unpayable mana cost: Frozen Shade's {B} beside a
+      -- Mountain apiece, which Mana.ceilingAdmits refuses.
+      Bench.bench "legal actions 40 unpayable" $ Bench.whnf (legalActionCountOf [shade, mountain] []) 40,
+      Bench.bench "legal actions 80 unpayable" $ Bench.whnf (legalActionCountOf [shade, mountain] []) 80,
+      -- A graveyard of cards printing keywords that permit no cast there:
+      -- Serra Angel's, beside a Mountain apiece.
+      Bench.bench "legal actions 40 buried keywords" $ Bench.whnf (legalActionCountOf [mountain] [angel]) 40,
+      Bench.bench "legal actions 80 buried keywords" $ Bench.whnf (legalActionCountOf [mountain] [angel]) 80
     ]
