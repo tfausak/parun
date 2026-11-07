@@ -865,7 +865,7 @@ policedChamber ::
   ObjectId.ObjectId ->
   m (GameState.GameState, [CardName.CardName])
 policedChamber s registry opponent fallback queue gs oid = do
-  let lifted = Registry.MkRegistry {Registry.fetchCard = Trans.lift . Registry.fetchCard registry, Registry.cards = Trans.lift (Registry.cards registry)}
+  let lifted = Registry.hoist Trans.lift registry
       play = Engine.runGameAsked (Interpreter.policingCardNames lifted (Trans.lift . S.brokenCorpus s) (queuedChamberAnswer opponent fallback)) gs (S.cast S.alice oid >> Stack.resolveTop)
   ((_, after), left) <- State.runStateT play queue
   pure (after, left)

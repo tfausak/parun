@@ -129,7 +129,7 @@ spec s registry = Spec.describe s "PlayerView" $ do
     other <- S.printingOf s registry "Mindslaver"
     let checking = Observer.MkObserver {Observer.before = \asked -> Trans.lift (State.modify' (<> [leaks other (Asked.game asked)])), Observer.after = \_ _ -> pure ()}
         seats :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Asked.Asked GameState.GameState) (State.StateT SplitMix.SplitMix (State.State [(Int, [PlayerId.PlayerId])])))
-        seats = Map.fromList [(S.alice, Driver.seated Bot.bot Chance.chance), (S.bob, Driver.seated Bot.bot Chance.chance)]
+        seats = Map.fromList [(S.alice, Driver.seated (Bot.bot []) Chance.chance), (S.bob, Driver.seated (Bot.bot []) Chance.chance)]
         checked seed = State.execState (State.evalStateT (Driver.match [checking] (Driver.bySeat seats Chance.chance) GameSettings.plain Map.empty matchup) (SplitMix.MkSplitMix seed)) []
         results = checked 1
     Spec.assertGtWith s "questions checked" (length results) 100
