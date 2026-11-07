@@ -1021,15 +1021,30 @@ placeBorne srcId pending = do
   case fmap LoggedEvent.event (PendingTrigger.firedBy pending) of
     Just (GameEvent.Revealed revealed) -> Monad.mapM_ (Event.stampReveal (RevealWindow.WhileOnStack abilId)) (Event.revealedObjects revealed gs2)
     _ -> pure ()
-  if not (Modal.selectionPossible legal selection)
-    then -- CR 603.3c: no selection satisfies the instruction.
-      State.modify' (Game.cease abilId)
-    else do
-      -- CR 700.2b: forced when there is nothing to choose, prompted otherwise.
-      -- Sorted on the way in, for Cast.castProposed's reason (CR 608.2c, 700.2d).
-      chosenModes <- case Modal.forcedSelection legal selection of
-        Just forced -> pure forced
-        Nothing -> fmap Seq.sort (Game.choose (Prompt.ChooseModes decider controller abilId legal selection))
+  -- CR 700.2b: forced when there is nothing to choose, prompted otherwise.
+  -- Sorted on the way in, for Cast.castProposed's reason (CR 608.2c, 700.2d).
+  --
+  -- An answer Modal.selectionSatisfiedBy refuses is RE-ASKED, for the reason
+  -- the target announcement below gives: a trigger has no `before` for CR
+  -- 601.2e's rewind. Bounded the same way, keyed on the answer narrowed to
+  -- `legal` and cut one past the most the instruction allows, a finite set.
+  let askModes rejected = do
+        answer <- fmap Seq.sort (Game.choose (Prompt.ChooseModes decider controller abilId legal selection))
+        if Modal.selectionSatisfiedBy legal selection answer
+          then pure (Just answer)
+          else
+            let key = Seq.take (Natural.toIntSaturating (Modal.mostOf selection + 1)) (Seq.filter (`Set.member` legal) answer)
+             in if Set.member key rejected
+                  then pure Nothing
+                  else askModes (Set.insert key rejected)
+  answeredModes <-
+    if not (Modal.selectionPossible legal selection)
+      then pure Nothing
+      else maybe (askModes Set.empty) (pure . Just) (Modal.forcedSelection legal selection)
+  case answeredModes of
+    -- CR 603.3c: no selection satisfies the instruction, or none was made.
+    Nothing -> State.modify' (Game.cease abilId)
+    Just chosenModes -> do
       -- CR 700.17: the controller faced a dilemma.
       Monad.when (Modal.facesDilemma chosenModes modal) $
         State.modify' (Event.recordEvent (GameEvent.FacedDilemma (FacedDilemma.MkFacedDilemma controller abilId)))

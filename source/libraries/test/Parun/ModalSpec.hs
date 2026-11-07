@@ -4,6 +4,7 @@
 -- resolution.
 module Parun.ModalSpec where
 
+import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
@@ -385,6 +386,58 @@ triggerModalSpec s registry = Spec.describe s "M4h trigger modal (CR 700.2b/603.
     Spec.assertEqWith s "Synthetic Modal Trigger still on the battlefield (nothing bounced or exiled)" (S.countOnBattlefieldByName (CardName.MkCardName $ Text.pack "Synthetic Modal Trigger") S.alice placed) 1
     Spec.assertEqWith s "alice's hand is still empty (nothing bounced)" (length (Game.zoneMembers Zone.Hand S.alice placed)) 0
     Spec.assertEqWith s "nothing was exiled" (length (Game.zoneMembers Zone.Exile S.alice placed)) 0
+
+-- CR 603.3c / 700.2b: a triggered ability's mode announcement is judged against
+-- its printed instruction exactly as a cast's (Cast.castProposed) and an
+-- activation's (Activate.activateAbility) are, by Modal.selectionSatisfiedBy.
+-- A refused answer is asked again, Engine.placeBorne's target-announcement
+-- posture, since a trigger has no CR 601.2e rewind.
+--
+-- Craftwork Crusher {3}{R}{R}{G}{G} Artifact Creature -- Boar Construct 7/5
+-- (data/cards/craftwork-crusher.json): "Trample. When this creature enters,
+-- choose two -- This creature deals 4 damage to target creature or
+-- planeswalker; Create a 2/2 colorless Wizard Soldier creature token named
+-- Cadet; Draw a card." Alone on the board it is its own first mode's only
+-- target, so all three modes are legal and the prompt is always asked.
+triggerAnswerSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+triggerAnswerSpec s registry = Spec.describe s "Judging a trigger's mode announcement (CR 603.3c)" $ do
+  Spec.it s "CR 603.3c a trigger's answer naming one mode of choose two is asked again" $ do
+    crusher <- S.printingOf s registry "Craftwork Crusher"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (crusherId, gs1) = S.entersWithTrigger crusher S.alice (Setup.emptyGame S.bothPlayers)
+        (_, gs) = S.addLibraryCard piker S.alice gs1
+        ((_, placed), asks) = State.runState (Engine.runGame (answeringModes (\n -> if n == 0 then [1] else [1, 2])) gs (Engine.placePendingTriggers [])) 0
+        resolved = snd (Engine.runGamePure S.identityAnswer placed Stack.resolveTop)
+    -- The gameplay-level assertions first: the re-asked answer is the one that
+    -- stands, so alice drew as well as made a Cadet.
+    Spec.assertEqWith s "alice drew a card: the second answer's draw mode resolved" (length (Game.zoneMembers Zone.Hand S.alice resolved)) 1
+    Spec.assertEqWith s "and made one Cadet" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Cadet")) S.alice resolved) 1
+    Spec.assertEqWith s "and Craftwork Crusher took no damage: mode 0 was never chosen" (S.damageOf crusherId resolved) (Just 0)
+    -- The proxy last.
+    Spec.assertEqWith s "alice was asked twice: the one-mode answer was refused" asks 2
+
+  -- An interpreter naming a mode index it has never used before, outside the
+  -- offer, on every call: keyed on the raw answer the re-ask would never end.
+  Spec.it s "CR 603.3c a mode answer outside the offer, made afresh each time, removes the trigger" $ do
+    crusher <- S.printingOf s registry "Craftwork Crusher"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (crusherId, gs1) = S.entersWithTrigger crusher S.alice (Setup.emptyGame S.bothPlayers)
+        (_, gs) = S.addLibraryCard piker S.alice gs1
+        ((_, placed), asks) = State.runState (Engine.runGame (answeringModes (\n -> [100 + n, 101 + n])) gs (Engine.placePendingTriggers [])) 0
+    Spec.assertEqWith s "the ability is removed from the stack rather than placed with unprinted modes" (length (GameState.stack placed)) 0
+    Spec.assertEqWith s "so alice drew nothing" (length (Game.zoneMembers Zone.Hand S.alice placed)) 0
+    Spec.assertEqWith s "and Craftwork Crusher took no damage" (S.damageOf crusherId placed) (Just 0)
+    Spec.assertEqWith s "and alice was asked exactly twice: both answers narrow to nothing" asks 2
+
+-- Answers the nth ChooseModes prompt (counting from 0) with `pick n`, and every
+-- other prompt as posed.
+answeringModes :: (Natural -> [Natural]) -> Prompt.Prompt r -> State.State Natural r
+answeringModes pick p = case p of
+  Prompt.ChooseModes {} -> do
+    n <- State.get
+    State.modify' (+ 1)
+    pure (Seq.fromList (fmap ModeIndex.MkModeIndex (pick n)))
+  _ -> pure (S.identityAnswer p)
 
 -- Cryptic Command's four modes, in printed order (CR 700.2 /
 -- data/cards/cryptic-command.json), under "Choose two --":
@@ -848,6 +901,7 @@ spec s registry = Spec.describe s "Parun.Engine.Modal" $ do
   modalReaderSpec s
   activationModalSpec s registry
   triggerModalSpec s registry
+  triggerAnswerSpec s registry
   chooseTwoSpec s registry
   forcedTwoSpec s registry
   repeatedModeSpec s registry
