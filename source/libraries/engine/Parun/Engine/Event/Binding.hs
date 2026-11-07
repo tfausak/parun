@@ -854,11 +854,9 @@ batchPartition cond bindings = case cond of
   -- a planeswalker you control at once triggers it twice.
   -- data/scenarios/card-trigger/cr-603-2c-vengeful-pharaoh-triggers-once-for-you-and-once-per-planeswalker.json
   -- proves the split.
-  -- OneOrMore is the whole batch (Fblthp, Impossibly Lost), and its
-  -- eventBindings arm stamps neither.
-  TriggerCondition.PlayerIsDealtDamage watched -> case PlayerIsDealtDamage.batching watched of
-    Batching.EachOccurrence -> seat Binding.triggerPlayer <> object Binding.became
-    Batching.OneOrMore -> Seq.empty
+  -- OneOrMore is the whole batch (Fblthp, Impossibly Lost): its eventBindings
+  -- arm stamps neither key.
+  TriggerCondition.PlayerIsDealtDamage _ -> seat Binding.triggerPlayer <> object Binding.became
   -- One occurrence per damaged permanent: Death Pits of Rath's "a creature is
   -- dealt damage" destroys each creature a batch damaged, and Ripjaw Raptor's
   -- Self reading has one.
@@ -872,6 +870,13 @@ batchPartition cond bindings = case cond of
   -- reading.
   TriggerCondition.AnyOf conditions -> Maybe.fromMaybe Seq.empty (List.find (not . Seq.null) (fmap (`batchPartition` bindings) conditions))
   TriggerCondition.CausedBy narrowed -> batchPartition (CausedBy.condition narrowed) bindings
+  -- CR 508.3b / 603.2c: one occurrence per attacked player, however many
+  -- attacking players' BecameAttacked name them -- Garruk, Curse Breaker's
+  -- creatures attacking bob and carol in one declaration are two. A Source
+  -- subject stamps no player: its one target is the bearer.
+  -- data/scenarios/garruk-curse-breaker-triggers-once-per-opponent-attacked.json
+  -- proves the split.
+  TriggerCondition.Attacks (AttackTrigger.Attacked _) -> seat Binding.triggerPlayer
   -- A wildcard where batchScoped is exhaustive: a batch condition splits only
   -- where an arm above says by what.
   _ -> Seq.empty

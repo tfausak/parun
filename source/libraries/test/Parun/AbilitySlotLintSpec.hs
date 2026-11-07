@@ -81,6 +81,7 @@ import qualified Parun.Types.CostSubject as CostSubject
 import qualified Parun.Types.Count as Count.Type
 import qualified Parun.Types.CountedDiscard as CountedDiscard
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DeclarationTrigger as DeclarationTrigger
 import qualified Parun.Types.Discard as Discard
 import qualified Parun.Types.Draw as Draw
@@ -128,6 +129,7 @@ import qualified Parun.Types.PermissionPool as PermissionPool
 import qualified Parun.Types.PermissionVerb as PermissionVerb
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerEffect as PlayerEffect
+import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerSacrifices as PlayerSacrifices
@@ -901,11 +903,23 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         attacksWith relation ability = ability {TriggeredAbility.condition = TriggerCondition.Attacks (AttackTrigger.Declaration (DeclarationTrigger.MkDeclarationTrigger relation Nothing))}
         youAttack = face {Face.delayedAbilities = fmap (attacksWith PlayerRelation.You) (Face.delayedAbilities face)}
         anyoneAttacks = face {Face.delayedAbilities = fmap (attacksWith PlayerRelation.AnyPlayer) (Face.delayedAbilities face)}
+        -- CR 102.1: a damage trigger's turn scope, Fblthp, Impossibly Lost's
+        -- "during your turn" against no turn named.
+        damagedDuring relation ability =
+          ability
+            { TriggeredAbility.condition =
+                TriggerCondition.PlayerIsDealtDamage
+                  (PlayerIsDealtDamage.watching (DealtDamage.MkDealtDamage PlayerRelation.Opponent Nothing Nothing)) {PlayerIsDealtDamage.scope = TurnScope.PlayersTurn (PlayerRef.Relative relation)}
+            }
+        yourTurnDamage = face {Face.delayedAbilities = fmap (damagedDuring PlayerRelation.You) (Face.delayedAbilities face)}
+        anyTurnDamage = face {Face.delayedAbilities = fmap (damagedDuring PlayerRelation.AnyPlayer) (Face.delayedAbilities face)}
     Spec.assertBool s (not (onsetOffends face)) "the real card, your turn, is accepted"
     Spec.assertBool s (onsetOffends widened) "each turn under an onset is rejected"
     Spec.assertBool s (onsetOffends dangling) "and so is an onset naming no declared ability"
     Spec.assertBool s (not (onsetOffends youAttack)) "CR 508.3d \"whenever you attack\" is controller-scoped"
     Spec.assertBool s (onsetOffends anyoneAttacks) "and \"whenever a player attacks\" is not"
+    Spec.assertBool s (not (onsetOffends yourTurnDamage)) "CR 102.1 damage \"during your turn\" is controller-scoped"
+    Spec.assertBool s (onsetOffends anyTurnDamage) "and damage on any turn is not"
     -- Not a check that fires for every card: one with no onset at all has
     -- nothing for this to reject, whatever its delayed abilities are scoped to.
     tidalWave <- S.printingOf s registry "Tidal Wave"

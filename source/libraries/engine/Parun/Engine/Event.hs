@@ -252,6 +252,7 @@ import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerEffect as PlayerEffect.Type
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.PlayerInstruction as PlayerInstruction
+import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import Parun.Types.Prevention (Prevention)
@@ -11555,7 +11556,8 @@ matchesTrigger gs = matchesTriggerGiven Map.empty (battlefieldCandidates gs) gs
 
 -- CR 603.2b / 109.5: does this condition restrict the turn its event may occur
 -- on to the ABILITY'S CONTROLLER's turn? True for "at the beginning of YOUR
--- <step>" and for nothing else.
+-- <step>", "whenever you attack", and a scope naming your turn ("during your
+-- turn").
 --
 -- A CLASSIFICATION of a trigger condition, the third of the same kind as
 -- eventBindingSlots and zonesTriggeredFrom above.
@@ -11670,7 +11672,9 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.StateIs _ -> False
   TriggerCondition.DealsDamage _ -> False
   TriggerCondition.IsDealtDamage _ -> False
-  TriggerCondition.PlayerIsDealtDamage _ -> False
+  -- The field again, LeavesZone's reading below: Fblthp, Impossibly Lost's
+  -- "during your turn".
+  TriggerCondition.PlayerIsDealtDamage watched -> Turn.isControllersTurn (PlayerIsDealtDamage.scope watched)
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> False
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> False
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> False
