@@ -66,11 +66,11 @@ bot names = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.ChooseManaToSpend _ _ units -> SplitMix.pick units
   Prompt.ChooseManaSpentOnX _ _ _ shares -> SplitMix.pick shares
   Prompt.ChooseX _ _ _ _ least greatest -> SplitMix.between least greatest
-  Prompt.ChooseOptional {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
-  Prompt.PayLifeForMana {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
+  Prompt.ChooseOptional {} -> exercisesOrDeclines
+  Prompt.PayLifeForMana {} -> exercisesOrDeclines
   Prompt.ChooseManaYield _ _ _ options -> SplitMix.pick options
   Prompt.ChooseTurnMarker _ _ markers -> SplitMix.pick markers
-  Prompt.ChooseCombatDamageOption {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
+  Prompt.ChooseCombatDamageOption {} -> exercisesOrDeclines
   Prompt.OrderTriggers _ _ entries -> order entries
   Prompt.OrderTimestamps _ _ objects -> order objects
   Prompt.OrderManaActivations _ _ objects -> order objects
@@ -90,7 +90,7 @@ bot names = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.ChooseModes _ _ _ legal selection -> pickOr (Replay.defaultAnswer (Asked.prompt asked)) (Modal.selections legal selection)
   -- CR 601.2c: each slot's count from its floor to what the board supplies.
   Prompt.AnnounceTargets _ _ _ offers -> traverse (\(count, legal) -> SplitMix.between (TargetCount.least count) (TargetCount.ceilingOn (Natural.length legal) count)) offers
-  Prompt.ReverseManaAbilities {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
+  Prompt.ReverseManaAbilities {} -> exercisesOrDeclines
   Prompt.ChooseDamageSource _ _ _ candidates -> SplitMix.pick candidates
   Prompt.ChooseCardInHand _ _ _ candidates -> SplitMix.pick candidates
   Prompt.ChooseColor _ _ _ colors -> SplitMix.pick colors
@@ -108,7 +108,23 @@ bot names = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.ChooseTaps _ _ _ candidates count -> fmap (Set.fromList . List.genericTake count) (SplitMix.shuffle candidates)
   Prompt.ChooseReturns _ _ _ candidates count -> fmap (Set.fromList . List.genericTake count) (SplitMix.shuffle candidates)
   Prompt.ChooseExiles _ _ _ candidates count -> fmap (Set.fromList . List.genericTake count) (SplitMix.shuffle candidates)
-  Prompt.OfferedCast {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
+  Prompt.OfferedCast {} -> exercisesOrDeclines
+  -- Each of these is a "may" or an either-or, both answers always legal.
+  Prompt.ChooseCommandZoneOfferFirst {} -> exercisesOrDeclines
+  Prompt.ChooseDredge {} -> exercisesOrDeclines
+  Prompt.ChooseExert {} -> exercisesOrDeclines
+  Prompt.ChooseExplore {} -> exercisesOrDeclines
+  Prompt.ChoosePayLifeOnEntry {} -> exercisesOrDeclines
+  Prompt.ChooseRedirect {} -> exercisesOrDeclines
+  Prompt.ChooseRepeat {} -> exercisesOrDeclines
+  Prompt.ChooseRiot {} -> exercisesOrDeclines
+  Prompt.ChooseSubstitute {} -> exercisesOrDeclines
+  Prompt.ChooseTribute {} -> exercisesOrDeclines
+  Prompt.ChooseTurnUpAttachment {} -> exercisesOrDeclines
+  Prompt.ChooseUnleash {} -> exercisesOrDeclines
+  Prompt.OfferedExtra {} -> exercisesOrDeclines
+  Prompt.OfferedMiracleReveal {} -> exercisesOrDeclines
+  Prompt.RerollDie {} -> exercisesOrDeclines
   Prompt.ChooseOfferedCastSpell _ _ options -> SplitMix.pick options
   -- CR 707.5: any candidate, or the card's "may" declined.
   Prompt.ChooseCopyTarget _ _ _ candidates -> SplitMix.pick (Nothing NonEmpty.:| fmap Just candidates)
@@ -132,6 +148,9 @@ bot names = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.ChooseCounterRemovalAmong _ _ _ owed offered -> pickOr (Replay.defaultAnswer (Asked.prompt asked)) (filter (Cost.dividesRemoval owed offered) (removals offered))
   Prompt.ChooseCounterRemovalAtLeast _ _ _ least offered -> pickOr (Replay.defaultAnswer (Asked.prompt asked)) (filter (Cost.dividesRemovalAtLeast least offered) (removals offered))
   Prompt.ChooseCounterRemovalUpTo _ _ _ most offered -> pickOr (Replay.defaultAnswer (Asked.prompt asked)) (filter ((<= most) . sum) (removals offered))
+  -- CR 608.2d: any branch left to choose, or neither where each branch
+  -- carries its own decline.
+  Prompt.ChooseClause _ _ _ _ branches neither _ -> SplitMix.pick ((if neither then (Nothing NonEmpty.<|) else id) (fmap Just branches))
   Prompt.ChooseGuess {} -> SplitMix.pick (GuessAnswer.Holds NonEmpty.:| [GuessAnswer.DoesNotHold])
   -- CR 107.1c: an unbounded number, a bid's included, reaches one past its
   -- floor, so a bid tops the high bid by one or declines.
@@ -229,6 +248,10 @@ divisions keys amount = case keys of
   key : rest -> do
     share <- [0 .. amount]
     fmap (if share == 0 then id else Map.insert key share) (divisions rest (amount - share))
+
+-- | A "may" taken or declined, each equally likely.
+exercisesOrDeclines :: (Monad m) => State.StateT SplitMix.Type.SplitMix m OptionalDecision.OptionalDecision
+exercisesOrDeclines = SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
 
 coin :: (Monad m) => State.StateT SplitMix.Type.SplitMix m Bool
 coin = SplitMix.pick (True NonEmpty.:| [False])
