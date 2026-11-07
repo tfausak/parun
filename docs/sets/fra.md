@@ -128,32 +128,19 @@ census did not settle.
 
 
 
-- Omnipresence: `_Rule:PlayerEffect`
 
 
-- Overwrite the Multiverse: `_Action:Exile`
-
-- Paradox Shaper // Omit Variables: `_Permanents:IsntPrepared`; shares Omit
-  Variables
-
-- Perfected Theory: `_LayerEffect:SetPT`
-
-- Pia, Aether Ascetic: `_Cost:DiscardACard`
-
-- Pia, Determined Rebuilder: `_LayerEffect:AdjustPTX`
-
-- Plan for All Outcomes: `_Permanents:IsPermanent`
-
-- Primal Witchstalker: `_Action:Reflexive_Mill_WhenYouDo`
-
-- Proft, Consulting Detective: `_Trigger:Or`
-
-- Proft, Sinister Mastermind: `_Rule:CastEffect`
-
-- Prophesied End: `_Action:If`
 
 
-- Prudent Fateseer: `_Rule:TriggerOnceEachTurn`; shares Peer Review
+
+
+
+
+
+
+
+
+
 
 - Puppet Crafting: `_Permanents:IsNonEnchantmentType`
 
@@ -337,6 +324,11 @@ census did not settle.
 - Yuriko, Hope from the Shadows: `_LayerEffect:AdjustPTX`
 
 ## Needs a capability
+
+### #6568: a free-cast permission can't bound mana value by a count
+
+- Omnipresence: its free casts take spells with mana value at most the number
+  of creatures you control; no filter operand reads a count of permanents.
 
 ### #6560: no effect removes up to N counters of any kind
 
