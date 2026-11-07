@@ -1295,6 +1295,8 @@ hand-of-the-praetors
 hangarback-walker
 hanweir-battlements
 hanweir-garrison
+hapatra-the-desert-fang
+hapatra-the-desert-frost
 happy-hogan-bodyguard
 harbinger-of-the-tides
 harbor-serpent
@@ -1346,6 +1348,8 @@ hero-of-bladehold
 heroes-bane
 hewed-stone-retainers
 hexhaven-battalion
+hexhaven-dueling-arena
+hexhaven-invigorator
 hickory-woodlot
 hidetsugus-second-rite
 hieromancers-cage
@@ -1399,6 +1403,7 @@ ichor-rats
 icon-of-ancestry
 icy-prison
 icy-reception
+identity-echo
 ignorant-bliss
 ill-gotten-gains
 illicit-auction
@@ -1448,6 +1453,7 @@ insatiable-skittermaw
 insidious-will
 inspiration-from-beyond
 inspired-idea
+inspired-tethermage
 inspiring-call
 inspiring-paladin
 inspiring-statuary
@@ -1487,10 +1493,12 @@ ivy-gleeful-spellthief
 ixidron
 izoni-center-of-the-web
 jace-memory-adept
+jace-reality-sculptor
 jace-the-living-guildpact
 jace-vryns-prodigy-jace-telepath-unbound
 jaces-archivist
 jaces-erasure
+jaces-machinations
 jaces-mindseeker
 jaces-phantasm
 jaces-sanctum
@@ -1506,6 +1514,7 @@ jeering-homunculus
 jesters-cap
 jet-medallion
 jeweled-bird
+jiang-yanggu-never-alone
 jinxed-idol
 johann-apprentice-sorcerer
 johtull-wurm
@@ -1529,6 +1538,8 @@ kalonian-twingrove
 kami-of-mourning
 kang-the-conqueror
 kari-zev-crew-of-two
+karn-argent-defender
+karn-gilded-guardian
 karn-liberated
 karns-touch
 karplusan-minotaur

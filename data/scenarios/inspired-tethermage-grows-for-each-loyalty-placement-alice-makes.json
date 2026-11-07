@@ -1,0 +1,59 @@
+{
+  "description": "CR 122.6 / 122.6a / 606.4 Inspired Tethermage grows each time alice puts loyalty counters on a planeswalker: as one enters, by a loyalty cost and by its own empower Jace, but not when bob does",
+  "note": "Ajani enters with its loyalty (122.6 counts counters given as it enters, 122.6a makes alice the one putting them): 4/3. Its +1 cost: 5/4. The {6} empower Jace creates a token with no counters and puts two on it: 6/5. On bob's turn bob's Ajani Goldmane +1 puts a loyalty counter that bob put, so the Tethermage stays 6/5.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Inspired Tethermage", "label": "teth" },
+          { "card": "Plains", "label": "p1" },
+          { "card": "Plains", "label": "p2" },
+          { "card": "Plains", "label": "p3" },
+          { "card": "Plains", "label": "p4" },
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Forest", "label": "f3" },
+          { "card": "Forest", "label": "f4" },
+          { "card": "Forest", "label": "f5" },
+          { "card": "Forest", "label": "f6" }
+        ],
+        "hand": [{ "card": "Ajani, Strength of the Pride", "label": "ajani" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Ajani Goldmane", "label": "goldmane", "counters": [{ "key": { "type": "Loyalty" }, "value": 4 }] }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$ajani", "mana": ["$p1", "$p2", "$p3", "$p4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of $teth"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$teth", "power": 4, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Ajani, Strength of the Pride", "ability": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$teth", "power": 5, "toughness": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$teth", "ability": 0, "mana": ["$f1", "$f2", "$f3", "$f4", "$f5", "$f6"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of $teth"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$teth", "power": 6, "toughness": 5 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "Jace Token", "kind": { "type": "Loyalty" }, "count": 2 } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "do": { "Activate": { "object": "$goldmane", "ability": 0 } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "check": { "View": { "of": "Stack", "is": ["ability of $goldmane"] } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "check": { "Counters": { "object": "$goldmane", "kind": { "type": "Loyalty" }, "count": 5 } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "check": { "PowerToughness": { "object": "$teth", "power": 6, "toughness": 5 } } }
+  ]
+}

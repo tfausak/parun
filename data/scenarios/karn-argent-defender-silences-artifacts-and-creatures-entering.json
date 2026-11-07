@@ -1,0 +1,38 @@
+{
+  "description": "CR 603.2 / 603.6a Karn, Argent Defender stops an artifact's and a creature's entering from triggering, for every player, and leaves an enchantment's alone",
+  "note": "bob controls Karn. alice's Golden Egg (a noncreature artifact) and Elvish Visionary (a nonartifact creature) enter without their draw triggers; her Ground Seal (neither) still triggers and draws.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "GGGGGG",
+        "hand": [
+          { "card": "Golden Egg", "label": "egg" },
+          { "card": "Elvish Visionary", "label": "visionary" },
+          { "card": "Ground Seal", "label": "seal" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Karn, Argent Defender", "label": "karn" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$egg" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$visionary", "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$seal", "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of Ground Seal"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Island", "count": 1 } } }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "description": "CR 602.5d / 701.20a Identity Echo exiles a creature alice controls and puts the first creature or planeswalker card revealed onto the battlefield, the rest on the bottom",
+  "note": "The library reveals Shock, then Ajani; Ajani enters and Shock goes beneath the Hill Giant and the Island, which were never revealed. The ability is refused at beginning of combat (sorcery timing), at bob's Ogre (not alice's) and at alice's Mountain (neither type), each on the same four Mountains.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Identity Echo", "label": "echo" },
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" },
+          { "card": "Mountain", "label": "m4" },
+          { "card": "Grizzly Bears", "label": "bears" }
+        ],
+        "library": [{ "card": "Shock" }, { "card": "Ajani, Strength of the Pride" }, { "card": "Hill Giant" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Gray Ogre", "label": "ogre" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "refuse": { "Activate": { "object": "$echo", "targets": ["$bears"], "mana": ["$m1", "$m2", "$m3", "$m4"] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "refuse": { "Activate": { "object": "$echo", "targets": ["$ogre"], "mana": ["$m1", "$m2", "$m3", "$m4"] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "refuse": { "Activate": { "object": "$echo", "targets": ["$m1"], "mana": ["$m1", "$m2", "$m3", "$m4"] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": { "Activate": { "object": "$echo", "targets": ["$bears"], "mana": ["$m1", "$m2", "$m3", "$m4"] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Ajani, Strength of the Pride", "count": 1 } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Hill Giant", "Island", "Shock"] } } }
+  ]
+}

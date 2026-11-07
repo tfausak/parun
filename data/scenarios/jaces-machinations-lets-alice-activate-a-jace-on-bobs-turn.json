@@ -1,0 +1,44 @@
+{
+  "description": "CR 606.3 / 117.1a Jace's Machinations lets alice activate her Jaces' loyalty abilities at instant speed on bob's turn, once each, and empowers Jace 8",
+  "note": "Before it resolves, alice's Jace Beleren cannot be activated on bob's turn. After it, the Jace's -1 is (alice draws the Hill Giant), a second activation of it is refused (606.3's once per turn is untouched), alice's Ajani Goldmane (no Jace) is refused, and in the end step carol's own Jace Beleren is refused: the grant is alice's alone. The Jace token enters with no counters and takes eight.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Jace Beleren", "label": "jace", "counters": [{ "key": { "type": "Loyalty" }, "value": 3 }] },
+          { "card": "Ajani Goldmane", "label": "goldmane", "counters": [{ "key": { "type": "Loyalty" }, "value": 4 }] }
+        ],
+        "hand": [{ "card": "Jace's Machinations", "label": "machinations" }],
+        "library": [{ "card": "Hill Giant" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "battlefield": [{ "card": "Jace Beleren", "label": "carol-jace", "counters": [{ "key": { "type": "Loyalty" }, "value": 3 }] }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "bob",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "$jace", "ability": 1, "targets": ["$alice"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$machinations", "mana": ["$i1", "$i2", "$i3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "Jace Token", "kind": { "type": "Loyalty" }, "count": 8 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "$goldmane", "ability": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$jace", "ability": 1, "targets": ["$alice"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$jace", "kind": { "type": "Loyalty" }, "count": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "$jace", "ability": 1, "targets": ["$alice"] } } },
+    { "turn": 1, "step": "EndStep", "player": "carol", "refuse": { "Activate": { "object": "$carol-jace", "ability": 1, "targets": ["$carol"] } } }
+  ]
+}
