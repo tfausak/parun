@@ -3106,6 +3106,53 @@ roilingCanopySpec s registry = Spec.describe s "Roiling Canopy" $ do
     after <- bearsAfter (canopyBoard S.bob 5 [] ["Forest"])
     Spec.assertEqWith s "the Bears stay 2/2" after (Just (Just (2, 2)))
 
+-- Tether Technician's "When you do" (CR 603.12), refused on a board paired with
+-- the one where the reflexive trigger fires. Asked here for Null Summoner's
+-- reason: a wrongly fired trigger raises a target prompt the scenario cannot
+-- schedule. The legs differ only in whether alice pays the discard.
+tetherTechnicianSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+tetherTechnicianSpec s registry = Spec.describe s "Tether Technician" $ do
+  -- alice holds the Technician, five Mountains to cast it and a Plains to
+  -- discard.
+  let technicianBoard =
+        let technician = S.aliased "technician" (S.cardSetup "Tether Technician")
+         in S.board
+              ( (S.battlefield S.alice (fmap S.permanent (replicate 5 "Mountain")))
+                  { Seat.hand = Seq.fromList [technician, S.cardSetup "Plains"]
+                  }
+                  NonEmpty.:| [S.playerSetup S.bob, S.playerSetup S.carol]
+              )
+              S.alice
+              S.precombatMain
+      paying :: Prompt.Prompt r -> r
+      paying p = case p of
+        Prompt.ChooseToPay {} -> PaymentDecision.Pays
+        _ -> S.identityAnswer p
+      -- Cast and resolve the Technician, then resolve its enters trigger under
+      -- the leg's answerer: what is left on the stack is the reflexive trigger.
+      entered :: (forall r. Prompt.Prompt r -> r) -> Staged.Staged -> Maybe GameState.GameState
+      entered answer built = do
+        technicianId <- aliasIn "technician" built
+        let cast = S.runPure answer (Staged.state built) (S.cast S.alice technicianId)
+            resolved = S.runPure answer cast Stack.resolveTop
+            arrived = S.runPure answer resolved Engine.settleForPriority
+            triggered = S.runPure answer arrived Stack.resolveTop
+        pure (S.runPure answer triggered Engine.settleForPriority)
+  Spec.it s "CR 603.12 discarding a card arms the reflexive damage trigger" $ do
+    built <- S.buildBoardOrFail s registry technicianBoard
+    case entered paying built of
+      Just settled -> do
+        Spec.assertEqWith s "the reflexive trigger is on the stack" (length (GameState.stack settled)) 1
+        Spec.assertEqWith s "and alice discarded the Plains" (S.handSize S.alice settled) 0
+      Nothing -> Spec.assertFailure s "fixture should alias the Technician"
+  Spec.it s "CR 603.12 declining the discard, nothing triggers" $ do
+    built <- S.buildBoardOrFail s registry technicianBoard
+    case entered S.identityAnswer built of
+      Just settled -> do
+        Spec.assertEqWith s "no trigger is on the stack" (GameState.stack settled) []
+        Spec.assertEqWith s "and alice kept the Plains" (S.handSize S.alice settled) 1
+      Nothing -> Spec.assertFailure s "fixture should alias the Technician"
+
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Parun.Engine.Trigger" $ do
   fireLordZukoSpec s registry
@@ -3148,3 +3195,4 @@ spec s registry = Spec.describe s "Parun.Engine.Trigger" $ do
   nullSummonerSpec s registry
   massacreGirlSpec s registry
   roilingCanopySpec s registry
+  tetherTechnicianSpec s registry
