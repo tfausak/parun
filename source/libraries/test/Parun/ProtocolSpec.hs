@@ -8,6 +8,7 @@ import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
@@ -29,6 +30,7 @@ import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Play.Protocol as Protocol
 import qualified Parun.Registry as Registry
+import qualified Parun.Scenario as Scenario
 import qualified Parun.Scenario.Prompt as Scenario.Prompt
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
@@ -36,8 +38,10 @@ import qualified Parun.Types.Action as Action
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
+import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.ClauseIndex as ClauseIndex
+import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Decider as Decider
@@ -147,6 +151,29 @@ spec s registry = Spec.describe s "Protocol" $ do
     Spec.assertEqWith s "from" (field "from" offer) (Just (Protocol.objects [o7, o5]))
     Spec.assertEqWith s "in order" (Protocol.decodeAnswer prompt (R.Array [R.Number 1, R.Number 0])) (Right (GraveyardArrangement.InOrder [1, 0]))
     Spec.assertEqWith s "any order" (Protocol.decodeAnswer prompt R.Null) (Right GraveyardArrangement.AnyOrder)
+
+  Spec.it s "a prompt answered by one of a list offers each option as the answer that picks it" $ do
+    let o7 = ObjectId.MkObjectId 7
+        o9 = ObjectId.MkObjectId 9
+        o11 = ObjectId.MkObjectId 11
+        alice = Decider.MkDecider S.alice
+        gs = Setup.emptyGame S.bothPlayers
+        listed key prompt = do
+          let offer = Protocol.offerOf gs prompt
+          options <- maybe (Left (Text.pack ("no " <> key))) Right (field key offer >>= arrayOf)
+          answers <- traverse (Protocol.decodeAnswer prompt) options
+          pure (field "source" offer, answers)
+        hand = Prompt.ChooseCardInHand alice S.alice o7 (o9 NonEmpty.:| [o11])
+    Spec.assertEqWith s "cards" (listed "options" hand) (Right (Just (Protocol.object o7), [o9, o11]))
+    Spec.assertEqWith s "players" (listed "players" (Prompt.ChoosePlayer alice S.alice o7 (S.alice NonEmpty.:| [S.bob]))) (Right (Just (Protocol.object o7), [S.alice, S.bob]))
+    Spec.assertEqWith s "a may declines last" (listed "players" (Prompt.ChooseAssistant alice S.alice o7 (S.bob NonEmpty.:| []))) (Right (Just (Protocol.object o7), [Just S.bob, Nothing]))
+    Spec.assertEqWith s "words" (listed "options" (Prompt.ChooseColor alice S.alice o7 (Color.Red NonEmpty.:| [Color.Green]))) (Right (Just (Protocol.object o7), [Color.Red, Color.Green]))
+    Spec.assertEqWith s "attack targets" (listed "options" (Prompt.ChooseAttackTarget alice S.alice o7 (AttackTarget.OfPlayer S.bob NonEmpty.:| [AttackTarget.OfPlaneswalker o9]))) (Right (Just (Protocol.object o7), [AttackTarget.OfPlayer S.bob, AttackTarget.OfPlaneswalker o9]))
+    Spec.assertEqWith s "no source" (listed "players" (Prompt.ChooseActivePlayer alice S.alice (S.bob NonEmpty.:| [S.alice]))) (Right (Nothing, [S.bob, S.alice]))
+    Spec.assertBool s (all (Scenario.withinOffer hand) [o9, o11]) "every option within the offer"
+    -- CR 101.4b: what earlier choosers took.
+    let graveyard = Protocol.offerOf gs (Prompt.ChooseCardInGraveyard alice S.alice o7 (o9 NonEmpty.:| []) (Seq.singleton (S.bob, o11)))
+    Spec.assertEqWith s "earlier" (field "earlier" graveyard) (Just (R.Array [R.Array [R.Text (Text.pack "1"), Protocol.object o11]]))
 
   Spec.it s "a hidden card reaches no line sent to the other seat" $ do
     gs <- started s registry
@@ -336,6 +363,11 @@ client line = case requestOf (Text.unpack line) of
 field :: String -> R.Reply -> Maybe R.Reply
 field key reply = case reply of
   R.Object pairs -> lookup (Text.pack key) pairs
+  _ -> Nothing
+
+arrayOf :: R.Reply -> Maybe [R.Reply]
+arrayOf reply = case reply of
+  R.Array xs -> Just xs
   _ -> Nothing
 
 requestOf :: String -> Maybe Request.Request
