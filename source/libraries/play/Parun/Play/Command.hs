@@ -22,6 +22,7 @@ import qualified Parun.Codec.Scenario as Codec.Scenario
 import qualified Parun.DeckList as DeckList
 import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Parun.Extra.Integer as Integer
+import qualified Parun.Interpreter as Interpreter
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Play.Client as Client
@@ -53,7 +54,7 @@ main arguments = case GetOpt.getOpt GetOpt.Permute flags arguments of
     Right options -> do
       registry <- Registry.defaultRoot >>= Registry.fileRegistry
       decks <- (,) <$> load registry one <*> load registry two
-      play options (Identity.runIdentity . Registry.fetchCard registry) decks
+      play options (Identity.runIdentity . Interpreter.chosenCard registry) decks
   (_, _, problems) -> usage problems
 
 flags :: [GetOpt.OptDescr (PlayOptions.PlayOptions -> Either String PlayOptions.PlayOptions)]

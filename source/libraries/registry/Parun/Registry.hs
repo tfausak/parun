@@ -17,7 +17,7 @@
 -- names Spy Kit's CR 612.7 grant reaches (Parun.Interpreter.lookingUpCards). A
 -- lint of the corpus parun ships is a claim about the data rather than a
 -- question for a registry, and that lives in the test suite -- every file
--- parses (Parun.CardsSpec), no card repeats a face name and no two cards claim
+-- parses (Parun.CardsSpec), no card repeats a face name and no two cards own
 -- one (Parun.EffectLintSpec) -- which borrows cardPath, listRoot, loadRoot,
 -- parseCard and filedAs: facts about the on-disk format rather than about
 -- looking a card up.
@@ -87,7 +87,7 @@ defaultRoot = Paths.getDataFileName "cards"
 -- answers Nothing. `cards` forces that same index.
 --
 -- A lookup or enumeration that reaches a file that will not parse, or a name
--- two cards claim, answers InvalidCorpus naming every such problem among the
+-- two cards own, answers InvalidCorpus naming every such problem among the
 -- files it reached. The rest of the root is not validated here; the corpus
 -- parun ships is, by the lints the module header names.
 --
@@ -157,6 +157,9 @@ slugFor = Slug.fromText . CardName.unwrap
 -- to answer all the same (Parun.Interpreter.chosenFace). So an own name wins: a
 -- prepare spell reprinting a real card (Encouraging Aviator's Jump) leaves the
 -- name to that card, and only a name no card owns answers by its alternative.
+-- A name several cards hold only as an alternative (Seed Suture, CR 723.4) is
+-- no card's, so it answers none here, and Parun.Interpreter.chosenCard finds
+-- a card holding it for CR 723.5.
 --
 -- An own name claimed by two cards is fatal, and so is a card repeating its own
 -- face name; see 'ambiguities'.
@@ -196,18 +199,16 @@ claims parsed = Map.fromListWith (<>) $ do
   pure (slug, claimant (Map.singleton path 1))
 
 -- Every name the pool cannot answer with one card: one card repeating a face
--- name, two cards owning one, or two cards holding one only as an alternative
--- that no card owns. Over the corpus parun ships, Parun.EffectLintSpec's "no two
--- cards claim one name" holds this for every file.
---
--- Answering a name two cards hold only as an alternative is not implemented
--- (#6457).
+-- name, or two cards owning one. Cards holding one name only as an alternative
+-- print the same spell under it (CR 723.4), so they contest nothing ('index').
+-- Over the corpus parun ships, Parun.EffectLintSpec's "no two cards own one
+-- name" holds this for every file.
 ambiguities :: [(FilePath, Card.Card)] -> [String]
 ambiguities parsed = do
   (slug, claimants) <- Map.toAscList (claims parsed)
   let name = Text.unpack (Slug.unwrap slug)
       repeats = Map.toAscList (Map.filter (> 1) (claimsPerPath claimants))
-      contested = if Map.null (owners claimants) then alternatives claimants else owners claimants
+      contested = owners claimants
   fmap (\(path, n) -> name <> " is claimed by " <> path <> ", which repeats it across " <> show n <> " of its own faces") repeats
     <> [name <> " is claimed by " <> List.intercalate ", " (Map.keys contested) | Map.size contested > 1]
 

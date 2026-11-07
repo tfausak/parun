@@ -202,7 +202,7 @@ spec s = Spec.describe s "Parun.Registry" $ do
   -- CR 709.4a: a name belongs to a card, so one name answering for two cards is
   -- a broken pool rather than a lookup with a preference: a silent
   -- last-one-wins would be a lookup quietly serving a card it was not asked
-  -- for. Over the corpus parun ships, Parun.EffectLintSpec's "no two cards claim
+  -- for. Over the corpus parun ships, Parun.EffectLintSpec's "no two cards own
   -- one name" holds this for every name.
   Spec.it s "a lookup reaching two cards that claim its name fails, naming both" $ do
     waxWane <- S.waxWaneJson
@@ -232,16 +232,19 @@ spec s = Spec.describe s "Parun.Registry" $ do
       byAlternative <- Registry.named registry "Jump"
       Spec.assertEqWith s "the Aviator answers" (fmap (fmap faceNames) byAlternative) (Right (Just (fmap (CardName.MkCardName . Text.pack) ["Encouraging Aviator", "Jump"])))
 
-  -- Two cards holding one alternative name, neither owning it, leave no one card
-  -- to answer, so the lookup fails as a collision (#6457).
-  Spec.it s "a lookup reaching two cards sharing an alternative name fails, naming both" $ do
+  -- CR 723.4: two cards holding one alternative name, neither owning it, print
+  -- the same spell under it, so neither is a card by that name and the pool
+  -- is not broken. Interpreter.chosenCard answers the name for CR 723.5
+  -- (Parun.PreparationSpec's Seed Suture case).
+  Spec.it s "CR 723.4 a name two cards hold only as an alternative is no card's" $ do
     aviator <- S.aviatorJson
     let other = Text.replace (Text.pack "\"name\": \"Encouraging Aviator\"") (Text.pack "\"name\": \"Other Aviator\"") aviator
     Spec.assertBool s (other /= aviator) "the fixture's front face was actually renamed"
-    withCorpus "shared-alternative" [("encouraging-aviator-jump.json", aviator), ("other-aviator-jump.json", other)] $ \root registry -> do
-      problems <- problemsOf s "shared-alternative" (Registry.named registry "Jump")
-      Spec.assertBool s (any (List.isInfixOf (root <> "/encouraging-aviator-jump.json")) problems) ("names the first claimant: " <> show problems)
-      Spec.assertBool s (any (List.isInfixOf (root <> "/other-aviator-jump.json")) problems) ("names the second claimant: " <> show problems)
+    withCorpus "shared-alternative" [("encouraging-aviator-jump.json", aviator), ("other-aviator-jump.json", other)] $ \_ registry -> do
+      byShared <- Registry.named registry "Jump"
+      Spec.assertEqWith s "no card answers" (fmap (fmap faceNames) byShared) (Right Nothing)
+      byOwn <- Registry.named registry "Other Aviator"
+      Spec.assertEqWith s "and each card its own name" (fmap (fmap faceNames) byOwn) (Right (Just (fmap (CardName.MkCardName . Text.pack) ["Other Aviator", "Jump"])))
 
   -- Registry.ambiguities refuses a name two cards own and a card repeating its
   -- own face name; "a lookup reaching two cards that claim its name" is the
