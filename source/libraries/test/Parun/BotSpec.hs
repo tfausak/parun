@@ -11,6 +11,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
+import qualified Data.Text as Text
 import qualified Data.Word as Word
 import Numeric.Natural (Natural)
 import qualified Parun.Engine.Decide as Decide
@@ -31,10 +32,19 @@ import qualified Parun.Scenario as Scenario
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
 import qualified Parun.Types.Answerer as Answerer
+import qualified Parun.Types.AnyNumberOf as AnyNumberOf
 import qualified Parun.Types.Asked as Asked
+import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.CandidateCost as CandidateCost
+import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.ChooseBetween as ChooseBetween
 import qualified Parun.Types.ClauseIndex as ClauseIndex
+import qualified Parun.Types.CoinFace as CoinFace
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.CostComponent as CostComponent
+import qualified Parun.Types.DamageEvent as DamageEvent
+import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Deck as Deck
 import qualified Parun.Types.Dividing as Dividing
@@ -45,16 +55,21 @@ import qualified Parun.Types.GuessAnswer as GuessAnswer
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.NumberFloor as NumberFloor
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.Observer as Observer
+import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.PayOffer as PayOffer
 import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Result as Result
+import qualified Parun.Types.SearchPlace as SearchPlace
+import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SplitMix as SplitMix
+import qualified Parun.Types.TargetCount as TargetCount
 import qualified Parun.Types.TriggerEntry as TriggerEntry
 import qualified Parun.Types.TriggerSource as TriggerSource
 import qualified Parun.Types.Zone as Zone
@@ -159,6 +174,80 @@ spec s registry = Spec.describe s "Bot" $ do
   Spec.it s "chooses any number in range and tops a bid by one" $ do
     Spec.assertEqWith s "bounded" (drawn (Prompt.ChooseNumber decider S.alice oid 1 NumberFloor.Least (Just 4))) (Set.fromList [1 .. 4])
     Spec.assertEqWith s "bid" (drawn (Prompt.ChooseNumber decider S.alice oid 3 NumberFloor.HighBid Nothing)) (Set.fromList [3, 4])
+
+  -- CR 601.2h: a total cost's components paid in any order; Ponder's cards
+  -- put back in any.
+  Spec.it s "orders cost components and library cards every way" $ do
+    let components = [CostComponent.TapThis, CostComponent.SacrificeThis, CostComponent.ReturnThis]
+        cards = fmap ObjectId.MkObjectId [8, 9, 10]
+    Spec.assertEqWith s "components" (drawn (Prompt.OrderCostComponents decider S.alice oid components)) (Set.fromList (List.permutations [0, 1, 2]))
+    Spec.assertEqWith s "arranged" (drawn (Prompt.ArrangeLibraryCards decider S.alice cards)) (Set.fromList (List.permutations [0, 1, 2]))
+
+  -- CR 701.22a: scry 2 puts any of the two on the bottom and the rest on
+  -- top, each group in any order: six answers.
+  Spec.it s "scries any cards to the bottom in any order" $ do
+    let one = ObjectId.MkObjectId 8
+        two = ObjectId.MkObjectId 9
+    Spec.assertEqWith s "scries" (drawn (Prompt.ChooseScry decider S.alice [one, two])) (Set.fromList [([], [one, two]), ([], [two, one]), ([one], [two]), ([two], [one]), ([one, two], []), ([two, one], [])])
+
+  -- CR 700.2: "Choose one or both" over two legal modes is three selections;
+  -- CR 700.2d's repeats make "choose two" over two modes three as well.
+  Spec.it s "chooses every selection of modes the instruction allows" $ do
+    let modes = Set.fromList (fmap ModeIndex.MkModeIndex [0, 1])
+        selections = Set.fromList . fmap (Seq.fromList . fmap ModeIndex.MkModeIndex)
+    Spec.assertEqWith s "range" (drawn (Prompt.ChooseModes decider S.alice oid modes (ModeSelection.ChooseBetween (ChooseBetween.MkChooseBetween 1 2)))) (selections [[0], [1], [0, 1]])
+    Spec.assertEqWith s "repeats" (drawn (Prompt.ChooseModes decider S.alice oid modes (ModeSelection.ChooseExactlyWithRepeats 2))) (selections [[0, 0], [0, 1], [1, 1]])
+
+  -- CR 601.2c: "up to three targets" with two legal is zero to two.
+  Spec.it s "announces any target count the board can supply" $ do
+    let slot = SlotName.MkSlotName (Text.pack "target")
+        legal = Set.fromList [Recipient.ToCreature (ObjectId.MkObjectId 8), Recipient.ToPlayer S.bob]
+    Spec.assertEqWith s "counts" (drawn (Prompt.AnnounceTargets decider S.alice oid (Map.singleton slot (TargetCount.upTo 3, legal)))) (Set.fromList (fmap (Map.singleton slot) [0, 1, 2]))
+
+  Spec.it s "takes or declines each offer" $ do
+    let decisions = Set.fromList [OptionalDecision.Exercises, OptionalDecision.Declines]
+    Spec.assertEqWith s "reversals" (drawn (Prompt.ReverseManaAbilities decider S.alice (oid NonEmpty.:| []))) decisions
+    Spec.assertEqWith s "casts" (drawn (Prompt.OfferedCast decider S.alice oid (CardName.MkCardName (Text.pack "Grizzly Bears")))) decisions
+    Spec.assertEqWith s "calls" (drawn (Prompt.CallCoin decider S.alice)) (Set.fromList [CoinFace.Heads, CoinFace.Tails])
+
+  Spec.it s "chooses any one of what is offered" $ do
+    let candidates = ObjectId.MkObjectId 8 NonEmpty.:| [ObjectId.MkObjectId 9]
+        cheaper = Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost [ManaSymbol.Generic 2]), Cost.components = []}
+        dearer = Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost [ManaSymbol.Generic 3]), Cost.components = []}
+        costs = [CandidateCost.plain Nothing cheaper, CandidateCost.plain Nothing dearer]
+        casts = (ObjectId.MkObjectId 8, CardName.MkCardName (Text.pack "Fire")) NonEmpty.:| [(ObjectId.MkObjectId 8, CardName.MkCardName (Text.pack "Ice"))]
+    Spec.assertEqWith s "sources" (drawn (Prompt.ChooseDamageSource decider S.alice oid candidates)) (Set.fromList (NonEmpty.toList candidates))
+    Spec.assertEqWith s "hand" (drawn (Prompt.ChooseCardInHand decider S.alice oid candidates)) (Set.fromList (NonEmpty.toList candidates))
+    Spec.assertEqWith s "colors" (drawn (Prompt.ChooseColor decider S.alice oid (Color.Red NonEmpty.:| [Color.Green]))) (Set.fromList [Color.Red, Color.Green])
+    Spec.assertEqWith s "costs" (drawn (Prompt.ChooseCost decider S.alice oid costs Seq.empty)) (Set.fromList costs)
+    Spec.assertEqWith s "spells" (drawn (Prompt.ChooseOfferedCastSpell decider S.alice casts)) (Set.fromList (NonEmpty.toList casts))
+    Spec.assertEqWith s "attacks" (drawn (Prompt.ChooseAttackTarget decider S.alice oid (AttackTarget.OfPlayer S.bob NonEmpty.:| [AttackTarget.OfPlaneswalker (ObjectId.MkObjectId 8)]))) (Set.fromList [AttackTarget.OfPlayer S.bob, AttackTarget.OfPlaneswalker (ObjectId.MkObjectId 8)])
+
+  -- CR 707.5: Clone may copy any candidate or nothing.
+  Spec.it s "copies any candidate or declines" $ do
+    let candidates = fmap ObjectId.MkObjectId [8, 9]
+    Spec.assertEqWith s "copies" (drawn (Prompt.ChooseCopyTarget decider S.alice oid candidates)) (Set.fromList (Nothing : fmap Just candidates))
+
+  -- Boonweaver Giant's "graveyard, hand, and/or library" is any nonempty
+  -- group of the three.
+  Spec.it s "searches any nonempty group of the places" $ do
+    let places = Set.fromList (fmap SearchPlace.InZone [Zone.Graveyard, Zone.Hand, Zone.Library])
+    Spec.assertEqWith s "places" (drawn (Prompt.ChooseSearchZones decider S.alice places)) (Set.fromList (fmap Set.fromList (filter (not . null) (List.subsequences (Set.toList places)))))
+
+  -- CR 601.2f: tapping two of three is any two; "any number" of three, at
+  -- most two, is any group of up to two.
+  Spec.it s "taps any group of the count and takes any number up to the bound" $ do
+    let candidates = fmap ObjectId.MkObjectId [8, 9, 10]
+        groups p = Set.fromList (fmap Set.fromList (filter (p . length) (List.subsequences candidates)))
+    Spec.assertEqWith s "taps" (drawn (Prompt.ChooseTaps decider S.alice oid candidates 2)) (groups (== 2))
+    Spec.assertEqWith s "bounded" (drawn (Prompt.ChooseAnyNumber decider S.alice oid AnyNumberOf.CardsFromAmong candidates (Just 2) Seq.empty)) (groups (<= 2))
+    Spec.assertEqWith s "unbounded" (drawn (Prompt.ChooseAnyNumber decider S.alice oid AnyNumberOf.Permanents candidates Nothing Seq.empty)) (groups (const True))
+
+  -- CR 615.7: a shield with 3 left over hits of 2 and 3 spends all 3, each
+  -- hit taking at most its own damage.
+  Spec.it s "allocates a shield every way that spends it" $ do
+    let hit n = DamageEvent.MkDamageEvent oid (Recipient.ToPlayer S.alice) n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
+    Spec.assertEqWith s "shares" (drawn (Prompt.AllocateDamage decider S.alice [hit 2, hit 3] 3)) (Set.fromList [[0, 3], [1, 2], [2, 1]])
 
 -- Every answer the bot gives the prompt over many seeds.
 drawn :: (Ord r) => Prompt.Prompt r -> Set.Set r
