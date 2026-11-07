@@ -14,12 +14,16 @@ import qualified Data.Set as Set
 import qualified Data.Traversable as Traversable
 import Numeric.Natural (Natural)
 import qualified Parun.Engine.Damage as Damage
+import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.Replay as Replay
 import qualified Parun.Engine.Target as Target
+import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Play.SplitMix as SplitMix
 import qualified Parun.Types.Action as Action
 import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
+import qualified Parun.Types.CoinFace as CoinFace
+import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.Dividing as Dividing
 import qualified Parun.Types.GuessAnswer as GuessAnswer
 import qualified Parun.Types.MulliganDecision as MulliganDecision
@@ -28,13 +32,15 @@ import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.PlayerView as PlayerView
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.SplitMix as SplitMix.Type
+import qualified Parun.Types.TargetCount as TargetCount
 
--- | Each prompt a Portal game reaches, plus ChooseGuess and ChooseNumber,
--- answered with one of its legal answers, each equally likely, an unbounded
--- number capped one past its floor. Never concedes.
+-- | Each prompt a bot game over the decks in data/decks reaches, plus
+-- ChooseGuess, ChooseNumber and the prompts sharing an arm's shape, answered
+-- with one of its legal answers, each equally likely, an unbounded number
+-- capped one past its floor. Never concedes.
 --
--- Not implemented: a random answer to every other prompt, which gets
--- 'Replay.defaultAnswer' (#5227).
+-- Not implemented: a random answer to every other prompt, DeclareBands
+-- and ChooseCardName included, which gets 'Replay.defaultAnswer' (#5227).
 bot :: (Monad m) => Answerer.Answerer (Asked.Asked PlayerView.PlayerView) (State.StateT SplitMix.Type.SplitMix m)
 bot = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.ChooseAction _ _ actions -> maybe (pure Action.Pass) SplitMix.pick (NonEmpty.nonEmpty actions)
@@ -42,6 +48,7 @@ bot = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.Bottom _ _ cards count -> fmap (List.genericTake count) (SplitMix.shuffle cards)
   Prompt.ChooseDiscard _ _ cards count -> fmap (List.genericTake count) (SplitMix.shuffle cards)
   Prompt.DeclareAttackers _ _ attackers -> Monad.filterM (const coin) attackers
+  Prompt.ChooseAttackTarget _ _ _ targets -> SplitMix.pick targets
   Prompt.DeclareBlockers _ _ blockers attackers ->
     fmap (Map.fromList . Maybe.catMaybes) . Traversable.for blockers $ \blocker ->
       fmap (fmap (\attacker -> (blocker, Set.singleton attacker))) (SplitMix.pick (Nothing NonEmpty.:| fmap Just attackers))
@@ -55,7 +62,46 @@ bot = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.PayLifeForMana {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
   Prompt.ChooseManaYield _ _ _ options -> SplitMix.pick options
   Prompt.ChooseCombatDamageOption {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
-  Prompt.OrderTriggers _ _ entries -> SplitMix.shuffle (zipWith const [0 ..] entries)
+  Prompt.OrderTriggers _ _ entries -> order entries
+  Prompt.OrderTimestamps _ _ objects -> order objects
+  Prompt.OrderManaActivations _ _ objects -> order objects
+  Prompt.OrderCombatTolls _ _ objects -> order objects
+  Prompt.OrderComponentCards _ _ _ printings -> order printings
+  Prompt.OrderCostComponents _ _ _ components -> order components
+  Prompt.OrderDamage _ _ events -> order events
+  Prompt.OrderForEach _ _ _ recipients -> order recipients
+  Prompt.ArrangeLibraryCards _ _ objects -> order objects
+  Prompt.ArrangeLibraryArrivals _ _ _ objects -> order objects
+  -- CR 701.22a / 701.25a / 701.29a: any of the cards to the bottom (the
+  -- graveyard, surveilling), the rest on top, each in any order.
+  Prompt.ChooseScry _ _ cards -> split cards
+  Prompt.ChooseSurveil _ _ cards -> split cards
+  Prompt.ChooseFateseal _ _ _ cards -> split cards
+  -- CR 700.2: every selection the instruction allows over the legal modes.
+  Prompt.ChooseModes _ _ _ legal selection ->
+    maybe (pure (Replay.defaultAnswer (Asked.prompt asked))) SplitMix.pick (NonEmpty.nonEmpty (Modal.selections legal selection))
+  -- CR 601.2c: each slot's count from its floor to what the board supplies.
+  Prompt.AnnounceTargets _ _ _ offers -> traverse (\(count, legal) -> SplitMix.between (TargetCount.least count) (TargetCount.ceilingOn (Natural.length legal) count)) offers
+  Prompt.ReverseManaAbilities {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
+  Prompt.ChooseDamageSource _ _ _ candidates -> SplitMix.pick candidates
+  Prompt.ChooseCardInHand _ _ _ candidates -> SplitMix.pick candidates
+  Prompt.ChooseColor _ _ _ colors -> SplitMix.pick colors
+  -- The printed "and/or": any nonempty group of the places.
+  Prompt.ChooseSearchZones _ _ places -> someOf places
+  Prompt.ChooseCost _ _ _ candidates _ -> maybe (pure (Replay.defaultAnswer (Asked.prompt asked))) SplitMix.pick (NonEmpty.nonEmpty candidates)
+  Prompt.CallCoin {} -> SplitMix.pick (CoinFace.Heads NonEmpty.:| [CoinFace.Tails])
+  -- CR 615.7: every share of the shield, each event taking at most its own
+  -- damage (Parun.Engine.Replacement.askAllocation's gate).
+  Prompt.AllocateDamage _ _ events share ->
+    maybe (pure (Replay.defaultAnswer (Asked.prompt asked))) SplitMix.pick (NonEmpty.nonEmpty (allocations (fmap DamageEvent.amount events) share))
+  Prompt.ChooseTaps _ _ _ candidates count -> fmap (Set.fromList . List.genericTake count) (SplitMix.shuffle candidates)
+  Prompt.ChooseReturns _ _ _ candidates count -> fmap (Set.fromList . List.genericTake count) (SplitMix.shuffle candidates)
+  Prompt.ChooseExiles _ _ _ candidates count -> fmap (Set.fromList . List.genericTake count) (SplitMix.shuffle candidates)
+  Prompt.OfferedCast {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
+  Prompt.ChooseOfferedCastSpell _ _ options -> SplitMix.pick options
+  -- CR 707.5: any candidate, or the card's "may" declined.
+  Prompt.ChooseCopyTarget _ _ _ candidates -> SplitMix.pick (Nothing NonEmpty.:| fmap Just candidates)
+  Prompt.ChooseAnyNumber _ _ _ _ candidates most _ -> fmap Set.fromList (atMost (Maybe.fromMaybe (List.genericLength candidates) most) candidates)
   -- CR 510.1c-e / 702.19b: every division whose gates this creature's own
   -- damage clears. Not implemented: a division leaning on another creature's
   -- damage in the same step, legal under CR 702.19b's third sentence (#5227).
@@ -94,6 +140,33 @@ atMost most items = do
   fmap (List.genericTake size) (SplitMix.shuffle items)
   where
     choose n k = product [n - k + 1 .. n] `div` product [1 .. k]
+
+-- | A permutation of the items' indices, each equally likely.
+order :: (Monad m) => [a] -> State.StateT SplitMix.Type.SplitMix m [Natural]
+order items = SplitMix.shuffle (zipWith const [0 ..] items)
+
+-- | The items in any order, cut at any point, each such answer equally likely.
+split :: (Monad m) => [a] -> State.StateT SplitMix.Type.SplitMix m ([a], [a])
+split items = do
+  shuffled <- SplitMix.shuffle items
+  at <- SplitMix.between 0 (List.genericLength items)
+  pure (List.genericSplitAt at shuffled)
+
+-- | A nonempty subset of the items, each equally likely; empty only when the
+-- items are.
+someOf :: (Monad m, Ord a) => Set.Set a -> State.StateT SplitMix.Type.SplitMix m (Set.Set a)
+someOf items = do
+  chosen <- fmap Set.fromList (Monad.filterM (const coin) (Set.toList items))
+  if Set.null chosen && not (Set.null items) then someOf items else pure chosen
+
+-- | Every way to spend the whole amount over the caps, each share within its
+-- own.
+allocations :: [Natural] -> Natural -> [[Natural]]
+allocations caps amount = case caps of
+  [] -> [[] | amount == 0]
+  cap : rest -> do
+    share <- [0 .. min cap amount]
+    fmap (share :) (allocations rest (amount - share))
 
 -- | Every way to divide an amount among the keys, zero shares left out.
 divisions :: (Ord k) => [k] -> Natural -> [Map.Map k Natural]
