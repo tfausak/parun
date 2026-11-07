@@ -4,7 +4,7 @@
 -- casing on one is the same kind of act as casing on a Phase.
 module Parun.Engine.TextWord where
 
-import qualified Data.List as List
+import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Parun.Engine.Subtype as Subtype
 import qualified Parun.Types.CardType as CardType
@@ -54,9 +54,13 @@ choosable family word = case (family, word) of
 -- of Parun.Engine.Game.chooseAmong. Nothing only when the card forbids all but
 -- one word of every family it names.
 firstSwap :: Set.Set WordFamily.WordFamily -> Set.Set TextWord.TextWord -> Maybe (TextWord.TextWord, TextWord.TextWord)
-firstSwap families forbidden =
+firstSwap families forbidden = Maybe.listToMaybe (swaps families forbidden)
+
+-- | Every `swappable` pair, in TextWord's order.
+swaps :: Set.Set WordFamily.WordFamily -> Set.Set TextWord.TextWord -> [(TextWord.TextWord, TextWord.TextWord)]
+swaps families forbidden =
   let offered = filter (\word -> any (`choosable` word) families) everyWord
-   in List.find (swappable families forbidden) [(from, to) | from <- offered, to <- offered]
+   in filter (swappable families forbidden) [(from, to) | from <- offered, to <- offered]
 
 -- Every word of every family, colours first.
 everyWord :: [TextWord.TextWord]
