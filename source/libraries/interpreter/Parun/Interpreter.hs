@@ -11,6 +11,7 @@
 -- depends on both halves, and neither half depends on it.
 module Parun.Interpreter where
 
+import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Maybe as Maybe
 import qualified Parun.Engine.Card as Card
@@ -88,14 +89,14 @@ admitsName gs chooser restriction found = case found of
       restriction
 
 -- CR 201.4: the face a chosen name answers to, which CR 201.4a's
--- characteristics are read off. A face of the card the registry answers with,
+-- characteristics are read off. A face of the card chosenCard answers with,
 -- else CR 201.4e's combined back face of a meld pair. No card prints that face
 -- whole (CR 713.1b), so the registry never answers to it and a deck list or
 -- Prompt.LookUpCard never finds it: the reference's meld cards are walked for
 -- it instead, and only when the name is no face's.
 chosenFace :: (Monad m) => Registry.Registry m -> CardName.CardName -> m (Either InvalidCorpus.InvalidCorpus (Maybe (Face.Face Card.Type.Card)))
 chosenFace registry name = do
-  found <- Registry.fetchCard registry name
+  found <- chosenCard registry name
   case fmap (>>= Card.faceNamed name) found of
     Right Nothing -> fmap (fmap (Maybe.listToMaybe . concatMap (Maybe.mapMaybe (Card.faceNamed name) . melded))) (Registry.cards registry)
     answer -> pure answer
@@ -103,6 +104,17 @@ chosenFace registry name = do
     melded card = case Card.Type.layout card of
       Layout.Meld {} -> Mentions.combinedBackFaces card
       _ -> []
+
+-- CR 201.4 / 723.5: the card a chosen name answers to. The card the registry
+-- answers with, else, for a name several cards hold only as an alternative and
+-- none owns (Parun.Registry.index), the first of them the reference lists:
+-- they print the same spell under it (CR 723.4), so any serves.
+chosenCard :: (Monad m) => Registry.Registry m -> CardName.CardName -> m (Either InvalidCorpus.InvalidCorpus (Maybe Card.Type.Card))
+chosenCard registry name = do
+  found <- Registry.fetchCard registry name
+  case found of
+    Right Nothing -> fmap (fmap (List.find (Maybe.isJust . Card.faceNamed name))) (Registry.cards registry)
+    answer -> pure answer
 
 -- CR 201.4's "the player must choose the name of a card", enforced over an
 -- interpreter's own answerer: an illegal name is not recorded, the same question

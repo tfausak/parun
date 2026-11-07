@@ -77,7 +77,6 @@ census did not settle.
 - Fatehold Charm: `_Target:TargetSpellOrTargetPermanent`
 
 - Fatehold Chronologist: `_CreatableToken:NamedTokenWithPT`; shares Peer Review
-  (#6457)
 
 - Fateshaper Aspirant: `_Actions:Modal_ChooseOne`
 
@@ -123,7 +122,7 @@ census did not settle.
 
 - Guiding Hydra: `_ReplacementActionWouldEnter:EntersWithNumberCounters`
 
-- Hallway Heckler: `_Cost:DiscardACard`; shares Vicious Verse (#6457)
+- Hallway Heckler: `_Cost:DiscardACard`; shares Vicious Verse
 
 - Hapatra, the Desert Fang: `_Target:UptoOneTargetPermanentEachPlayerControls`
 
@@ -132,7 +131,7 @@ census did not settle.
 
 - Heartstring Puller: `_CreatableToken:NamedTokenWithPT`
 
-- Heartwood Crafter: `_Action:AddManaWithModifiers`; shares Soul Tether (#6457)
+- Heartwood Crafter: `_Action:AddManaWithModifiers`; shares Soul Tether
 
 - Hexhaven Battalion: `_CreatableToken:NamedTokenWithPT`
 
@@ -179,7 +178,6 @@ census did not settle.
 - Konstrari Charm: `_Actions:Modal_ChooseOne`
 
 - Konstrari Improviser: `_CreatableToken:HeartwoodToken`; shares Soul Tether
-  (#6457)
 
 - Koth, the Geomancer: `_Action:If`
 
@@ -227,7 +225,7 @@ census did not settle.
 - Overwrite the Multiverse: `_Action:Exile`
 
 - Paradox Shaper // Omit Variables: `_Permanents:IsntPrepared`; shares Omit
-  Variables (#6457)
+  Variables
 
 - Perfected Theory: `_LayerEffect:SetPT`
 
@@ -246,7 +244,7 @@ census did not settle.
 - Prophesied End: `_Action:If`
 
 
-- Prudent Fateseer: `_Rule:TriggerOnceEachTurn`; shares Peer Review (#6457)
+- Prudent Fateseer: `_Rule:TriggerOnceEachTurn`; shares Peer Review
 
 - Puppet Crafting: `_Permanents:IsNonEnchantmentType`
 
@@ -286,7 +284,7 @@ census did not settle.
 - Seasoned Cryomancer:
   `_Action:Reflexive_Discard_WhenYouDiscardOneOrMoreCardsOfTypeThisWay`
 
-- Semester Foreseer: `_Action:Surveil`; shares Peer Review (#6457)
+- Semester Foreseer: `_Action:Surveil`; shares Peer Review
 
 
 - Silence the Echo: `_Rule:CastEffect`
@@ -310,7 +308,7 @@ census did not settle.
 - Stingerquill Charm: `_CreatableToken:NamedTokenWithPT`
 
 - Stingerquill Voxmancer // Vicious Verse: `_Permanents:IsntPrepared`; shares
-  Vicious Verse (#6457)
+  Vicious Verse
 
 - Stinging Vitriol: `_Action:RevealHandAndPlayerChoosesACardToDiscard`
 
@@ -373,7 +371,6 @@ census did not settle.
 - Vigorbloom Charm: `_Action:Fight`
 
 - Vigorbloom Vanguard: `_Permanents:HasACounterOfType`; shares Seed Suture
-  (#6457)
 
 - Vindictive Triumph: `_Action:If`
 
@@ -409,12 +406,12 @@ census did not settle.
 - Way of the Wildspeaker: `_Rule:Activated`
 
 - Whiplash Wordsmith: `_Players:WasDealtNoncombatDamageThisTurn`; shares Vicious
-  Verse (#6457)
+  Verse
 
 - Winter, Tormented Loner: `_Action:Reflexive_Sacrifice_WhenYouDo`
 
 - Woodwork Prodigy // Soul Tether: `_Permanents:IsntPrepared`; shares Soul
-  Tether (#6457)
+  Tether
 
 - Wrath of the Bloodmane: `_Rule:CastEffect`
 
@@ -432,11 +429,4 @@ census did not settle.
 
 ## Needs a capability
 
-### #6457: two cards sharing one prepare spell
-
-The pool holds Blossom-Blessed Angel // Seed Suture and Theorix Metamage //
-Omit Variables, so a second holder of either spell cannot enter it.
-
-- Emergency Phytomedic // Seed Suture: translates; shares Seed Suture
-
-- Void Extrapolator // Omit Variables: translates; shares Omit Variables
+None.

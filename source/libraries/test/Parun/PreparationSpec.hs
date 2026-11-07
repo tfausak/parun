@@ -35,8 +35,9 @@
 -- needs. Rule 723.3d's second sentence is Codie, Ravenous Codex's "a prepared
 -- spell", asked of the Twincast copy.
 --
--- CR 723.5's alternative name needs nothing here, for Parun.FlipSpec's CR 710.5
--- reason: Prompt.ChooseCardName offers no candidate list.
+-- CR 723.5's alternative name is asked of the registry, not the engine
+-- (Prompt.ChooseCardName offers no candidate list): the last case reads it off
+-- the real pool, where two cards hold Seed Suture.
 module Parun.PreparationSpec where
 
 import qualified Data.Foldable as Foldable
@@ -45,7 +46,9 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
+import qualified Parun.DeckList as DeckList
 import qualified Parun.Engine.Action as Action
+import qualified Parun.Engine.Card as Card
 import qualified Parun.Engine.Cast as Cast
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
@@ -54,6 +57,7 @@ import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Sba as Sba
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Engine.Stack as Stack
+import qualified Parun.Interpreter as Interpreter
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
@@ -62,6 +66,7 @@ import qualified Parun.Types.Board as Board
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Designation as Designation
+import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.GameState as GameState
@@ -268,3 +273,16 @@ spec s registry = Spec.describe s "Preparation" $ do
         swept = S.runPure S.identityAnswer bounced (Sba.checkStateBasedActions S.insteadOfLoss)
     Spec.assertEqWith s "CR 704.5e: the copy has ceased to exist" (prepareCopies swept) []
     Spec.assertEqWith s "and exile is empty" (Foldable.toList (GameState.exile swept)) []
+  -- CR 723.4 / 723.5: Seed Suture is printed on two pool cards and owned by
+  -- neither, so a deck list naming it finds no card, while a player may still
+  -- choose it, judged by either card's Seed Suture face. The scenario
+  -- cr-723-5-null-chamber-names-seed-suture-... plays that choice out.
+  Spec.it s "CR 723.4 / 723.5 a prepare spell two cards share is no deck list's card, and still a name to choose" $ do
+    holders <- mapM (S.cardOf s registry) ["Blossom-Blessed Angel", "Emergency Phytomedic"]
+    Spec.assertBool s (all (Maybe.isJust . Card.faceNamed seedSuture) holders) "both pool cards hold Seed Suture"
+    listed <- DeckList.parse registry (Text.pack "1 Seed Suture\n")
+    Spec.assertEqWith s "CR 723.4: a deck list naming it finds no card" (fmap (either Just (const Nothing)) listed) (Right (Just [DeckList.NoSuchCard 1 seedSuture]))
+    chosen <- Interpreter.chosenFace registry seedSuture
+    Spec.assertEqWith s "CR 723.5: the name answers to a Seed Suture face" (fmap (fmap Face.name) chosen) (Right (Just seedSuture))
+  where
+    seedSuture = CardName.MkCardName (Text.pack "Seed Suture")

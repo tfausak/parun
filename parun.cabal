@@ -2164,6 +2164,7 @@ library play
     parun:engine,
     parun:exceptions,
     parun:extra,
+    parun:interpreter,
     parun:json-codec,
     parun:oracle,
     parun:registry,

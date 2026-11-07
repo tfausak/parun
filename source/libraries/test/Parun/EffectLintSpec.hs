@@ -3810,11 +3810,11 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- nothing. Wax // Wane is what makes it non-vacuous.
     Spec.assertBool s (any ((> 1) . length . Card.Type.faces . Printing.card) ps) "the pool has a multi-face card to lint"
     Spec.assertEqWith s "no card repeats a face name" (fmap (S.nameOf . Printing.card) offenders) []
-  -- The other half, across cards: a name answers for one card, so a lookup by
+  -- The other half, across cards: a name belongs to one card, so a lookup by
   -- it is well-defined. A lazy registry parses only the files a lookup reaches
   -- and so cannot hold this for the whole corpus itself; Registry.ambiguities
   -- is the one statement of what a lookup refuses.
-  Spec.it s "no two cards claim one name" $ do
+  Spec.it s "no two cards own one name" $ do
     let parsed = do
           (path, result) <- corpus
           card <- case result of Right card -> [card]; Left _ -> []
@@ -3823,27 +3823,35 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- The sibling lints' guard: a sweep that never sees a name beyond a file's
     -- own proves nothing about the names a lookup reaches only by fallback.
     Spec.assertBool s (Set.size names > length corpus) "the pool has a card with more than one name"
-    Spec.assertEqWith s "no name is claimed by two cards" (Registry.ambiguities parsed) []
+    Spec.assertEqWith s "no name is owned by two cards" (Registry.ambiguities parsed) []
   -- An alternative face sharing a real card's name is that card's text again:
   -- a prepare spell reprinting it (Encouraging Aviator's Jump), which the
-  -- registry leaves the name to the real card for (Parun.Registry.index). Held
-  -- face for face, reminder text aside, so the two copies cannot drift.
+  -- registry leaves the name to the real card for (Parun.Registry.index). So is
+  -- one sharing another card's alternative name and no card's own (Seed
+  -- Suture, CR 723.4), which Parun.Interpreter.chosenCard answers with either
+  -- card for. Held face for face, reminder text aside, so the copies cannot
+  -- drift.
   Spec.it s "an alternative face named for a card restates that card" $ do
     let cards = do
           (_, result) <- corpus
           either (const []) pure result
+        alternativesOf card = filter (\face -> Set.notMember (Face.name face) (Card.combinedNames card)) (NonEmpty.toList (Card.Type.faces card))
         owned = Map.fromList $ do
           card <- cards
           name <- Set.toList (Card.combinedNames card)
           face <- Maybe.maybeToList (Card.faceNamed name card)
           pure (name, face)
+        held = Map.fromListWith (flip (<>)) [(Face.name face, [face]) | card <- cards, face <- alternativesOf card]
         shared = do
-          card <- cards
-          face <- NonEmpty.toList (Card.Type.faces card)
-          if Set.member (Face.name face) (Card.combinedNames card) then [] else Maybe.maybeToList (fmap ((,) face) (Map.lookup (Face.name face) owned))
+          (name, faces) <- Map.toList held
+          case (Map.lookup name owned, faces) of
+            (Just real, _) -> fmap (\face -> (face, real)) faces
+            (Nothing, first : rest) -> fmap (\face -> (face, first)) rest
+            (Nothing, []) -> []
         unprinted face = face {Face.oracleText = fmap (Text.strip . Normalise.withoutReminders) (Face.oracleText face)}
         offenders = [Face.name alternative | (alternative, real) <- shared, unprinted alternative /= unprinted real]
-    Spec.assertBool s (not (null shared)) "the pool has an alternative face named for a card"
+    Spec.assertBool s (any (`Map.member` owned) (Map.keys held)) "the pool has an alternative face named for a card"
+    Spec.assertBool s (any ((> 1) . length) (Map.elems (Map.withoutKeys held (Map.keysSet owned)))) "and one two cards share"
     Spec.assertEqWith s "every such face restates its card" offenders []
   -- CR 710.1a with CR 710.1b: a flip card's frame has a top half and a bottom
   -- half, so a Flip card prints exactly two faces. Held over the pool rather
