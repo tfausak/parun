@@ -42,10 +42,6 @@
           {
             "card": "Grizzly Bears",
             "label": "bears"
-          },
-          {
-            "card": "Hill Giant",
-            "label": "giant"
           }
         ],
         "library": [
@@ -65,7 +61,7 @@
     "step": "PrecombatMain"
   },
   "description": "A Face Yourself token's end step sacrifice does not trigger while its controller controls a planeswalker",
-  "note": "The pair of face-yourself-copies-each-creature-of-the-target-player-and-sacrifices-them-at-end-step, with Jace Beleren on alice's side.",
+  "note": "The pair of face-yourself-copies-each-creature-of-the-target-player-and-sacrifices-them-at-end-step, with Jace Beleren on alice's side and one creature on bob's, so a sacrifice that triggered would ask no ordering question (CR 603.3b) and the token's survival into bob's turn is what a wrong reading reddens.",
   "timeline": [
     {
       "do": {
@@ -87,47 +83,9 @@
       "turn": 1
     },
     {
-      "do": {
-        "Answer": {
-          "prompt": "OrderForEach",
-          "with": [
-            0,
-            1
-          ]
-        }
-      },
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
-      "do": {
-        "OrderTimestamps": [
-          "Grizzly Bears#2",
-          "Hill Giant#2"
-        ]
-      },
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
       "check": {
         "Count": {
           "card": "Grizzly Bears",
-          "count": 1,
-          "player": "alice",
-          "zone": "Battlefield"
-        }
-      },
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
-      "check": {
-        "Count": {
-          "card": "Hill Giant",
           "count": 1,
           "player": "alice",
           "zone": "Battlefield"
@@ -157,7 +115,7 @@
           "keyword": {
             "type": "Haste"
           },
-          "object": "Hill Giant#2"
+          "object": "Grizzly Bears#2"
         }
       },
       "player": "alice",
@@ -174,17 +132,6 @@
     },
     {
       "check": {
-        "View": {
-          "is": [],
-          "of": "Stack"
-        }
-      },
-      "player": "alice",
-      "step": "EndStep",
-      "turn": 1
-    },
-    {
-      "check": {
         "Count": {
           "card": "Grizzly Bears",
           "count": 1,
@@ -192,22 +139,9 @@
           "zone": "Battlefield"
         }
       },
-      "player": "alice",
-      "step": "EndStep",
-      "turn": 1
-    },
-    {
-      "check": {
-        "Count": {
-          "card": "Hill Giant",
-          "count": 1,
-          "player": "alice",
-          "zone": "Battlefield"
-        }
-      },
-      "player": "alice",
-      "step": "EndStep",
-      "turn": 1
+      "player": "bob",
+      "step": "Upkeep",
+      "turn": 2
     }
   ]
 }

@@ -140,12 +140,6 @@
       "turn": 1
     },
     {
-      "do": "Pass",
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
       "check": {
         "Count": {
           "card": "Island",
@@ -154,6 +148,12 @@
           "zone": "Hand"
         }
       },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
       "player": "alice",
       "step": "PrecombatMain",
       "turn": 1
@@ -232,12 +232,6 @@
       "turn": 1
     },
     {
-      "do": "Pass",
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
       "check": {
         "Counters": {
           "count": 1,
@@ -247,6 +241,12 @@
           "object": "$spear"
         }
       },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
       "player": "alice",
       "step": "PrecombatMain",
       "turn": 1
@@ -304,12 +304,6 @@
       "turn": 1
     },
     {
-      "do": "Pass",
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
       "check": {
         "Counters": {
           "count": 2,
@@ -319,6 +313,12 @@
           "object": "$spear"
         }
       },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
       "player": "alice",
       "step": "PrecombatMain",
       "turn": 1
@@ -381,12 +381,6 @@
       "turn": 3
     },
     {
-      "do": "Pass",
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 3
-    },
-    {
       "check": {
         "Count": {
           "card": "Island",
@@ -395,6 +389,12 @@
           "zone": "Hand"
         }
       },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 3
+    },
+    {
+      "do": "Pass",
       "player": "alice",
       "step": "PrecombatMain",
       "turn": 3
