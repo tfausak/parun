@@ -45,7 +45,9 @@ import qualified Parun.Types.TargetCount as TargetCount
 -- the reference's (Parun.Play.Game.bot).
 --
 -- Not implemented: a random answer to every other prompt, which gets
--- 'Replay.defaultAnswer' (#5227).
+-- 'Replay.defaultAnswer': one of a list (#6597), a fixed decision or a bounded
+-- number (#6598), a group, piles or an order (#6599), and a division of
+-- counters or an amount (#6600).
 bot :: (Monad m) => [CardName.CardName] -> Answerer.Answerer (Asked.Asked PlayerView.PlayerView) (State.StateT SplitMix.Type.SplitMix m)
 bot names = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.ChooseAction _ _ actions -> maybe (pure Action.Pass) SplitMix.pick (NonEmpty.nonEmpty actions)
@@ -131,7 +133,7 @@ bot names = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.ChooseAnyNumber _ _ _ _ candidates most _ -> fmap Set.fromList (atMost (Maybe.fromMaybe (List.genericLength candidates) most) candidates)
   -- CR 510.1c-e / 702.19b: every division whose gates this creature's own
   -- damage clears. Not implemented: a division leaning on another creature's
-  -- damage in the same step, legal under CR 702.19b's third sentence (#5227).
+  -- damage in the same step, legal under CR 702.19b's third sentence (#6601).
   Prompt.AssignCombatDamage _ _ _ thresholds power ->
     pickOr (Replay.defaultAnswer (Asked.prompt asked)) (filter (\division -> Damage.tiersCleared thresholds division Set.empty division) (divisions (Map.keys thresholds) power))
   Prompt.Search _ _ cards most -> atMost most cards
