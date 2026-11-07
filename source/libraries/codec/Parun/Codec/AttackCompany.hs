@@ -24,8 +24,7 @@ tagOf x = case x of
   AttackCompany.Alone {} -> "Alone"
   AttackCompany.WithAnother {} -> "WithAnother"
 
--- | CR 506.5's "alone" writes a bare tag, so the cards spelled before CR
--- 506.6's reading keep their shape; any other reading carries its value.
+-- | CR 506.5's "alone" is the bare tag; CR 506.6's carries its value.
 projectAlone :: AttackCompany.AttackCompany -> Maybe (Maybe AloneAmongType.AloneAmong)
 projectAlone x = case x of
   AttackCompany.Alone AloneAmongType.EveryAttacker -> Just Nothing

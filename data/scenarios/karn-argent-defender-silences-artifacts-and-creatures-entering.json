@@ -1,5 +1,5 @@
 {
-  "description": "CR 603.2 / 603.6a Karn, Argent Defender stops an artifact's and a creature's entering from triggering, for every player, and leaves an enchantment's alone",
+  "description": "CR 603.6a / 613.11 Karn, Argent Defender stops an artifact's and a creature's entering from triggering, for every player, and leaves an enchantment's alone",
   "note": "bob controls Karn. alice's Golden Egg (a noncreature artifact) and Elvish Visionary (a nonartifact creature) enter without their draw triggers; her Ground Seal (neither) still triggers and draws.",
   "board": {
     "seats": [

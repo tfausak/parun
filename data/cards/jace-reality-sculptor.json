@@ -172,6 +172,7 @@
                               }
                             }
                           ],
+                          "individually": true,
                           "ref": {
                             "type": "Players",
                             "value": {
