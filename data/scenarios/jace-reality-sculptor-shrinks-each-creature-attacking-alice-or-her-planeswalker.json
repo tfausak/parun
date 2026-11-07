@@ -1,44 +1,246 @@
 {
-  "description": "CR 603.7 / 611.2a / 508.1b Jace, Reality Sculptor's -3: until alice's next turn, each creature attacking alice or a planeswalker she controls gets -5/-0",
-  "note": "On bob's turn the Craw Wurm attacks alice (1/4), the Serra Angel attacks the Jace (-1/4) and the Hill Giant attacks carol (unchanged 3/3).",
   "board": {
+    "active": "alice",
     "seats": [
       {
-        "name": "alice",
-        "battlefield": [{ "card": "Jace, Reality Sculptor", "label": "jace", "counters": [{ "key": { "type": "Loyalty" }, "value": 5 }] }],
-        "library": [{ "card": "Island" }, { "card": "Island" }]
-      },
-      {
-        "name": "bob",
         "battlefield": [
-          { "card": "Craw Wurm", "label": "wurm", "ready": true },
-          { "card": "Serra Angel", "label": "angel", "ready": true },
-          { "card": "Hill Giant", "label": "giant", "ready": true }
+          {
+            "card": "Jace, Reality Sculptor",
+            "counters": [
+              {
+                "key": {
+                  "type": "Loyalty"
+                },
+                "value": 5
+              }
+            ],
+            "label": "jace"
+          }
         ],
-        "library": [{ "card": "Island" }, { "card": "Island" }]
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
       },
       {
-        "name": "carol",
-        "library": [{ "card": "Island" }, { "card": "Island" }]
+        "battlefield": [
+          {
+            "card": "Craw Wurm",
+            "label": "wurm",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Serra Angel",
+            "label": "angel",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "carol"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "dave"
       }
     ],
-    "active": "alice",
     "step": "PrecombatMain"
   },
+  "description": "CR 603.7 / 611.2a / 508.1b Jace, Reality Sculptor's -3: until alice's next turn, each creature attacking alice or a planeswalker she controls gets -5/-0",
+  "note": "Each attack is its own declaration, so no two triggers wait on an order: bob's Craw Wurm attacks alice (1/4), carol's Serra Angel attacks the Jace (-1/4) and dave's Hill Giant attacks bob (unchanged 3/3). Alice's turn 5 ends the effect, so on turn 6 the Wurm attacks her as a 6/4.",
   "timeline": [
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$jace", "ability": 1 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$jace", "kind": { "type": "Loyalty" }, "count": 2 } } },
-    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$wurm", "$angel", "$giant"] } },
-    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "source": "$wurm", "do": { "ChooseAttackTarget": "$alice" } },
-    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "source": "$angel", "do": { "ChooseAttackTarget": "$jace" } },
-    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "source": "$giant", "do": { "ChooseAttackTarget": "$carol" } },
-    { "turn": 2, "step": "DeclareAttackers", "player": "alice", "do": { "OrderTriggers": ["$jace", "$jace"] } },
-    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "check": { "View": { "of": "Stack", "is": ["trigger of $jace", "trigger of $jace"] } } },
-    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "do": "Pass" },
-    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "do": "Pass" },
-    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "check": { "PowerToughness": { "object": "$wurm", "power": 1, "toughness": 4 } } },
-    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "check": { "PowerToughness": { "object": "$angel", "power": -1, "toughness": 4 } } },
-    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "check": { "PowerToughness": { "object": "$giant", "power": 3, "toughness": 3 } } }
+    {
+      "do": {
+        "Activate": {
+          "ability": 1,
+          "object": "$jace"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Counters": {
+          "count": 2,
+          "kind": {
+            "type": "Loyalty"
+          },
+          "object": "$jace"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Attack": [
+          "$wurm"
+        ]
+      },
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 2
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$alice"
+      },
+      "player": "bob",
+      "source": "$wurm",
+      "step": "DeclareAttackers",
+      "turn": 2
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "$wurm",
+          "power": 1,
+          "toughness": 4
+        }
+      },
+      "player": "bob",
+      "step": "EndOfCombat",
+      "turn": 2
+    },
+    {
+      "do": {
+        "Attack": [
+          "$angel"
+        ]
+      },
+      "player": "carol",
+      "step": "DeclareAttackers",
+      "turn": 3
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$jace"
+      },
+      "player": "carol",
+      "source": "$angel",
+      "step": "DeclareAttackers",
+      "turn": 3
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "$angel",
+          "power": -1,
+          "toughness": 4
+        }
+      },
+      "player": "carol",
+      "step": "EndOfCombat",
+      "turn": 3
+    },
+    {
+      "do": {
+        "Attack": [
+          "$giant"
+        ]
+      },
+      "player": "dave",
+      "step": "DeclareAttackers",
+      "turn": 4
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$bob"
+      },
+      "player": "dave",
+      "source": "$giant",
+      "step": "DeclareAttackers",
+      "turn": 4
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "$giant",
+          "power": 3,
+          "toughness": 3
+        }
+      },
+      "player": "dave",
+      "step": "EndOfCombat",
+      "turn": 4
+    },
+    {
+      "do": {
+        "Attack": [
+          "$wurm"
+        ]
+      },
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 6
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$alice"
+      },
+      "player": "bob",
+      "source": "$wurm",
+      "step": "DeclareAttackers",
+      "turn": 6
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "$wurm",
+          "power": 6,
+          "toughness": 4
+        }
+      },
+      "player": "bob",
+      "step": "EndOfCombat",
+      "turn": 6
+    }
   ]
 }

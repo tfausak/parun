@@ -205,7 +205,7 @@ attacks context board gs bearer you trigger event = case (trigger, event) of
     let attacker = AttackerDeclared.attacker d
      in admittedAt context board gs attacker (AttackerTrigger.creature t)
           && attackerTargetHolds context gs bearer you (AttackerTrigger.target t) d
-          && attackCompanyHolds context gs bearer attacker (AttackerTrigger.company t) d
+          && attackCompanyHolds context board gs attacker (AttackerTrigger.company t) d
           && case AttackerTrigger.frequency t of
             TriggerFrequency.EveryTime -> True
             -- "For the first time each turn": the declaration being matched is
@@ -276,28 +276,41 @@ attackerTargetHolds context gs bearer you target d = case target of
             Just theirs -> all (maybe True (<= theirs) . lifeOf) (Game.stillPlaying gs)
     _ -> False
 
--- CR 506.5 / 702.149a: whether the rest of the declaration is what the
+-- CR 506.5 / 506.6 / 702.149a: whether the rest of the declaration is what the
 -- trigger asks.
-attackCompanyHolds :: Filter.Context -> GameState -> ObjectId -> ObjectId -> AttackCompany.AttackCompany -> AttackerDeclared.AttackerDeclared -> Bool
-attackCompanyHolds context gs bearer attacker company d = case company of
+attackCompanyHolds :: Filter.Context -> Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> ObjectId -> AttackCompany.AttackCompany -> AttackerDeclared.AttackerDeclared -> Bool
+attackCompanyHolds context board gs attacker company d = case company of
   AttackCompany.AnyCompany -> True
   -- "The ONLY creature declared": one number, never a floor.
   AttackCompany.Alone AloneAmong.EveryAttacker -> AttackerDeclared.count d == 1
   -- CR 506.6: a player, and no other creature declared attacking that player.
-  -- Combat.attackers is the declaration, as for WithAnother below.
   AttackCompany.Alone AloneAmong.AttackersOfItsPlayer -> case AttackerDeclared.target d of
-    AttackTarget.OfPlayer attacked ->
-      let others = Map.delete attacker (Combat.attackers (GameState.combat gs))
-       in AttackTarget.OfPlayer attacked `notElem` Map.elems others
+    AttackTarget.OfPlayer attacked -> AttackTarget.OfPlayer attacked `notElem` Map.elems (Map.delete attacker (declaredTargets gs))
     _ -> False
-  -- Combat.attackers IS the declaration here: CR 508.2b puts these triggers on
-  -- the stack before any player gets priority, so CR 508.4 has had no window to
-  -- add a creature, where the turn's log keeps an earlier combat phase's.
-  -- Each companion reads through the bearer's last known information (CR
-  -- 608.2h), so CR 702.149a's comparison against the source's power holds.
+  -- Each companion is read off the declaration's board sample (admittedAt, CR
+  -- 603.10), so one CR 704.5g has destroyed since still has its power.
   AttackCompany.WithAnother f ->
-    let admits other = other /= attacker && maybe False (\view -> Filter.matches context view f) (Projection.viewWithLastKnown bearer gs other)
-     in any admits (Map.keys (Combat.attackers (GameState.combat gs)))
+    let admits other = other /= attacker && admittedAt context board gs other f
+     in any admits (Map.keys (declaredTargets gs))
+
+-- CR 506.5 / 506.6 / 702.149a: this combat's declaration, each creature declared
+-- as an attacker with the target CR 508.1b announced for it. Not
+-- Combat.attackers, from which CR 704.5g's death after CR 508.1k has already
+-- removed a co-attacker by the time triggers are put on the stack (CR 117.5);
+-- data/scenarios's
+-- jiang-yanggu-alone-ignores-an-attacker-whose-co-attacker-died-after-the-declaration
+-- and hopeful-initiate-trains-beside-a-co-attacker-that-died-after-the-declaration
+-- prove it. Combat.declaredAttackers scopes the turn's log to this combat
+-- phase, the latest event answering for a creature declared in an earlier one
+-- too, and leaves out a creature lost before CR 508.1k (docs/decisions.md,
+-- "Attacks alone after a sacrificed co-attacker").
+declaredTargets :: GameState -> Map.Map ObjectId AttackTarget.AttackTarget
+declaredTargets gs =
+  Map.fromList
+    [ (oid, target)
+    | GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared oid _ target _ _) <- fmap LoggedEvent.event (Foldable.toList (GameState.events gs)),
+      Set.member oid (Combat.declaredAttackers (GameState.combat gs))
+    ]
 
 -- CR 509.3e on the effect road (BlockProducer.ByEffect): whether this arrival
 -- is the one that answers the attacker's crossing. One effect records a
