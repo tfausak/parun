@@ -220,7 +220,8 @@ data Filter keyword
   | -- | CR 205.3: the candidate's subtypes include the one the SOURCE chose as it
     -- entered (CR 614.1c), the two abilities linked by CR 607.2d -- Obelisk of
     -- Urd's "creatures you control of the chosen type" and Pillar of Origins'
-    -- "creature spell of the chosen type". HasSubtype above with the subtype read
+    -- "creature spell of the chosen type" -- or earlier in the same resolution
+    -- (CR 608.2d, Kindred Judgment). HasSubtype above with the subtype read
     -- off the source instead of written on the card, and vacuously False where the
     -- source has chosen none.
     HasChosenSubtype

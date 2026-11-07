@@ -101,30 +101,18 @@ census did not settle.
 
 
 
-- Kindred Judgment: `_Action:ChooseACreatureType`
-
-- Kiora of Fire and Ashes: renders differently from its Oracle text
-
-- Kiora of Salt and Sand: `_Trigger:WhenAPlayerAttacks`
 
 
-- Konstrari Charm: `_Actions:Modal_ChooseOne`
 
-- Konstrari Improviser: `_CreatableToken:HeartwoodToken`; shares Soul Tether
 
-- Koth, the Geomancer: `_Action:If`
 
-- Kwia Vigorbloom: `_Rule:Ward`
 
-- Lich's Relic: `_Action:Reflexive_PayMana_WhenYouDo`
 
-- Liliana the Faultless: renders differently from its Oracle text
 
-- Liliana the Repentant: `_Action:PutGraveyardCardOntoBattlefield`
 
-- Living Library: `_Action:ShufflePermanentIntoLibrary`
 
-- Lyra, Archangel of Dawn: `_Trigger:WhenAPlayerGainsLife`
+
+
 
 - Lyra, Tolarian Archangel: `_Players:NumCardsDrawnThisTurnIs`
 

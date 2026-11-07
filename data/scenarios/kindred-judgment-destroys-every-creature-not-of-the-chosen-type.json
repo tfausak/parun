@@ -1,0 +1,44 @@
+{
+  "description": "CR 608.2d / 205.3 Kindred Judgment destroys every creature, any controller's, that isn't of the type alice chose",
+  "note": "alice chooses Goblin: her Goblin Piker, bob's Raging Goblin and carol's changeling Impostor of the Sixth Pride (CR 702.73a) survive; alice's Llanowar Elves, bob's Grizzly Bears and carol's Hill Giant die. Destroying the chosen type instead would flip every survivor.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "WWCCCCC",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Llanowar Elves", "label": "elves" }
+        ],
+        "hand": [{ "card": "Kindred Judgment", "label": "judgment" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Raging Goblin", "label": "raging" },
+          { "card": "Grizzly Bears", "label": "bears" }
+        ]
+      },
+      {
+        "name": "carol",
+        "battlefield": [
+          { "card": "Impostor of the Sixth Pride", "label": "impostor" },
+          { "card": "Hill Giant", "label": "giant" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$judgment" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCreatureType", "with": "Goblin" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Goblin Piker", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Raging Goblin", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Battlefield", "card": "Impostor of the Sixth Pride", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Llanowar Elves", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } } }
+  ]
+}

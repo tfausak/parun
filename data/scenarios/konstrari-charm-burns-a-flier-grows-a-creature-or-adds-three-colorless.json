@@ -1,0 +1,45 @@
+{
+  "description": "CR 700.2 Konstrari Charm deals 6 to a creature with flying, puts two +1/+1 counters on a creature and gives it trample, or adds {C}{C}{C}",
+  "note": "The first mode refuses bob's Hill Giant, which lacks flying, and kills his 4/4 Serra Angel. The second makes alice's Grizzly Bears 4/4 with trample. The third leaves exactly three colorless in alice's pool once all six of her coloured mana are spent.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "RRRGGG",
+        "battlefield": [{ "card": "Grizzly Bears", "label": "bears" }],
+        "hand": [
+          { "card": "Konstrari Charm", "label": "burn" },
+          { "card": "Konstrari Charm", "label": "grow" },
+          { "card": "Konstrari Charm", "label": "ramp" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Serra Angel", "label": "angel" },
+          { "card": "Hill Giant", "label": "giant" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Cast": { "object": "$burn", "modes": [0], "targets": ["$giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$burn", "modes": [0], "targets": ["$angel"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Serra Angel", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$giant", "damage": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$grow", "modes": [1], "targets": ["$bears"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$bears", "power": 4, "toughness": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "$bears", "keyword": { "type": "Trample" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$ramp", "modes": [2] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "ManaPool", "player": "alice", "is": [
+      { "manaType": { "type": "Colorless" }, "tags": [], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null },
+      { "manaType": { "type": "Colorless" }, "tags": [], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null },
+      { "manaType": { "type": "Colorless" }, "tags": [], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null }
+    ] } } }
+  ]
+}

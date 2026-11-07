@@ -1,0 +1,32 @@
+{
+  "description": "CR 603.6a / 602.2 Kiora of Fire and Ashes creates a 5/5 red flying Dragon as it enters and another for {8}",
+  "note": "One Dragon after the enters trigger, a second after the activation; each is checked for its size, colour and flying.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "RRCCCCCCCCCCCC",
+        "hand": [{ "card": "Kiora of Fire and Ashes", "label": "kiora" }]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$kiora" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of Kiora of Fire and Ashes"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Dragon Token", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Dragon Token", "power": 5, "toughness": 5 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "Dragon Token", "keyword": { "type": "Flying" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Colors", "object": "Dragon Token", "is": ["Red"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Kiora of Fire and Ashes" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Dragon Token", "count": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Dragon Token#2", "power": 5, "toughness": 5 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "Dragon Token#2", "keyword": { "type": "Flying" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "ManaPool", "player": "alice", "is": [] } } }
+  ]
+}

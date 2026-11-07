@@ -1,0 +1,41 @@
+{
+  "description": "CR 603.4 / 606.2 Kiora of Salt and Sand untaps an attacker and makes it unblockable once alice has activated a loyalty ability, here the [-8] it grants Ajani Goldmane",
+  "note": "Ajani Goldmane's fourth ability is the granted [-8]: it makes an 8/8 blue hexproof Leviathan and leaves Ajani at 1 loyalty. Kiora and Grizzly Bears attack; the trigger targets the Bears, which end untapped while Kiora stays tapped, and bob's Hill Giant may not block them. The paired board activates Shivan Dragon's non-loyalty ability instead, and the Bears stay tapped and blockable.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "R",
+        "battlefield": [
+          { "card": "Kiora of Salt and Sand", "label": "kiora", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true },
+          { "card": "Shivan Dragon", "label": "shivan" },
+          { "card": "Ajani Goldmane", "label": "ajani", "counters": [{ "key": { "type": "Loyalty" }, "value": 9 }] }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$ajani", "ability": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Leviathan Token", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Leviathan Token", "power": 8, "toughness": 8 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "Leviathan Token", "keyword": { "type": "Hexproof" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Colors", "object": "Leviathan Token", "is": ["Blue"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$ajani", "kind": { "type": "Loyalty" }, "count": 1 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$kiora", "$bears"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseTargets": { "target": ["$bears"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Tapped": { "object": "$bears", "tapped": false } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Tapped": { "object": "$kiora", "tapped": true } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": { "$giant": ["$bears"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$giant": ["$kiora"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$bears", "blockers": null } } }
+  ]
+}

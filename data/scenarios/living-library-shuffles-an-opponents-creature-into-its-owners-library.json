@@ -1,0 +1,40 @@
+{
+  "description": "CR 701.24 / 108.3 Living Library sacrifices itself for {6} to shuffle a creature or planeswalker an opponent controls into its owner's library",
+  "note": "bob controls a Hill Giant that carol owns: it goes into carol's library, not bob's. The target refuses alice's own Grizzly Bears and bob's Forest, which is neither a creature nor a planeswalker.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "CCCCCC",
+        "battlefield": [
+          { "card": "Living Library", "label": "library" },
+          { "card": "Grizzly Bears", "label": "bears" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Forest", "label": "forest" }],
+        "library": [{ "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant", "controller": "bob" }],
+        "library": [{ "card": "Plains" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "$library", "targets": ["$bears"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "$library", "targets": ["$forest"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$library", "targets": ["$giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Living Library", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["Plains", "Hill Giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "carol", "zone": "Library", "is": ["Plains", "Hill Giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Library", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Library", "card": "Hill Giant", "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Hill Giant", "count": 0 } } }
+  ]
+}

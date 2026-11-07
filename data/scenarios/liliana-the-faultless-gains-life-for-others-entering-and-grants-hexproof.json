@@ -1,0 +1,61 @@
+{
+  "description": "CR 603.2 / 602.2 Liliana the Faultless gains 1 life as each other creature or planeswalker alice controls enters, and discards for hexproof on another of them",
+  "note": "Liliana entering herself gains nothing, nor does Sol Ring, nor bob's Grizzly Bears on turn 2; Grizzly Bears and Ajani Goldmane gain 1 each, so alice ends turn 1 at 22. On turn 3 the activation refuses Liliana herself, bob's Hill Giant and alice's Sol Ring, discards alice's Lightning Bolt, and gives the Bears hexproof.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "WWWGCCCC",
+        "hand": [
+          { "card": "Liliana the Faultless", "label": "liliana" },
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Ajani Goldmane", "label": "ajani" },
+          { "card": "Sol Ring", "label": "ring" },
+          { "card": "Lightning Bolt", "label": "bolt" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant" }, { "card": "Forest", "label": "f1" }, { "card": "Forest", "label": "f2" }],
+        "hand": [{ "card": "Grizzly Bears", "label": "bobbears" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$liliana" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 20 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bears" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseManaToSpend", "with": { "manaType": { "type": "Colorless" }, "tags": [], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 21 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$ajani" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 22 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$ring" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 22 } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$bobbears", "mana": ["$f1", "$f2"] } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "check": { "Life": { "player": "alice", "life": 22 } } },
+    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": [] } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "Liliana the Faultless", "targets": ["Liliana the Faultless"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "Liliana the Faultless", "targets": ["$giant"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "Liliana the Faultless", "targets": ["Sol Ring"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Liliana the Faultless", "targets": ["Grizzly Bears"], "mana": ["Sol Ring"], "costOrder": [0, 1] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseDiscard", "with": ["$bolt"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "Grizzly Bears", "keyword": { "type": "Hexproof" }, "count": 1 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Lightning Bolt", "count": 1 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "Liliana the Faultless", "tapped": true } } }
+  ]
+}
