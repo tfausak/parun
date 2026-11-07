@@ -1208,7 +1208,8 @@ batchScoped condition = case condition of
   TriggerCondition.RevealedThisWay _ -> False
   -- OneOrMore beside a OneOrMore Leaves: "whenever you discard one or more cards"
   -- (Magmakin Artillerist) names a whole CR 608.2f / 601.2h discard as one
-  -- trigger event, where EachOccurrence is CR 603.2c's second sentence. Only as
+  -- trigger event per discarder (Event.Binding's batchPartition), where
+  -- EachOccurrence is CR 603.2c's second sentence. Only as
   -- good as the brackets around every caller discarding several cards at once
   -- -- a cost, Effect.Discard, connive, the cleanup discard -- since an
   -- unbracketed loop gives each card a group of its own.

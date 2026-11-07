@@ -58,6 +58,7 @@
         }
       ],
       "name": "The Echoverse Fulcrum",
+      "oracleText": "When The Echoverse Fulcrum enters, draw a card, then discard a card.\n{5}, {T}, Exile The Echoverse Fulcrum: Destroy all creatures. Activate only as a sorcery.",
       "triggeredAbilities": [
         {
           "condition": {

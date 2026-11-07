@@ -89,6 +89,7 @@
         }
       ],
       "name": "Theoretical Necromancer",
+      "oracleText": "{3}{B}, Exile this card from your graveyard: Return another target creature card from your graveyard to your hand.",
       "power": {
         "type": "Literal",
         "value": 4

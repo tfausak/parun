@@ -20,6 +20,7 @@
         }
       ],
       "name": "Titanbones, Towering Heart",
+      "oracleText": "Reach\nWhenever you gain life, put two +1/+1 counters on Titanbones.\nWhen you discard this card, you gain 3 life.",
       "power": {
         "type": "Literal",
         "value": 4

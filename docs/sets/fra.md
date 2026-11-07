@@ -182,32 +182,20 @@ census did not settle.
 
 
 
-- Teyo, Lightshield Expert: `_Action:If`
-
-- The Echoverse Fulcrum: `_Cost:Exile`
-
-- Theoretical Necromancer: `_Rule:FromGraveyard`
-
-- Theorist's Proxy: `_Action:CreateFutureSpellEffect`
-
-- Theorist's Sanctum: `_ReplacementActionWouldEnter:MayCost`
 
 
-- Theorix Charm: `_Player:ControllerOfSpell`
 
 
-- Tinybones, Pocket Nuisance: `_Trigger:WhenAPlayerDiscardsAnyNumberOfCards`
-
-- Titanbones, Towering Heart: `_Trigger:WhenAPlayerGainsLife`
-
-- Tomik, Izzet Sparkmage: `_Rule:ReplaceWouldDealDamage`
 
 
-- Traxos, Academy Guardian: `_Rule:CastEffect`
 
-- Traxos, Scourge Eternal: `_PermanentRule:DoesntUntapDuringControllersUntap`
 
-- Twinned Vision: `_Action:IfElse`
+
+
+
+
+
+
 
 - Twisted Fates: renders differently from its Oracle text
 
@@ -283,6 +271,12 @@ census did not settle.
 - Yuriko, Hope from the Shadows: `_LayerEffect:AdjustPTX`
 
 ## Needs a capability
+
+### #6588: the next spell can't be made uncounterable without a flash grant
+
+- Theorist's Proxy: "the next spell you cast this turn can't be countered" has
+  no one-shot row for the cast to spend; only Savage Summoning's flash grant
+  binds the next spell into a `CantBeCountered` row.
 
 ### #6576: no effect exempts planeswalkers from the 0-loyalty state-based action
 

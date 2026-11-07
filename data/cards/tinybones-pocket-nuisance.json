@@ -15,6 +15,7 @@
         }
       ],
       "name": "Tinybones, Pocket Nuisance",
+      "oracleText": "When Tinybones enters, each opponent discards a card.\nWhenever a player discards one or more cards, Tinybones deals 1 damage to each opponent.",
       "power": {
         "type": "Literal",
         "value": 2

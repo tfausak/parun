@@ -18,6 +18,7 @@
         }
       ],
       "name": "Theorix Charm",
+      "oracleText": "Choose one —\n• Counter target noncreature spell unless its controller pays {2}.\n• Target creature gets -2/-2 until end of turn.\n• Mill three cards, then draw a card. (To mill three cards, put the top three cards of your library into your graveyard.)",
       "spell": {
         "modes": [
           {

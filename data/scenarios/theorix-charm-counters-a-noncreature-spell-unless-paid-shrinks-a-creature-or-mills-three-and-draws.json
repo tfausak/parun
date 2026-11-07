@@ -148,7 +148,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "CR 700.2 / 118.12 / 701.17a: Theorix Charm mills three then draws, gives a creature -2/-2 until end of turn, or counters a noncreature spell whose controller declines to pay {2}; a creature spell is refused as the counter's target",
+  "description": "CR 700.2 / 118.12a / 701.17a: Theorix Charm mills three then draws, gives a creature -2/-2 until end of turn, or counters a noncreature spell whose controller declines to pay {2}; a creature spell is refused as the counter's target",
   "note": "Bob holds three Islands beyond Think Twice's cost, so declining the {2} is a choice. The refused cast at the creature spell names the Island and Swamp the cast that stands pays with. Think Twice above the Grizzly Bears spell lets the counter mode be chosen, so the creature spell is refused at targeting. The Forests are milled and the Mountain drawn.",
   "timeline": [
     {
