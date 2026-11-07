@@ -48,6 +48,12 @@
         "name": "alice"
       },
       {
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          }
+        ],
         "library": [
           {
             "card": "Island"
@@ -70,7 +76,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Graft Surgeon, destroyed with two +1/+1 counters, puts them on Grizzly Bears",
+  "description": "Graft Surgeon, destroyed with two +1/+1 counters, cannot put them on bob's Hill Giant and puts them on alice's Grizzly Bears",
   "timeline": [
     {
       "do": {
@@ -88,6 +94,18 @@
     {
       "do": "Pass",
       "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "ChooseTargets": {
+          "creature": [
+            "$giant"
+          ]
+        }
+      },
       "step": "PrecombatMain",
       "turn": 1
     },

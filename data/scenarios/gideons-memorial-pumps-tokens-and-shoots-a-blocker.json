@@ -22,6 +22,10 @@
             "label": "tok",
             "ready": true,
             "token": true
+          },
+          {
+            "card": "Glory Seeker",
+            "label": "seeker"
           }
         ],
         "hand": [
@@ -78,7 +82,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Gideon's Memorial makes a token 3/2 with vigilance, and a second copy discarded deals 4 to bob's blocking Hill Giant",
+  "description": "Gideon's Memorial makes a token 3/2 with vigilance but not the nontoken Glory Seeker; a second copy cannot be discarded at Hill Giant before combat, and deals 4 to it once it blocks",
   "timeline": [
     {
       "check": {
@@ -103,6 +107,50 @@
         }
       },
       "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "$seeker",
+          "power": 2,
+          "toughness": 2
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Keywords": {
+          "count": 0,
+          "keyword": {
+            "type": "Vigilance"
+          },
+          "object": "$seeker"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "ability": 1,
+          "mana": [
+            "$p4",
+            "$p5"
+          ],
+          "object": "$gm2",
+          "targets": [
+            "$giant"
+          ]
+        }
+      },
       "step": "PrecombatMain",
       "turn": 1
     },

@@ -12,24 +12,32 @@
                   "type": "Named",
                   "value": "charge"
                 },
-                "value": 1
+                "value": 2
               }
             ],
             "label": "gz"
           },
           {
             "card": "Mountain",
-            "label": "mtn"
+            "label": "m1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
           }
         ],
         "hand": [
           {
-            "card": "Llanowar Elves",
-            "label": "elves"
+            "card": "Grizzly Bears",
+            "label": "bear"
           },
           {
             "card": "Shock",
-            "label": "shock"
+            "label": "s1"
+          },
+          {
+            "card": "Shock",
+            "label": "s2"
           }
         ],
         "library": [
@@ -52,6 +60,12 @@
         "name": "alice"
       },
       {
+        "battlefield": [
+          {
+            "card": "Llanowar Elves",
+            "label": "elves"
+          }
+        ],
         "library": [
           {
             "card": "Island"
@@ -74,7 +88,7 @@
     ],
     "step": "Upkeep"
   },
-  "description": "Gardenize adds {G} for its one charge counter in alice's first main phase, and gains a second when Llanowar Elves dies",
+  "description": "Gardenize adds {G}{G} for its two charge counters in alice's first main phase, paying for Grizzly Bears; bob's Llanowar Elves dying adds no counter, alice's Grizzly Bears dying adds a third",
   "timeline": [
     {
       "do": "Pass",
@@ -88,7 +102,43 @@
           "mana": [
             null
           ],
-          "object": "$elves"
+          "object": "$bear"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Grizzly Bears",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$m1",
+            null
+          ],
+          "object": "$s1",
+          "targets": [
+            "$elves"
+          ]
         }
       },
       "player": "alice",
@@ -106,8 +156,34 @@
         "Count": {
           "card": "Llanowar Elves",
           "count": 1,
-          "player": "alice",
-          "zone": "Battlefield"
+          "player": "bob",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Counters": {
+          "count": 2,
+          "kind": {
+            "type": "Named",
+            "value": "charge"
+          },
+          "object": "$gz"
         }
       },
       "player": "alice",
@@ -118,11 +194,11 @@
       "do": {
         "Cast": {
           "mana": [
-            "$mtn"
+            "$m2"
           ],
-          "object": "$shock",
+          "object": "$s2",
           "targets": [
-            "Llanowar Elves"
+            "Grizzly Bears"
           ]
         }
       },
@@ -145,7 +221,7 @@
     {
       "check": {
         "Counters": {
-          "count": 2,
+          "count": 3,
           "kind": {
             "type": "Named",
             "value": "charge"
@@ -154,7 +230,7 @@
         }
       },
       "player": "alice",
-      "step": "PrecombatMain",
+      "step": "BeginningOfCombat",
       "turn": 1
     }
   ]

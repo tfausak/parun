@@ -5,11 +5,12 @@
       {
         "graveyard": [
           {
-            "card": "Grizzly Bears",
-            "label": "gb"
+            "card": "Horned Turtle",
+            "label": "turtle"
           },
           {
-            "card": "Hill Giant"
+            "card": "Hill Giant",
+            "label": "giant"
           }
         ],
         "hand": [
@@ -39,6 +40,12 @@
         "name": "alice"
       },
       {
+        "graveyard": [
+          {
+            "card": "Grizzly Bears",
+            "label": "gb"
+          }
+        ],
         "library": [
           {
             "card": "Island"
@@ -61,14 +68,40 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Generous Revival returns Grizzly Bears, mana value 2, with a +1/+1 counter",
+  "description": "Generous Revival cannot return alice's Hill Giant, mana value 4, nor bob's Grizzly Bears; it returns alice's Horned Turtle, mana value 3, with a +1/+1 counter",
   "timeline": [
+    {
+      "player": "alice",
+      "refuse": {
+        "Cast": {
+          "object": "$rev",
+          "targets": [
+            "$giant"
+          ]
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Cast": {
+          "object": "$rev",
+          "targets": [
+            "$gb"
+          ]
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
     {
       "do": {
         "Cast": {
           "object": "$rev",
           "targets": [
-            "$gb"
+            "$turtle"
           ]
         }
       },
@@ -84,12 +117,25 @@
     },
     {
       "check": {
+        "Count": {
+          "card": "Horned Turtle",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
         "Counters": {
           "count": 1,
           "kind": {
             "type": "PlusOnePlusOne"
           },
-          "object": "Grizzly Bears"
+          "object": "Horned Turtle"
         }
       },
       "player": "alice",

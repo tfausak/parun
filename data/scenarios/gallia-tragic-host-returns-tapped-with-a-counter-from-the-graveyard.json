@@ -77,6 +77,19 @@
     {
       "check": {
         "Count": {
+          "card": "Gallia, Tragic Host",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
           "card": "Grizzly Bears",
           "count": 1,
           "player": "alice",

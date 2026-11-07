@@ -15,6 +15,10 @@
           {
             "card": "Mountain",
             "label": "m2"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "giant"
           }
         ],
         "hand": [
@@ -66,7 +70,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Gallia, the Merrymaker puts a +1/+1 counter on Grizzly Bears cast this turn, which then has haste and attacks for 3",
+  "description": "Gallia, the Merrymaker cannot target Hill Giant, which did not enter this turn; it puts a +1/+1 counter on Grizzly Bears cast this turn, which then has haste where the counterless Hill Giant does not, and attacks for 3",
   "timeline": [
     {
       "do": {
@@ -84,6 +88,24 @@
     {
       "do": "Pass",
       "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "ability": 0,
+          "mana": [
+            "$m1",
+            "$m2"
+          ],
+          "object": "$gallia",
+          "targets": [
+            "$giant"
+          ]
+        }
+      },
       "step": "PrecombatMain",
       "turn": 1
     },
@@ -119,6 +141,20 @@
             "type": "Haste"
           },
           "object": "Grizzly Bears"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Keywords": {
+          "count": 0,
+          "keyword": {
+            "type": "Haste"
+          },
+          "object": "$giant"
         }
       },
       "player": "alice",

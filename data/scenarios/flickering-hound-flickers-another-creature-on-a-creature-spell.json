@@ -5,7 +5,8 @@
       {
         "battlefield": [
           {
-            "card": "Flickering Hound"
+            "card": "Flickering Hound",
+            "label": "hound"
           },
           {
             "card": "Hill Giant",
@@ -47,6 +48,12 @@
         "name": "alice"
       },
       {
+        "battlefield": [
+          {
+            "card": "Craw Wurm",
+            "label": "wurm"
+          }
+        ],
         "library": [
           {
             "card": "Island"
@@ -69,7 +76,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Casting Grizzly Bears, alice exiles and returns Hill Giant with Flickering Hound, which loses its counter",
+  "description": "Casting Grizzly Bears, alice cannot flicker Flickering Hound itself or bob's Craw Wurm, and exiles and returns Hill Giant, which loses its counter",
   "timeline": [
     {
       "do": {
@@ -78,6 +85,30 @@
         }
       },
       "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "ChooseTargets": {
+          "target": [
+            "$hound"
+          ]
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "ChooseTargets": {
+          "target": [
+            "$wurm"
+          ]
+        }
+      },
       "step": "PrecombatMain",
       "turn": 1
     },

@@ -12,7 +12,11 @@
         "hand": [
           {
             "card": "Shock",
-            "label": "shock"
+            "label": "s1"
+          },
+          {
+            "card": "Shock",
+            "label": "s2"
           }
         ],
         "library": [
@@ -32,7 +36,7 @@
             "card": "Island"
           }
         ],
-        "manaPool": "RBR",
+        "manaPool": "RRBR",
         "name": "alice"
       },
       {
@@ -58,12 +62,64 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "After Shock deals 2 to bob, Grim Repriser returns from alice's graveyard with a finality counter",
+  "description": "Grim Repriser stays in alice's graveyard after Shock deals 2 to alice, and returns with a finality counter once a second Shock deals 2 to bob",
   "timeline": [
+    {
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "ability": 0,
+          "object": "$gr"
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
     {
       "do": {
         "Cast": {
-          "object": "$shock",
+          "object": "$s1",
+          "targets": [
+            "$alice"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 18,
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "ability": 0,
+          "object": "$gr"
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$s2",
           "targets": [
             "$bob"
           ]
@@ -92,6 +148,19 @@
     },
     {
       "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Grim Repriser",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
       "player": "alice",
       "step": "PrecombatMain",
       "turn": 1

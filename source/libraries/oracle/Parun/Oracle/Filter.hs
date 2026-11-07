@@ -201,7 +201,7 @@ permanentCard ts =
 -- into one noun ("artifact or enchantment"), whose plural Oracle text writes
 -- with "and" ("all creatures and lands", Devastation) where the nouns are
 -- bare, and not at all otherwise; 'Inclusive' joins both numbers with
--- "and/or".
+-- "and/or", 'Conjoined' with "and".
 disjunction :: Joining -> [Phrase] -> [Phrase]
 disjunction joining ps
   | length ps < 2 = []

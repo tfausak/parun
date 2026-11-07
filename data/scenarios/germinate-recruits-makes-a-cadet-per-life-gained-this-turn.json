@@ -34,6 +34,12 @@
         "name": "alice"
       },
       {
+        "hand": [
+          {
+            "card": "Angel's Mercy",
+            "label": "mercy"
+          }
+        ],
         "library": [
           {
             "card": "Island"
@@ -51,12 +57,13 @@
             "card": "Island"
           }
         ],
+        "manaPool": "WWWW",
         "name": "bob"
       }
     ],
     "step": "PrecombatMain"
   },
-  "description": "After Sacred Nectar gains alice 4 life, Germinate Recruits makes four Cadets",
+  "description": "After Sacred Nectar gains alice 4 life and Angel's Mercy gains bob 7, Germinate Recruits makes four Cadets",
   "timeline": [
     {
       "do": {
@@ -70,6 +77,39 @@
     },
     {
       "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$mercy"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 27,
+          "player": "bob"
+        }
+      },
       "player": "alice",
       "step": "PrecombatMain",
       "turn": 1

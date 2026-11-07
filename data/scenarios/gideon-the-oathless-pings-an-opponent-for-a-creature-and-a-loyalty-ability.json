@@ -67,11 +67,31 @@
         ],
         "manaPool": "GG",
         "name": "bob"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "carol"
       }
     ],
     "step": "PrecombatMain"
   },
-  "description": "Gideon the Oathless deals 1 to bob when bob's creature enters and 1 more when bob activates a loyalty ability",
+  "description": "Gideon the Oathless deals 1 to bob, not carol, when bob's creature enters and 1 more when bob activates a loyalty ability",
   "timeline": [
     {
       "do": {
@@ -84,18 +104,6 @@
       "turn": 1
     },
     {
-      "do": "Pass",
-      "player": "bob",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
-      "do": "Pass",
-      "player": "bob",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
       "check": {
         "Life": {
           "life": 19,
@@ -103,7 +111,18 @@
         }
       },
       "player": "bob",
-      "step": "PrecombatMain",
+      "step": "BeginningOfCombat",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 20,
+          "player": "carol"
+        }
+      },
+      "player": "bob",
+      "step": "BeginningOfCombat",
       "turn": 1
     },
     {
@@ -117,13 +136,7 @@
         }
       },
       "player": "bob",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
-      "do": "Pass",
-      "player": "bob",
-      "step": "PrecombatMain",
+      "step": "PostcombatMain",
       "turn": 1
     },
     {
@@ -134,13 +147,18 @@
         }
       },
       "player": "bob",
-      "step": "PrecombatMain",
+      "step": "EndStep",
       "turn": 1
     },
     {
-      "do": "Pass",
+      "check": {
+        "Life": {
+          "life": 20,
+          "player": "carol"
+        }
+      },
       "player": "bob",
-      "step": "PrecombatMain",
+      "step": "EndStep",
       "turn": 1
     },
     {
@@ -151,7 +169,7 @@
         }
       },
       "player": "bob",
-      "step": "PrecombatMain",
+      "step": "EndStep",
       "turn": 1
     }
   ]

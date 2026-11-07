@@ -12,6 +12,10 @@
           {
             "card": "Divination",
             "label": "div"
+          },
+          {
+            "card": "Horned Turtle",
+            "label": "turtle"
           }
         ],
         "library": [
@@ -35,6 +39,12 @@
         "name": "alice"
       },
       {
+        "hand": [
+          {
+            "card": "Lightning Strike",
+            "label": "strike"
+          }
+        ],
         "library": [
           {
             "card": "Island"
@@ -52,13 +62,24 @@
             "card": "Island"
           }
         ],
+        "manaPool": "R",
         "name": "bob"
       }
     ],
     "step": "PrecombatMain"
   },
-  "description": "Geist of Saint Thalia lets alice cast Divination with two mana",
+  "description": "Geist of Saint Thalia lets alice cast Divination with two mana, but not Horned Turtle, a creature spell of the same cost, nor bob Lightning Strike with one",
   "timeline": [
+    {
+      "player": "alice",
+      "refuse": {
+        "Cast": {
+          "object": "$turtle"
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
     {
       "do": {
         "Cast": {
@@ -72,6 +93,19 @@
     {
       "do": "Pass",
       "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "bob",
+      "refuse": {
+        "Cast": {
+          "object": "$strike",
+          "targets": [
+            "$alice"
+          ]
+        }
+      },
       "step": "PrecombatMain",
       "turn": 1
     },
