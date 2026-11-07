@@ -2695,17 +2695,44 @@ plainPayable subject spending swept pid committed committedEnergy claimed cost g
        in sourceLifePayable swept (committed + life)
             && all (\subset -> demandedIn subset <= couldServe subset) (List.subsequences (Set.toList (Set.fromList wanted_)))
 
+-- What a board's sources could add at most, ignoring what they spend: the
+-- bound ceilingAdmits holds a cost to.
+data Ceiling = MkCeiling
+  { -- Every group's PROFILE (ceilingProfile), with the activations summed over
+    -- groups sharing one.
+    ceilingGroups :: Map.Map [[Supply]] Natural,
+    -- What each unit of a type in the pool becomes under some group's CR
+    -- 701.10f doubling, unioned over the groups that can be activated at all:
+    -- as many times over as the walk likes, since its yield grows with the pool.
+    ceilingDoubling :: Map.Map ManaType [Supply],
+    -- CR 116.2c's life for mana, one supply per mana it may add, each as often
+    -- as the walk likes.
+    ceilingLifeForMana :: [Supply]
+  }
+
 -- What one group of a source's routes (groupsOf) could add to a board at most,
 -- as its yields' units, each a supply admitting no payment: the PROFILE
--- sourceCeiling sums `times` over. Nothing for a group announcing an X or
--- doubling the pool, whose yield the walk measures against the cost
--- (payableResolutionsGiven's `xCeiling`, CR 701.10f).
-ceilingProfile :: [SpendManaAsThough.SpendManaAsThough] -> (GroupKey, [([ManaUnit], Activations.Activations, Maybe Natural)]) -> Maybe ([[Supply]], Natural)
+-- ceilingGroups sums `times` over, beside what its CR 701.10f doubling makes of
+-- each type. Nothing for a group announcing an X, whose yield the walk
+-- measures against the cost (payableResolutionsGiven's `xCeiling`).
+ceilingProfile :: [SpendManaAsThough.SpendManaAsThough] -> (GroupKey, [([ManaUnit], Activations.Activations, Maybe Natural)]) -> Maybe ([[Supply]], Natural, Map.Map ManaType [Supply])
 ceilingProfile clauses ((activations, _, doubling, announcing), entries)
-  | announcing || not (Map.null doubling) = Nothing
-  | otherwise = Just (ListUtils.nubOrd [List.sort (fmap supply units) | (units, _, _) <- entries, not (null units)], Activations.times activations)
+  | announcing = Nothing
+  | otherwise = Just (ListUtils.nubOrd [List.sort (fmap supply units) | (units, _, _) <- entries, not (null units)], Activations.times activations, fmap (fmap supply) doubling)
   where
     supply unit = rewriteSupply clauses (supplyOf (const Set.empty) unit)
+
+-- The board's Ceiling, from every group of every source and CR 116.2c's life
+-- for mana. Nothing where some group announces an X.
+ceilingOf :: [SpendManaAsThough.SpendManaAsThough] -> [(ObjectId, Natural, ManaType)] -> [[(Activations.Activations, Yield, ManaCost, Activations.Activations)]] -> Maybe Ceiling
+ceilingOf clauses lifeForMana supplies = do
+  profiles <- traverse (ceilingProfile clauses) (concatMap groupsOf supplies)
+  pure
+    MkCeiling
+      { ceilingGroups = Map.fromListWith (+) [(yields, times) | (yields, times, _) <- profiles],
+        ceilingDoubling = Map.unionsWith (<>) [doubling | (_, times, doubling) <- profiles, times > 0],
+        ceilingLifeForMana = ListUtils.nubOrd [rewriteSupply clauses (supplyOf (const Set.empty) (lifeForManaUnit manaType)) | (_, _, manaType) <- lifeForMana]
+      }
 
 -- A NECESSARY condition for payableResolutionsGiven, asked before it because
 -- it costs no walk: Hall's condition over each resolution's own demands,
@@ -2716,10 +2743,12 @@ ceilingProfile clauses ((activations, _, doubling, announcing), entries)
 -- fails the walk does too. sourceCeiling sums the groups by profile once per
 -- sweep, so this is a pass over distinct profiles rather than sources.
 --
--- True, deciding nothing, where the board holds a group announcing an X, one
--- doubling the pool, or CR 116.2c's life for mana, each of whose mana grows
--- with the cost. Parun.ManaSpec's "mana ceiling" group pins this to the walk's
--- answer.
+-- Mana that grows with the cost is held to its TYPES alone, unbounded in
+-- number: CR 116.2c's life for mana, and a CR 701.10f doubling of every type
+-- the pool, a group or another doubling could hold. A demand set one of those
+-- serves is met. True, deciding nothing, where the board holds a group
+-- announcing an X. Parun.ManaSpec's "mana ceiling" group pins this to the
+-- walk's answer.
 ceilingAdmits :: PaymentSubject.PaymentSubject -> ManaSpending -> Sources -> PlayerId -> ManaCost -> GameState -> Bool
 ceilingAdmits subject spending swept pid cost gs = case sourceCeiling swept of
   Nothing -> True
@@ -2731,14 +2760,24 @@ ceilingAdmits subject spending swept pid cost gs = case sourceCeiling swept of
       | costClauses == clauses = serves
       | otherwise = serves . rewriteSupply costClauses
     pooled = [rewriteSupply clauses (supplyOf (const Set.empty) unit) | unit <- unitsOf (Game.poolOf pid gs)]
+    -- What the doublings make of every type the pool, a group, life for mana
+    -- or another doubling could hold.
+    doubledFrom ceiling_ =
+      let bounded = pooled <> ceilingLifeForMana ceiling_ <> [supply | (yields, times) <- Map.toList (ceilingGroups ceiling_), times > 0, supply <- concat yields]
+          close made =
+            let grown = Set.union made (Set.unions [supplyMade supply | (manaType, supplies) <- Map.toList (ceilingDoubling ceiling_), Set.member manaType made, supply <- supplies])
+             in if grown == made then made else close grown
+          made_ = close (Set.unions (fmap supplyMade bounded))
+       in concat (Map.elems (Map.restrictKeys (ceilingDoubling ceiling_) made_))
     reachable ceiling_ (demands, generic, _) =
       let wanted_ = demands <> List.genericReplicate generic anyTypeDemand
           servesAny subset supply = any (servesCost supply) subset
+          unbounded = ceilingLifeForMana ceiling_ <> doubledFrom ceiling_
           couldServe subset =
             Natural.length (filter (servesAny subset) pooled)
-              + sum [times * List.foldl' max 0 (fmap (Natural.length . filter (servesAny subset)) yields) | (yields, times) <- Map.toList ceiling_]
+              + sum [times * List.foldl' max 0 (fmap (Natural.length . filter (servesAny subset)) yields) | (yields, times) <- Map.toList (ceilingGroups ceiling_)]
           demandedIn subset = Natural.length (filter (`elem` subset) wanted_)
-       in all (\subset -> demandedIn subset <= couldServe subset) (List.subsequences (Set.toList (Set.fromList wanted_)))
+       in all (\subset -> any (servesAny subset) unbounded || demandedIn subset <= couldServe subset) (List.subsequences (Set.toList (Set.fromList wanted_)))
 
 -- CR 118.3 asked of the board activating no mana ability: the claims, CR
 -- 107.14's energy and CR 119.4's life the rest of the cost spends, held by
@@ -3294,11 +3333,8 @@ data Sources = MkSources
     -- source: what plainPayable reads in place of the walk.
     sourcePlain :: Map.Map ObjectId [(Supply, Natural)],
     sourcePlainTotal :: Map.Map Supply Natural,
-    -- Every group of every source by its ceilingProfile, with the activations
-    -- summed over groups sharing one: what ceilingAdmits reads in place of the
-    -- walk. Nothing where some group has no profile or the player has CR
-    -- 116.2c's life for mana.
-    sourceCeiling :: Maybe (Map.Map [[Supply]] Natural)
+    -- The board's ceilingOf: what ceilingAdmits reads in place of the walk.
+    sourceCeiling :: Maybe Ceiling
   }
 
 -- The supply sweep of `pid`'s board under `capacity`, and what Sources measures
@@ -3323,7 +3359,7 @@ supplySourcesGiven capacity grants pcs pid gs =
           sourceClauses = clauses,
           sourcePlain = plain,
           sourcePlainTotal = Map.fromListWith (+) (concat (Map.elems plain)),
-          sourceCeiling = if null lifeForMana then Map.fromListWith (+) <$> traverse (ceilingProfile clauses) (concatMap groupsOf supplies) else Nothing,
+          sourceCeiling = ceilingOf clauses lifeForMana supplies,
           sourceLifeForMana = lifeForMana,
           sourceLifePayable = Event.lifePayable pid gs
         }
