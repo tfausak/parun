@@ -24,6 +24,7 @@ import qualified Parun.Codec.Cost as Codec.Cost
 import qualified Parun.Codec.CostComponent as Codec.CostComponent
 import qualified Parun.Codec.Keyword as Codec.Keyword
 import qualified Parun.Codec.ManaCost as Codec.ManaCost
+import qualified Parun.Codec.ManaSymbol as Codec.ManaSymbol
 import qualified Parun.Codec.ManaType as Codec.ManaType
 import qualified Parun.Codec.ManaUnit as Codec.ManaUnit
 import qualified Parun.Codec.NumberFloor as Codec.NumberFloor
@@ -434,8 +435,10 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
   -- One of what the offer lists, sent back as the answer it already is.
   _ -> do
     (options, name) <- Monad.mplus (fmap (\o -> (o, optionName view)) (field "options" offer >>= arrayOf)) (fmap (\o -> (o, playerName)) (field "players" offer >>= arrayOf))
+    let self = foldMap (objectName view) (field "source" offer)
     pure
-      ( kindHeading <> foldMap (\source -> Text.pack " for " <> objectName view source) (field "source" offer) <> Text.pack ":" : numbered (fmap name options),
+      ( told view self offer
+          <> (kindHeading <> foldMap (\source -> Text.pack " for " <> objectName view source) (field "source" offer) <> Text.pack ":" : numbered (fmap name options)),
         fmap (pickFrom options) . one (Natural.length options)
       )
   where
@@ -826,7 +829,9 @@ optionName :: PlayerView.PlayerView -> R.Reply -> Text.Text
 optionName view reply = case reply of
   R.Null -> Text.pack "None"
   R.Number n -> Text.pack (show n)
-  R.Text t -> if Maybe.isJust (objectOf reply) then listedName view reply else t
+  R.Text t
+    | Maybe.isJust (objectOf reply) -> listedName view reply
+    | otherwise -> tagName t
   R.Array [R.Text tag, _] | tag `elem` fmap Text.pack ["Player", "Planeswalker", "Battle"] -> recipientName view reply
   R.Array xs -> Text.intercalate (Text.pack ", ") (fmap (optionName view) xs)
   -- A damage event (Parun.Play.Protocol.damageEvent).
@@ -836,6 +841,49 @@ optionName view reply = case reply of
       Just amount <- field "amount" reply >>= naturalOf ->
         Text.concat [objectName view source, Text.pack (" deals " <> show amount <> " damage to "), recipientName view target]
   _ -> Common.render (Codec.Reply.toValue reply)
+
+-- | A word an offer spells an option with: a yes or no as one
+-- (Parun.Types.OptionalDecision), a tag joining words (BuysBack) as words, and
+-- anything else, a card's name say, as itself.
+tagName :: Text.Text -> Text.Text
+tagName t
+  | t == Text.pack "Exercises" = Text.pack "Yes"
+  | t == Text.pack "Declines" = Text.pack "No"
+  | Text.all (\c -> Char.isAsciiUpper c || Char.isAsciiLower c) t,
+    Text.any Char.isAsciiUpper (Text.drop 1 t) =
+      case Text.uncons (Render.spaced t) of
+        Just (c, rest) -> Text.cons (Char.toUpper c) rest
+        Nothing -> t
+  | otherwise = t
+
+-- | What a listed offer tells the seat beside its options, a line each, in
+-- the order the offer gives: a cost or mana as Oracle text prints it, a list of who
+-- did what as each beside its player, and anything else as an option is named.
+-- An empty list says nothing.
+told :: PlayerView.PlayerView -> Text.Text -> R.Reply -> [Text.Text]
+told view self offer = case offer of
+  R.Object pairs ->
+    [ label key <> Text.pack ": " <> value key reply
+    | (key, reply) <- pairs,
+      key `notElem` fmap Text.pack ["source", "options", "players"],
+      reply /= R.Array []
+    ]
+  _ -> []
+  where
+    label key = case Text.uncons key of
+      Just (c, rest) -> Text.cons (Char.toUpper c) rest
+      Nothing -> key
+    value key reply
+      | key == Text.pack "cost" = candidateName self reply
+      | key == Text.pack "symbol", Just symbol <- decoded Codec.ManaSymbol.codec reply = Render.manaCost (ManaCost.MkManaCost [symbol])
+      | key == Text.pack "mana", Just mana <- decoded Codec.ManaType.codec reply = Render.manaType mana
+      | Just pairs <- arrayOf reply,
+        Just named <- mapM byPlayer pairs =
+          Text.intercalate (Text.pack "; ") named
+      | otherwise = optionName view reply
+    byPlayer pair = case pair of
+      R.Array [player@(R.Text _), what] | Maybe.isNothing (objectOf player) -> Just (playerName player <> Text.pack ": " <> optionName view what)
+      _ -> Nothing
 
 -- | A seat a listed offer names by its bare id, or declining as None.
 playerName :: R.Reply -> Text.Text
