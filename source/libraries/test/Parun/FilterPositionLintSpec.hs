@@ -1994,7 +1994,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     --
     -- Exactly, against the mana value: Chthonian Nightmare, Tamiyo, Compleated
     -- Sage, Synthetic Counted, Announced, Wide, Paired, Total and Divided
-    -- Verdict, Spell Blast and Detonate in a slot, and Fear of Change and Ornate Imitations in a reference
+    -- Verdict, Synthetic Wide Muster on a modal trigger, Spell Blast and Detonate in a slot, and Fear of Change and Ornate Imitations in a reference
     -- pick, at the top level and
     -- inside a ForEachNumber body; Isareth the Awakener in a reflexive delayed
     -- ability's slot, whose amount the arming resolution's chosen X binds.
@@ -2030,6 +2030,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Synthetic Paired Verdict", 1),
         ("Synthetic Total Verdict", 1),
         ("Synthetic Divided Verdict", 1),
+        ("Synthetic Wide Muster", 1),
         ("Spell Blast", 1),
         ("Detonate", 1),
         ("Fear of Change", 1),
