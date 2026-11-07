@@ -857,6 +857,27 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "Enter finds none" (fst (asking facing [""] gs prompt)) (Right [])
     Spec.assertEqWith s "past the count is refused" (fst (asking facing ["all"] gs prompt)) (Left (Text.pack "end of input"))
 
+  Spec.it s "CR 608.2d a prompt answered by one of a list numbers its options, and the number picks one" $ do
+    bears <- S.printingOf s registry "Grizzly Bears"
+    giant <- S.printingOf s registry "Hill Giant"
+    forest <- S.printingOf s registry "Forest"
+    let (b, g1) = S.addHandCard bears S.alice (Setup.emptyGame S.bothPlayers)
+        (g, g2) = S.addHandCard giant S.alice g1
+        (f, gs) = S.addPermanent forest S.alice g2
+        facing = Hotseat.fresh {Hotseat.facing = Just S.alice}
+        alice = Decider.MkDecider S.alice
+        listedAfter heading screenLines = takeWhile (Text.isPrefixOf (Text.pack "  ")) (drop 1 (dropWhile (/= Text.pack heading) screenLines))
+        (card, shown) = asking facing ["2"] gs (Prompt.ChooseCardInHand alice S.alice f (b NonEmpty.:| [g]))
+        (player, seats) = asking facing ["2"] gs (Prompt.ChoosePlayer alice S.alice f (S.alice NonEmpty.:| [S.bob]))
+        (assistant, declining) = asking facing ["2"] gs (Prompt.ChooseAssistant alice S.alice f (S.bob NonEmpty.:| []))
+    Spec.assertEqWith s "cards listed" (listedAfter "Choose card in hand for Forest:" shown) [Text.pack "  1. Grizzly Bears", Text.pack "  2. Hill Giant"]
+    Spec.assertEqWith s "the card picked" card (Right g)
+    Spec.assertEqWith s "seats listed" (listedAfter "Choose player for Forest:" seats) [Text.pack "  1. Player 1", Text.pack "  2. Player 2"]
+    Spec.assertEqWith s "the seat picked" player (Right S.bob)
+    Spec.assertEqWith s "declining listed last" (listedAfter "Choose assistant for Forest:" declining) [Text.pack "  1. Player 2", Text.pack "  2. None"]
+    Spec.assertEqWith s "declined" assistant (Right Nothing)
+    Spec.assertEqWith s "past the list is refused" (fst (asking facing ["3"] gs (Prompt.ChooseCardInHand alice S.alice f (b NonEmpty.:| [g])))) (Left (Text.pack "end of input"))
+
 -- The seat across the table.
 otherSeat :: Natural -> Natural
 otherSeat n = if n == 1 then 2 else 1

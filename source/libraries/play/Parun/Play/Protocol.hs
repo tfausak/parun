@@ -21,6 +21,7 @@ import qualified Parun.Codec.Facing as Codec.Facing
 import qualified Parun.Codec.Filter as Codec.Filter
 import qualified Parun.Codec.Keyword as Codec.Keyword
 import qualified Parun.Codec.ManaCost as Codec.ManaCost
+import qualified Parun.Codec.ManaSymbol as Codec.ManaSymbol
 import qualified Parun.Codec.ManaType as Codec.ManaType
 import qualified Parun.Codec.ManaUnit as Codec.ManaUnit
 import qualified Parun.Codec.NumberFloor as Codec.NumberFloor
@@ -48,6 +49,7 @@ import qualified Parun.Scenario.Reply as Reply
 import qualified Parun.Types.Action as Action
 import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
+import qualified Parun.Types.BallotChoice as BallotChoice
 import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
@@ -219,7 +221,71 @@ offerOf gs prompt = case prompt of
   Prompt.ChooseManaToSpend _ _ units -> Reply.encode (Reply.list (Reply.viaCodec Codec.ManaUnit.codec)) namer (NonEmpty.toList units)
   -- CR 701.23a: the searcher looks at the cards searched, so each is named.
   Prompt.Search _ _ cards count -> fields [("from", objects cards), ("names", R.Array (fmap (R.Text . Render.snapshotName . (`Projection.project` gs)) cards)), ("count", natural count)]
+  Prompt.ChooseConjuredCard _ _ names -> choosing prompt "options" Nothing [] (NonEmpty.toList names)
+  Prompt.ChooseCoinResult _ _ faces -> choosing prompt "options" Nothing [] (NonEmpty.toList faces)
+  Prompt.ChooseDefender _ _ players -> choosing prompt "players" Nothing [] (NonEmpty.toList players)
+  Prompt.ChooseRingBearer _ _ candidates -> choosing prompt "options" Nothing [] (NonEmpty.toList candidates)
+  Prompt.ChooseBolster _ _ source candidates -> choosing prompt "options" (Just source) [] (NonEmpty.toList candidates)
+  Prompt.ChooseAmass _ _ source candidates -> choosing prompt "options" (Just source) [] (NonEmpty.toList candidates)
+  Prompt.ChooseBlight _ _ source candidates -> choosing prompt "options" (Just source) [] (NonEmpty.toList candidates)
+  Prompt.ChooseBehold _ _ source candidates -> choosing prompt "options" (Just source) [] (NonEmpty.toList candidates)
+  -- Every choice of one vote is of one kind (Parun.Types.VoteChoices).
+  Prompt.ChooseVote _ _ source choices -> choosing prompt (case NonEmpty.head choices of BallotChoice.ForPlayer _ -> "players"; _ -> "options") (Just source) [] (NonEmpty.toList choices)
+  Prompt.ChooseCounterKind _ _ _ kinds -> choosing prompt "options" Nothing [] (NonEmpty.toList kinds)
+  -- CR 122.5: the object the counters move off, and the one they move onto.
+  Prompt.ChooseMovedCounterOrNone _ _ off onto kinds -> choosing prompt "options" Nothing [("off", object off), ("onto", object onto)] (orNone kinds)
+  Prompt.ChooseDamageSource _ _ source candidates -> choosing prompt "options" (Just source) [] (NonEmpty.toList candidates)
+  -- CR 101.4b: the cards earlier choosers took, beside who took each.
+  Prompt.ChooseCardInGraveyard _ _ source cards earlier -> choosing prompt "options" (Just source) [("earlier", Reply.encode (Reply.seqOf (Reply.pairOf Reply.player Reply.object)) namer earlier)] (NonEmpty.toList cards)
+  Prompt.ChooseCardInHand _ _ source cards -> choosing prompt "options" (Just source) [] (NonEmpty.toList cards)
+  Prompt.ChooseCardFromAmong _ _ source cards -> choosing prompt "options" (Just source) [] (NonEmpty.toList cards)
+  Prompt.ChooseDungeon _ _ dungeons -> choosing prompt "options" Nothing [] (NonEmpty.toList dungeons)
+  Prompt.ChooseSticker _ _ source stickers -> choosing prompt "options" (Just source) [] (NonEmpty.toList stickers)
+  Prompt.ChooseStickerOrNone _ _ source stickers -> choosing prompt "options" (Just source) [] (orNone stickers)
+  Prompt.ChooseNamePosition _ _ source positions -> choosing prompt "options" (Just source) [] (NonEmpty.toList positions)
+  Prompt.ChooseCompanion _ _ companions -> choosing prompt "options" Nothing [] (orNone companions)
+  Prompt.ChooseRoom _ _ source rooms -> choosing prompt "options" (Just source) [] (NonEmpty.toList rooms)
+  Prompt.ChooseHalf _ _ source names -> choosing prompt "options" (Just source) [] (NonEmpty.toList names)
+  Prompt.ChooseLegend _ _ candidates -> choosing prompt "options" Nothing [] (NonEmpty.toList candidates)
+  Prompt.ChooseAttackTarget _ _ attacker targets -> choosing prompt "options" (Just attacker) [] (NonEmpty.toList targets)
+  Prompt.ChooseEnlist _ _ source candidates -> choosing prompt "options" (Just source) [] (orNone candidates)
+  Prompt.ChooseEncode _ _ source candidates -> choosing prompt "options" (Just source) [] (orNone candidates)
+  Prompt.ChooseAssistant _ _ source players -> choosing prompt "players" (Just source) [] (orNone players)
+  Prompt.ChooseCopyTarget _ _ source candidates -> choosing prompt "options" (Just source) [] (fmap Just candidates <> [Nothing])
+  Prompt.ChooseRevealOnEntry _ _ source cards -> choosing prompt "options" (Just source) [] (orNone cards)
+  Prompt.ChooseColor _ _ source colors -> choosing prompt "options" (Just source) [] (NonEmpty.toList colors)
+  Prompt.ChooseDesignation _ _ source designations -> choosing prompt "options" (Just source) [] (NonEmpty.toList designations)
+  Prompt.ChooseManaType _ _ source types -> choosing prompt "options" (Just source) [] (NonEmpty.toList types)
+  Prompt.ChooseCardType _ _ source types -> choosing prompt "options" (Just source) [] (NonEmpty.toList types)
+  Prompt.ChooseOpponent _ _ source _ players -> choosing prompt "players" (Just source) [] (NonEmpty.toList players)
+  Prompt.ChooseProtector _ _ source players -> choosing prompt "players" (Just source) [] (NonEmpty.toList players)
+  Prompt.ChoosePlayer _ _ source players -> choosing prompt "players" (Just source) [] (NonEmpty.toList players)
+  Prompt.ChooseActivePlayer _ _ players -> choosing prompt "players" Nothing [] (NonEmpty.toList players)
+  -- CR 101.4b: the objects earlier choosers chose, beside who chose them.
+  Prompt.ChoosePermanent _ _ source candidates earlier -> choosing prompt "options" (Just source) [("earlier", Reply.encode (Reply.seqOf (Reply.pairOf Reply.player (Reply.setOf Reply.object))) namer earlier)] (NonEmpty.toList candidates)
+  Prompt.ChooseCounterRemoval _ _ source candidates -> choosing prompt "options" (Just source) [] (NonEmpty.toList candidates)
+  Prompt.ChooseAttachment _ _ source candidates -> choosing prompt "options" (Just source) [] (NonEmpty.toList candidates)
+  Prompt.ChooseOfferedCastSpell _ _ offers -> choosing prompt "options" Nothing [] (NonEmpty.toList offers)
+  Prompt.ChoosePlayPermission _ _ source permissions -> choosing prompt "options" (Just source) [] (NonEmpty.toList permissions)
+  -- CR 601.2b: the symbol announced for, beside each way to pay it.
+  Prompt.AnnouncePhyrexianPayment _ _ source symbol payments -> choosing prompt "options" (Just source) [("symbol", Reply.encode (Reply.viaCodec Codec.ManaSymbol.codec) namer symbol)] (NonEmpty.toList payments)
+  Prompt.AnnounceHybridPayment _ _ source mana payments -> choosing prompt "options" (Just source) [("mana", Reply.encode (Reply.viaCodec Codec.ManaType.codec) namer mana)] (NonEmpty.toList payments)
+  Prompt.AnnounceHybridHalf _ _ source symbol halves -> choosing prompt "options" (Just source) [("symbol", Reply.encode (Reply.viaCodec Codec.ManaSymbol.codec) namer symbol)] (NonEmpty.toList halves)
+  Prompt.ChooseReductionHalf _ _ source symbol halves -> choosing prompt "options" (Just source) [("symbol", Reply.encode (Reply.viaCodec Codec.ManaSymbol.codec) namer symbol)] (NonEmpty.toList halves)
+  Prompt.ChooseReducedCost _ _ source costs -> choosing prompt "options" (Just source) [] (NonEmpty.toList costs)
   _ -> R.Null
+
+-- | A prompt answered by one of what it lists: its source where it has one,
+-- what else the seat is told, and under @key@ each option spelled as the
+-- answer that picks it, @"players"@ for seats (which the line spells as bare
+-- ids) and @"options"@ for anything else.
+choosing :: Prompt.Prompt r -> String -> Maybe ObjectId.ObjectId -> [(String, R.Reply)] -> [r] -> R.Reply
+choosing prompt key source told options =
+  fields ([("source", object s) | Just s <- [source]] <> told <> [(key, R.Array (fmap (Reply.encode (Reply.shapeOf prompt) namer) options))])
+
+-- | Each of a "may" prompt's options, then declining, spelled null.
+orNone :: NonEmpty.NonEmpty a -> [Maybe a]
+orNone options = fmap Just (NonEmpty.toList options) <> [Nothing]
 
 -- | CR 603.3b: an entry of a trigger ordering as its source (null for none, CR
 -- 113.7) and, where it renders, its ability's Oracle text, which tells apart

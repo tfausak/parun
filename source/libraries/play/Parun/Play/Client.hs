@@ -426,7 +426,16 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
           picked <- some from typed
           if Natural.length picked <= n then Right (R.Array picked) else Left (Text.pack ("Choose at most " <> show n <> "."))
       )
-  _ -> Nothing
+  -- One of what the offer lists, sent back as the answer it already is.
+  _ -> do
+    (options, name) <- Monad.mplus (fmap (\o -> (o, optionName view)) (field "options" offer >>= arrayOf)) (fmap (\o -> (o, playerName)) (field "players" offer >>= arrayOf))
+    let heading = case Text.uncons (Render.spaced (Question.kind question)) of
+          Just (c, rest) -> Text.cons (Char.toUpper c) rest
+          Nothing -> Text.empty
+    pure
+      ( heading <> foldMap (\source -> Text.pack " for " <> objectName view source) (field "source" offer) <> Text.pack ":" : numbered (fmap name options),
+        fmap (pickFrom options) . one (Natural.length options)
+      )
   where
     offer = Question.offer question
     -- A number from least to greatest, or from least up with no greatest.
@@ -487,9 +496,9 @@ readingByName lookUp view wanted =
     matches = any ((== Text.toCaseFold (Text.strip wanted)) . Text.toCaseFold . CardName.unwrap) . Set.toList . Render.cardNames
 
 -- | The object behind each numbered option of an offer, where it names one:
--- the offer's own list, or the cards or sources it chooses from.
+-- the offer's own list, or the cards, sources or options it chooses from.
 listedObjects :: PlayerView.PlayerView -> R.Reply -> [Maybe ObjectId.ObjectId]
-listedObjects view offer = foldMap (fmap optionObject) (Monad.msum [fmap (fmap snd . distinct view) (arrayOf offer), field "from" offer >>= arrayOf, field "sources" offer >>= arrayOf])
+listedObjects view offer = foldMap (fmap optionObject) (Monad.msum [fmap (fmap snd . distinct view) (arrayOf offer), field "from" offer >>= arrayOf, field "sources" offer >>= arrayOf, field "options" offer >>= arrayOf])
   where
     optionObject option = Monad.msum [objectOf option, field "object" option >>= objectOf, field "source" option >>= objectOf]
 
@@ -764,6 +773,24 @@ objectName view reply = maybe (Text.pack "something") (Render.named view) (objec
 -- | An object an offer lists, told apart from others of its name.
 listedName :: PlayerView.PlayerView -> R.Reply -> Text.Text
 listedName view reply = maybe (Text.pack "something") (Render.choosable view) (objectOf reply)
+
+-- | An option of a listed offer: an object as listedName names it, a
+-- recipient or attack target as recipientName does, declining as None, and a
+-- word or number as itself.
+optionName :: PlayerView.PlayerView -> R.Reply -> Text.Text
+optionName view reply = case reply of
+  R.Null -> Text.pack "None"
+  R.Number n -> Text.pack (show n)
+  R.Text t -> if Maybe.isJust (objectOf reply) then listedName view reply else t
+  R.Array [R.Text tag, _] | tag `elem` fmap Text.pack ["Player", "Planeswalker", "Battle"] -> recipientName view reply
+  R.Array xs -> Text.intercalate (Text.pack ", ") (fmap (optionName view) xs)
+  _ -> Common.render (Codec.Reply.toValue reply)
+
+-- | A seat a listed offer names by its bare id, or declining as None.
+playerName :: R.Reply -> Text.Text
+playerName reply = case reply of
+  R.Text x -> maybe x (Render.player . PlayerId.MkPlayerId) (Read.readMaybe (Text.unpack x))
+  _ -> Text.pack "None"
 
 recipientName :: PlayerView.PlayerView -> R.Reply -> Text.Text
 recipientName view reply = case reply of
