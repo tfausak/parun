@@ -1,17 +1,39 @@
 # Orchestrating a set
 
-How to run one set of #5468's ladder: every card of the set in the pool, and
-its census doc (`docs/sets/<set>.md`) listing nothing under "Needs a
-capability". Read with `docs/agents/set-by-set.md`, which the implementers and
-auditors you dispatch follow; `CLAUDE.md` and `CONTRIBUTING.md` apply
-throughout and override both except where they say otherwise. Every subagent
-is opus. Rules only: the incidents behind them are in git history.
+How to run one set of #6476's ladder: every card of the set in the pool, and
+its set list committed. Read with `docs/agents/set-by-set.md`, which the
+sessions working the set's issues follow; `CLAUDE.md` and `CONTRIBUTING.md`
+apply throughout and override both except where they say otherwise. Rules
+only: the incidents behind them are in git history.
 
-## Machine setup
+## The shape
 
-`_scratch/` is gitignored. Fetch each input from its source when a step needs
-it, never copying one between machines; a missing file is a fetch, not a
-blocker.
+A set is one **tracking issue**, a sub-issue of #6476, whose sub-issues are
+the set's units. Each unit is one issue a fresh cloud session can finish from
+its body alone, and one PR closing it. GitHub is the only progress record:
+open and closed sub-issues, their blocked-by links and the tracker's census
+snapshot. No unit edits a file another unit of the set also edits for
+bookkeeping: the set's doc, `docs/sets/<set>.md`, is written once, by the
+finish unit.
+
+The orchestrator dispatches a unit by applying the `claude` label to its
+issue; the session that starts opens the PR. The orchestrator owns the
+tracker, which only the census unit also writes (its snapshot), and the body
+of every unlabelled issue. A labelled issue's body belongs to its unit:
+nobody edits it after labelling.
+
+The units, as sub-issues of the tracker:
+
+- **Census**: one, first.
+- **Batch**: about 20 expressible cards, a contiguous run in name order.
+- **Capability**: one missing capability and the cards waiting on it.
+- **Fix**: an audit finding on a merged unit.
+- **Finish**: one, last, filed when everything else is closed.
+
+## Session setup
+
+A cloud session starts without `_scratch/` (gitignored). Fetch each input
+when a step needs it; a missing file is a fetch, not a blocker.
 
 - MTGJSON: `curl -sfL -o _scratch/X.json.gz
   https://mtgjson.com/api/v5/X.json.gz && gunzip _scratch/X.json.gz` for `X`
@@ -22,67 +44,51 @@ blocker.
   commits `data/mtgish.lines.json` pre-built, and `git pull` refreshes it.
 - Prior art, optional: clone `https://github.com/phase-rs/phase` and
   `https://github.com/wingedsheep/argentum-engine` into `_scratch/`.
-- The warm worktree: only the orchestrator runs `script/warm-worktree.sh` (no
-  argument), once before the first dispatch and in the background after every
-  merge; implementers seed from it. Never reap, rename or dispatch into it.
 - A binary run outside `cabal run` (`cabal list-bin parun`) needs
   `parun_datadir` pointing at the checkout's `data/`.
 
 ## The procedure
 
-Per set, in this order, one unit at a time ("Mechanics").
-
-1. **Census unit.** Diff AllPrintings' `.data[SET].cards[].name` (split ` // `
+1. **Tracker.** Open `SETNAME (SET)` with a dated plain-language summary,
+   make it a sub-issue of #6476, file the census issue under it ("Templates")
+   and label the census issue.
+2. **Census unit.** Diff AllPrintings' `.data[SET].cards[].name` (split ` // `
    names into faces) against every face `name` in `data/cards/` (`jq -r
    '.faces[].name' data/cards/*.json`), never against names a card's text
    mentions. Put each missing card in exactly one place:
-   - added in this PR: what `parun translate` accepts;
-   - "Expressible today": with the mtgish node translate stops at, or
-     "renders differently";
-   - "Needs a capability": grouped under its issue, hardest first, a
-     one-line note each on why.
+   - added in the census PR: what `parun translate` accepts;
+   - a batch issue: what the DSL expresses but translate rejects, in name
+     order, about 20 a batch, each card with the mtgish node translate stops
+     at, or "renders differently";
+   - a capability issue: what needs a capability (`gap`, an `area:*`,
+     `expires:card-driven`, no priority), hardest first. An open issue
+     already covering it gets a comment naming the card instead; if it has a
+     parent elsewhere (an issue has one), link it as blocking the tracker.
 
-   A blank line separates the entries of both lists. Remove a finished
-   entry's own lines and keep the blanks around it, even where two end up
-   together: git conflicts on edits to adjacent lines, and the blanks keep
-   parallel units' edits apart.
-
-   Shape `docs/sets/<set>.md` like the previous set's census as its census PR
-   first wrote it (`git log --diff-filter=A --format=%h --
-   docs/sets/<prev>.md`, then `git show`), not the finished file. File one
-   issue per missing capability (`gap`, an `area:*`, `expires:card-driven`,
-   no priority), or comment on an existing one naming the card. Classify
-   cheaply: start from `parun translate --set SET --out DIR`'s rejections,
-   judge whether the DSL expresses the blocking node (a pool card using it is
-   the evidence), and Scryfall-verify only the "Needs a capability" cards.
-   Report the two trend numbers: the first dry run's translations, and the
-   cards needing a capability.
-2. **Hand batches** over "Expressible today", in order, about 20 cards each.
-   Translate first, hand-write on rejection. Every census verdict and every
-   sibling it names is a claim to verify. A wrong verdict moves the card
-   under "Needs a capability" (issue or comment), or is folded if small. Each
-   batch updates the census.
-3. **Capability units**, one per issue, hardest first. Parameter-sized issues
-   share a capability batch only when they share an edit site: name the
-   function or constructor they all edit, and read it; if you cannot, they
-   are a topic, not a batch. Capability units do NOT edit
-   `docs/sets/<set>.md`; the orchestrator or the set's last unit does.
-4. **Audit** a PR that changes what many games pass through: a `GameState`
-   field, a reader every resolution, search, combat or cast passes through, a
-   codec shape, or a new `docs/decisions.md` entry. Audit any other PR at the
-   orchestrator's judgement: more of a kind that keeps finding defects, none
-   of a kind clean twice running. Record each skip and its reason as the unit
-   reports. Hand the findings, as claims to verify, to a FRESH fixer with the
-   PR's diff and body; it pushes back with evidence where the audit is wrong.
-   The PR stays a draft until the fixes land.
-5. **Finish.** When every capability card is in the pool, set "Needs a
-   capability" to "Nothing", commit the set list as
-   `data/decks/sets/<set>/all.txt` (`1 Name` a line, one per card name;
-   `DecksSpec` proves each resolves), and tick the set on #5468. The set's
-   last unit does this; until then, check the list with `parun deck` from a
-   scratch file. The orchestrator then writes `## How it went` as the
-   census's last section from what it recorded as each unit reported: a
-   frozen record (the no-tallies rule for trackers does not apply), and a
+   Every issue it files is a sub-issue of the tracker, written per "Writing
+   an issue". Classify cheaply: start from `parun translate --set SET --out
+   DIR`'s rejections, judge whether the DSL expresses the blocking node (a
+   pool card using it is the evidence), and Scryfall-verify only the
+   capability cards. Then append the census snapshot to the tracker's body:
+   the date, the count per place, and the two trend numbers (the first dry
+   run's translations, and the cards needing a capability).
+3. **Fan out** ("Mechanics"). Capability issues hardest first, then batches.
+4. **Audit** a merged PR that changes what many games pass through: a
+   `GameState` field, a reader every resolution, search, combat or cast
+   passes through, a codec shape, or a new `docs/decisions.md` entry. Audit
+   any other at the orchestrator's judgement: more of a kind that keeps
+   finding defects, none of a kind clean twice running. The auditor is a
+   read-only subagent of the orchestrator ("Templates"); each finding that
+   holds on the orchestrator's own reading becomes a fix issue (`bug`,
+   `rules-correctness`) under the tracker. Record each skip and its reason on
+   the tracker.
+5. **Finish.** When every other sub-issue and every issue blocking the
+   tracker is closed, file the finish issue and label it. Its PR commits the
+   set list as `data/decks/sets/<set>/all.txt` (`1 Name` a line, one per
+   card name; `DecksSpec` proves each resolves), writes `docs/sets/<set>.md`,
+   and ticks the set on #6476. The doc is the tracker's census snapshot, then
+   `## How it went`: a frozen record (the no-tallies rule for trackers does
+   not apply) built from the tracker and its sub-issues' merged PRs, where a
    figure nobody recorded is "not recorded", never an estimate:
 
    ```markdown
@@ -93,7 +99,7 @@ Per set, in this order, one unit at a time ("Mechanics").
    | Route | Cards | PRs |
    | --- | --- | --- |
    | Translated (census) | N | #census |
-   | Hand-written | N | #hand1, #hand2 |
+   | Batches | N | #batch1, #batch2 |
    | Behind a capability | N, plus M from other sets | below |
 
    - Census trend: the first dry run translated T of the N missing; C
@@ -101,10 +107,8 @@ Per set, in this order, one unit at a time ("Mechanics").
    - Capability issues, hardest first: #issue Card (#PR), ...
    - Filed along the way: #N (one phrase), ...
    - Audits: A of K capability PRs; D found rules defects.
-     - #PR: the defect, in a line.
-   - Cost (`script/session-tokens.sh` over the set's transcripts): cache
-     reads X.XB, cache writes XM, output XM; X.XM cache reads per card. The
-     costliest units: #PR (XM), .... Wall clock ~Nh.
+     - #PR: the defect, in a line, and its fix issue.
+   - Cost: as recorded on the tracker, else "not recorded". Wall clock ~Nh.
    - Owner review:
      - #PR: a decisions.md entry, wire-format change or contested reading.
    ```
@@ -117,161 +121,132 @@ summary, and its title carries no CR numbers.
 
 ## Mechanics
 
-- **One unit at a time.** Dispatch the next unit only after the current one's
-  PR merges, cut from that `origin/main`; a read-only audit runs while its
-  unit waits. Tokens, not wall clock, are the budget.
-  `script/with-build-lock.sh` (`PARUN_BUILD_SLOTS`) stays as the guard.
-- **Cost** is cache reads (`script/session-tokens.sh` on the transcripts):
-  every turn re-reads the whole context, so cost grows with the square of a
-  session's length.
-- **Short sessions.** Size a unit to finish in about 150 turns: hand batches
-  of about 20 cards, capability batches of two or three issues. A unit
-  with work left hands it to a fresh unit briefed with its branch and report
-  ("Implementing a unit"). Never resume a finished agent for more work; brief
-  a fresh one.
-- **Subagents commit; the orchestrator pushes.** Before pushing, grep the
-  branch's commit messages and the PR body for close/fix/resolve beside an
-  issue number. Open the PR as a draft from the agent's PR-body file, then
-  shepherd it.
-- **Scratch.** Each agent gets its own named subfolder of the session
-  scratchpad. Briefs and PR bodies are files there, relayed by path, never
-  retyped.
-- **Merging.** When a PR has cleared any audit, `gh pr ready` it and arm
-  auto-merge (`gh pr merge --auto`; the merge queue sets the method) in the
-  same step; a later fix undoes ready first
-  (`gh pr ready --undo`). After arming and after every push, read `gh api
-  repos/parun-mtg/parun/issues/P/events`: the last `auto_merge_*` or
-  `*_merge_queue` event must be neither a disabling nor a removal, since a
-  queued PR shows no `autoMergeRequest`. On a conflict or a CI failure that
-  needs `main`, brief a fresh agent on the branch to merge `origin/main`
-  (`docs/agents/set-by-set.md`, "Git and the PR").
-- **Shepherd** each PR with `script/shepherd.sh PR` in the background: it
-  exits on merge, conflict, a failed check or removal from the queue. Don't
-  update a `BEHIND` branch: the queue tests each PR against main.
-  Read a failed job's log first: one that died in `Set up job` is not a real
-  failure.
-- **Reap after every merge**, from the primary checkout: `git worktree remove
-  --force` the unit's worktree (unlock first), `git worktree prune`, `git
-  fetch --prune`, then delete every local branch whose upstream is `[gone]` or
-  that has no commit beyond `origin/main`, skipping any a live worktree has
-  checked out. Kill a stalled `cabal` by PID after `lsof -p <pid> -d cwd`
-  shows a finished worktree. Leave branches you did not create that carry
-  commits. Hold a worktree until its PR merges: a fixer works in it. Then
-  refresh the warm worktree.
+- **Eight at a time.** Toposort the tracker's open sub-issues, and the open
+  issues blocking it, by their blocked-by links, and label up to eight whose
+  blockers are all closed. As each PR merges, label the next. Never label an
+  issue with an open blocker.
+- **Shared edit sites serialize.** Two issues that edit the same function or
+  constructor are never in flight together: link the later as blocked by
+  the earlier, so the toposort orders them. A batch takes a contiguous run in
+  name order, so batches meet only at their ends in a sorted list.
+- **Hot files stay sorted.** A list every card PR edits is kept in byte order,
+  never appended to: `data/oracle-unrendered.txt` (`script/sort-lines.sh`,
+  the `sorted` hook). A new list of that kind gets the same treatment.
+- **Carry findings forward** by editing unlabelled issues: a census verdict a
+  merged unit overturned, a renderer wording or `docs/decisions.md` entry it
+  added that a later unit must extend rather than duplicate. An issue a unit
+  files for the set goes under the tracker; adopt it if it did not.
+- **Short units.** Size an issue to finish in about 150 turns: about 20 cards
+  a batch, one capability an issue, or two or three parameter-sized ones
+  that share an edit site (name it, and read it; if you cannot, they are a
+  topic, not one issue). A unit with work left files the rest as a new
+  sub-issue ("Implementing a unit").
+- **Cost** is cache reads (`script/session-tokens.sh` on the transcripts,
+  where they are reachable): every turn re-reads the whole context, so cost
+  grows with the square of a session's length. Record it on the tracker as
+  each unit merges.
+- **Merging.** The unit marks its PR ready (`CLAUDE.md`). The orchestrator
+  arms auto-merge (`gh pr merge --auto`, or from a cloud session `PUT
+  repos/parun-mtg/parun/pulls/P/ccr/auto_merge`; the merge queue sets the
+  method), then reads `gh api repos/parun-mtg/parun/issues/P/events`: the
+  last `auto_merge_*` or `*_merge_queue` event must be neither a disabling
+  nor a removal, since a queued PR shows no `autoMergeRequest`. On a conflict
+  or a CI failure that needs `main`, a fresh agent merges `origin/main` into
+  the branch (`docs/agents/set-by-set.md`, "Git and the PR"). Don't update a
+  `BEHIND` branch: the queue tests each PR against main. Read a failed job's
+  log first: one that died in `Set up job` is not a real failure.
+- **Waiting** is a scheduled check-in or a PR subscription, never a polling
+  loop.
 
-## Writing a brief
+## Writing an issue
 
-Instantiate the templates below, never a previous filled-in brief; add only
-what is specific to the unit. Don't research ahead of the implementer: a brief
-carries facts reading settles (producers, Oracle text fetched this session,
-what the census says, which merged units it must reuse, enumerations a haiku
-Explore subagent answered for it, since the unit can't spawn one) and flags
-anything else unverified --- never a predicted wire spelling, test board,
-mutation outcome or file list. Never tell an implementer not to chase
+The labelled session sees the issue, `CLAUDE.md` and the tree, and nothing the
+orchestrator knows: everything it needs is in the body or one link away. It
+names the set and the tracker (`#T`), says the PR closes this issue, and lists
+the deliverables. It carries facts reading settles (producers, Oracle text
+fetched that day, what the census found, which merged PRs it must reuse) and
+flags anything else unverified --- never a predicted wire spelling, test
+board, mutation outcome or file list. Never tell an implementer not to chase
 something.
 
 ## Templates
 
-Placeholders: `SET` (code, e.g. `M14`), `SETNAME`, `ISSUE`, `BRANCH`,
-`SCRATCH` (the agent's folder under the session scratchpad), `BASESHA`,
-`HEADSHA`. Every implementer brief opens with **Preamble** and closes with
-**Finishing**.
+Placeholders: `SET` (code, e.g. `HOB`), `SETNAME`, `T` (the tracker), `DATE`.
+Every unit issue but the finish ends with **Footer**.
 
-**Preamble.**
+**Footer.**
 
-> You are an implementing agent on parun. Read `CLAUDE.md` and
-> `docs/agents/set-by-set.md` ("Implementing a unit" and "What every brief
-> repeats") first and follow them. You are in your own git worktree. First
-> `git fetch` and `git checkout -B BRANCH origin/main` (or the branch named
-> below, if its PR has not merged). Keep every scratch file, mutation scripts
-> included, in `SCRATCH`. Another agent builds at the same time, so prefer
-> pattern runs to full-suite runs except the last.
-
-**Finishing.**
-
-> Work through `CLAUDE.md`'s "Before you consider a change done" in full,
-> self-review, and run the full suite after your last code change. Commit on
-> `BRANCH`; DO NOT push and DO NOT open the PR. End every commit with the
-> session's `Co-Authored-By` trailer. Report: branch, worktree path, head
-> SHA; suite count before -> after; issues filed or commented on; and the PR
-> body, per `CLAUDE.md`'s bullets, saved to `SCRATCH/pr.md` and ending with
-> the session's generated-with line.
+> Follow `CLAUDE.md` and `docs/agents/set-by-set.md` ("What every unit
+> repeats" and "Implementing a unit"). Part of SETNAME (SET), tracked in #T;
+> file anything new for the set as a sub-issue of #T. Do not edit
+> `docs/sets/<set>.md`. The PR closes this issue.
 
 **Census.**
 
-> Start SETNAME (SET) under #5468: unit 1, the census, whose purpose is to
-> find the hard cards early. Follow "The procedure", step 1. Deliverables, one
-> PR: `docs/sets/<set>.md`; the capability issues or comments, dated today;
-> the cards `parun translate` accepts, each `new` ability (and each shared one
-> no test exercises) with a gameplay-level scenario, ten spot-checked on
-> Scryfall; keyword-only cards ingested. Before filing, check the DSL for a
-> sibling a parameter would extend ("Parameters, not siblings"). Read `git
-> log --oneline` since the previous set's census and use today's names for
+> **Summary (DATE).** Census SETNAME (SET): find the hard cards early, and
+> cut the rest into issues. Follow `docs/agents/orchestrating.md`, "The
+> procedure", step 2. Deliverables: one PR adding the cards `parun
+> translate` accepts, each `new` ability (and each shared one no test
+> exercises) with a gameplay-level scenario, ten spot-checked on Scryfall,
+> keyword-only cards ingested; the batch and capability issues, each a
+> sub-issue of #T written per "Writing an issue"; the census snapshot on
+> #T's body. Before filing a capability, check the DSL for a sibling a
+> parameter would extend ("Parameters, not siblings"). Read `git log
+> --oneline` since the previous set's census and use today's names for
 > every wire shape. Confirm every sibling you name is in the pool and
-> expresses the wording. The PR says "related to #5468". Also report the
-> count per census section and the two trend numbers.
+> expresses the wording.
 
-**Hand batch.**
+**Batch.**
 
-> Hand-write entries FIRST through LAST (N cards) of SETNAME's "Expressible
-> today" list in `docs/sets/<set>.md`. Follow "The procedure", step 2:
-> translate first; verify each card's Oracle text, cost, type line and P/T on
-> Scryfall; stamp `oracleText` via `parun ingest`; one scenario per new
-> ability wording, the PR body naming each card left without its own and the
-> scenario covering it. Update the census: move the added cards out, and drop
-> any "Needs a capability" entry whose card is now on main (re-check after
-> your merge). The PR says "related to #5468". Also report the cards and
-> scenarios added and what remains, by census section.
+> **Summary (DATE).** Add N SETNAME cards, FIRST through LAST. The census
+> found the DSL expresses each; translate stopped at the node named
+> ("verify" marks a clause it did not settle):
+>
+> - CARD: `NODE`
+>
+> Translate first, hand-write on rejection. Verify each card's Oracle text,
+> cost, type line and P/T on Scryfall; stamp `oracleText` via `parun ingest`;
+> one scenario per new ability wording, the PR body naming each card left
+> without its own and the scenario covering it. Each verdict above is a
+> claim: a card that needs a capability goes to a capability issue (file
+> one, or comment on the open one) and the PR says so. Reuse: MERGED.
 
-Each later batch adds "the previous batch is PR #P, merged", says whether it
-finishes the list, and carries the earlier batches' findings forward --- the
-census verdicts they overturned, and any renderer wordings or
-`docs/decisions.md` entries they added --- so it extends those sites rather
-than duplicating them.
+**Capability** is a `gap` issue in the project's usual form, plus: the
+SETNAME cards needing it (Oracle text fetched DATE), the census's one-line
+claim to verify ("needs only a parameter on X"), the merged units whose shape
+it must reuse, "prefer a parameter on an existing type", and "every
+capability needs a gameplay-level scenario on the real card".
 
-**Audit fix.**
+**Fix.**
 
-> Fix the findings of PR #P's audit. You are on branch BRANCH (PR #P) in
-> your own worktree; read the PR body (`gh api
-> repos/parun-mtg/parun/pulls/P --jq .body`) and its diff (`git diff
-> BASESHA HEAD`) before anything else, and read only the code the findings
-> name. Each finding below is a claim to verify: fix what holds, push back
-> with evidence where it doesn't. FINDINGS. Update the PR body file
-> `SCRATCH/pr.md` (copy it from the PR first) and report the head SHA.
+> **Summary (DATE).** An audit of #P (merged) found: FINDING, as board,
+> action sequence, engine behaviour, CR or ruling, file and identifier.
+> Verify it before fixing; if it does not hold, close this issue as not
+> planned with the evidence.
 
-**Capability unit.**
+**Finish.**
 
-> Implement #ISSUE and add the SETNAME card or cards it names; it came out of
-> the census (`docs/sets/<set>.md`), and the PR closes it. Re-derive the
-> issue's card facts, wire shapes and claim about what the DSL lacks against
-> the tree, `docs/rules.txt` and Scryfall. Prefer a parameter on an existing
-> type. Every capability needs a gameplay-level scenario on the real card. Do
-> NOT edit `docs/sets/<set>.md`. Fold small follow-ups in; file only what is
-> too big, naming its card.
+> **Summary (DATE).** Finish SETNAME: every other sub-issue of #T, and
+> every issue blocking it, is closed.
+> Follow `docs/agents/orchestrating.md`, "The procedure", step 5. Check the
+> set list with `parun deck` from a scratch file first; a card still missing
+> is a new sub-issue of #T, not this unit's work. The PR also closes #T.
 
-**Capability batch** is the capability unit over several issues: it names
-each (#A, #B, ...) with its card and the one-line census claim to verify
-("needs only a parameter on X"), the edit site they share, and any merged
-unit whose shape it must reuse; the PR closes them all. As the set's last
-unit it also finishes the census ("The procedure", step 5) and reports which
-entries were still open.
-
-**Audit.**
+**Audit** (a subagent prompt, not an issue).
 
 > You are a read-only auditor on parun. Read `CLAUDE.md` and
 > `docs/agents/set-by-set.md` ("Auditing a unit") first and follow them. Do
-> not edit, commit, push, build or run tests; never cd to the primary
-> checkout. Audit branch `BRANCH` at head HEADSHA (pin it; never
-> `FETCH_HEAD`). Read only its own diff: `git fetch origin BRANCH` then `git
-> diff BASESHA HEADSHA`, BASESHA being `origin/main`'s merge base. It
-> implements #ISSUE, adds CARDS, and is PR #P, whose body states the design.
-> Find rules-correctness defects: a legal board on which the change plays
-> differently from `docs/rules.txt` or the cards' rulings (Scryfall
-> `named?fuzzy=`, then each `rulings_uri`). The riskiest part is SHAREDGATE,
-> which every RESOLUTION/SEARCH/COMBAT passes through. Check: BOARDS (that
-> unaffected games are unchanged; two such effects at once; control or zone
-> changes mid-effect; multiplayer). Enumerate with jq the pool cards that
-> reach the changed reader and say whether any now reads differently. Also
-> check `CLAUDE.md` item 4's sites for the new constructors and fields, and
-> whether the tests prove what they claim. Keep scratch in `SCRATCH`. Report
-> findings only, most severe first.
+> not edit, commit, push, build or run tests. Audit PR #P, merged as SHA:
+> `git fetch origin main`, then `git show SHA`. It implements #ISSUE, adds
+> CARDS, and its body states the design (`gh api
+> repos/parun-mtg/parun/pulls/P --jq .body`). Find rules-correctness
+> defects: a legal board on which the change plays differently from
+> `docs/rules.txt` or the cards' rulings (Scryfall `named?fuzzy=`, then each
+> `rulings_uri`). The riskiest part is SHAREDGATE, which every
+> RESOLUTION/SEARCH/COMBAT passes through. Check: BOARDS (that unaffected
+> games are unchanged; two such effects at once; control or zone changes
+> mid-effect; multiplayer). Enumerate with jq the pool cards that reach the
+> changed reader and say whether any now reads differently. Also check
+> `CLAUDE.md` item 4's sites for the new constructors and fields, and
+> whether the tests prove what they claim. Report findings only, most severe
+> first.

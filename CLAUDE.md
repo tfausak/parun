@@ -44,9 +44,10 @@ Read `docs/` by section, on demand, never a whole doc "for context".
 - Prior-art evidence: `docs/prior-art-lessons.md`
 - What the milestone era established: `docs/progress.md` (frozen), newest first
 - A landed unit's authoritative detail: `docs/superpowers/`
-- Dispatched as a subagent, or running a set? `docs/agents/set-by-set.md` ---
-  "Implementing a unit" if you hold the build, "Auditing a unit" if you are
-  read-only; all of it and `docs/agents/orchestrating.md` if you orchestrate.
+- Working an issue under a set's tracker, or running a set?
+  `docs/agents/set-by-set.md` --- "Implementing a unit" if you hold the
+  build, "Auditing a unit" if you are read-only; all of it and
+  `docs/agents/orchestrating.md` if you orchestrate.
 
 ## Workflow
 
@@ -116,9 +117,7 @@ to agents as written. What it doesn't say:
 
 - Mark the PR ready once the self-review's fixes are pushed and the suite is
   green, report it, and stop: don't wait for CI, don't start the next unit.
-  One unit at a time per checkout. An orchestrated unit leaves it a draft,
-  overriding `CONTRIBUTING.md`; the orchestrator marks it ready
-  (`docs/agents/orchestrating.md`).
+  One unit at a time per checkout.
 
 - STAGE, then `hooky fix` (staged files only; it runs every `.hooky.kdl` check
   and rewrites in place), then `git add` again. `--all` sweeps the tree; use
