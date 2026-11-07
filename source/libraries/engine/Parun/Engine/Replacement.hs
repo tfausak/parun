@@ -3123,6 +3123,15 @@ revealableFromHand pid filter_ gs =
       matching oid = Filter.matches (Filter.contextIn gs Nothing Nothing) (viewOf oid) filter_
    in filter matching (Game.cardsIn Zone.Hand pid gs)
 
+-- CR 701.4a: what a player may behold as `entering` enters -- revealableFromHand
+-- above, then the permanents they control matched the same way, in id order.
+-- The entering object is not yet among them (CR 614.12).
+beholdableOnEntry :: PlayerId -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
+beholdableOnEntry pid entering filter_ gs =
+  let viewOf = Projection.viewsOf gs
+      matching oid = Filter.matches (Filter.contextIn gs Nothing Nothing) (viewOf oid) filter_
+   in revealableFromHand pid filter_ gs <> filter (\oid -> oid /= entering && matching oid) (List.sort (Projection.controls pid gs))
+
 -- CR 702.38a: the cards a player may reveal from their hand for an amplify
 -- ability -- the ones sharing a creature type with the entering object.
 -- revealableFromHand above with a set intersection where that one has a Filter,

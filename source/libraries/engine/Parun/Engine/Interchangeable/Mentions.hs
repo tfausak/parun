@@ -1722,6 +1722,7 @@ entryPriceNames :: (Monoid r) => Asking r -> EntryPrice.EntryPrice -> r
 entryPriceNames asking x = case x of
   EntryPrice.PayLife _natural -> mempty
   EntryPrice.Reveal filter_ -> filterNames asking filter_
+  EntryPrice.Behold filter_ -> filterNames asking filter_
 
 entryRNames :: (Monoid r) => Asking r -> (ability -> r) -> (effect -> r) -> EntryR.EntryR ability effect -> r
 entryRNames asking onAbility onEffect x = case x of

@@ -338,11 +338,13 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   --
   -- CR 603.2c's batch reading instead counts "that much" (Magmakin
   -- Artillerist): one card per Discarded event, summed across the group by
-  -- batchBindings. A Self discard stamps nothing: its card is the bearer, whom
+  -- batchBindings, beside the discarder batchPartition splits the group by.
+  -- A Self discard stamps nothing: its card is the bearer, whom
   -- CR 113.7a's source slot already names, and its discarder is the owner CR
   -- 113.8 and CR 108.4a make the controller, whom Binding.setYou names.
   (TriggerCondition.Discards trigger, GameEvent.Discarded (Discarded.MkDiscarded discarder card _ _ _)) -> case (DiscardTrigger.subject trigger, DiscardTrigger.batching trigger) of
-    (_, Batching.OneOrMore) -> Binding.setEventAmount 1 Map.empty
+    (DiscardSubject.Discarder _, Batching.OneOrMore) -> Binding.setEventAmount 1 (Binding.setTriggerPlayer discarder Map.empty)
+    (DiscardSubject.Self, Batching.OneOrMore) -> Binding.setEventAmount 1 Map.empty
     (DiscardSubject.Discarder _, Batching.EachOccurrence) -> Binding.setBecame card (Binding.setTriggerPlayer discarder Map.empty)
     (DiscardSubject.Self, Batching.EachOccurrence) -> Map.empty
   -- The drawing player, a discarder's player slot for CR 121.1's draw (Underworld
@@ -877,6 +879,12 @@ batchPartition cond bindings = case cond of
   -- data/scenarios/garruk-curse-breaker-triggers-once-per-opponent-attacked.json
   -- proves the split.
   TriggerCondition.Attacks (AttackTrigger.Attacked _) -> seat Binding.triggerPlayer
+  -- CR 603.2c: "a player discards one or more cards" is one occurrence per
+  -- discarder -- Tinybones, Pocket Nuisance's enters trigger making bob and
+  -- carol discard at once is two.
+  -- data/scenarios/tinybones-pocket-nuisance-makes-each-opponent-discard-and-pings-them-once-per-discarding-player.json
+  -- proves the split.
+  TriggerCondition.Discards _ -> seat Binding.triggerPlayer
   -- A wildcard where batchScoped is exhaustive: a batch condition splits only
   -- where an arm above says by what.
   _ -> Seq.empty
@@ -1495,9 +1503,11 @@ eventBindingSlots cond = case cond of
   -- eventBindings' Discards arm, slot for slot: a Self discard's card is the
   -- bearer, already bound as CR 113.7's source; a Discarder's is CR 400.7e's
   -- `became` (Bag of Holding's "that card") beside the discarding player, whom
-  -- the bearer does not name (Megrim's "that player"); a batch counts cards.
+  -- the bearer does not name (Megrim's "that player"); a batch counts cards
+  -- beside its discarder.
   TriggerCondition.Discards trigger -> case (DiscardTrigger.subject trigger, DiscardTrigger.batching trigger) of
-    (_, Batching.OneOrMore) -> Set.singleton Binding.eventAmount
+    (DiscardSubject.Discarder _, Batching.OneOrMore) -> Set.fromList [Binding.triggerPlayer, Binding.eventAmount]
+    (DiscardSubject.Self, Batching.OneOrMore) -> Set.singleton Binding.eventAmount
     (DiscardSubject.Discarder _, Batching.EachOccurrence) -> Set.fromList [Binding.triggerPlayer, Binding.became]
     (DiscardSubject.Self, Batching.EachOccurrence) -> Set.empty
   -- CR 121.1's drawing player, a discarder's player slot: Underworld Dreams' "that

@@ -4150,6 +4150,19 @@ apply settle batch applied batchPrevented candidate event =
               case answer of
                 Just shown | List.elem shown candidates -> reveal RevealCause.Ordinary controller shown
                 _ -> enterTapped oid
+            -- CR 701.4a: the reveal above, with the permanents the controller
+            -- controls offered beside the hand, on the same prompt and posture.
+            -- A beheld permanent is only chosen, so nothing is logged for it.
+            EntryPrice.Behold filter_ -> do
+              let candidates = Replacement.beholdableOnEntry controller oid filter_ gs
+              answer <- case NonEmpty.nonEmpty candidates of
+                Nothing -> pure Nothing
+                Just offered -> Game.choose (Prompt.ChooseRevealOnEntry (Decide.deciderFor controller gs) controller oid offered)
+              case answer of
+                Just shown
+                  | List.elem shown candidates ->
+                      Monad.when (fmap Object.zone (Game.lookupObject shown gs) == Just Zone.Hand) (reveal RevealCause.Ordinary controller shown)
+                _ -> enterTapped oid
         pure (Just event)
       -- CR 702.145b's first static ability: "if it is night and this permanent
       -- is represented by a double-faced card, it enters transformed." The one
