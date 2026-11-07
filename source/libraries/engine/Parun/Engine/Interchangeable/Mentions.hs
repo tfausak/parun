@@ -362,6 +362,7 @@ import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Types.PlayerCounters as PlayerCounters
 import qualified Parun.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Parun.Types.PlayerEffect as PlayerEffect
+import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerQuantity as PlayerQuantity
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerSacrifices as PlayerSacrifices
@@ -3005,6 +3006,10 @@ statedFlipNames :: (Monoid r) => Asking r -> StatedFlip.StatedFlip -> r
 statedFlipNames asking x = case x of
   StatedFlip.MkStatedFlip _face _wins firstEachTurn -> if firstEachTurn then history asking HistoryRead.CoinFlips else mempty
 
+playerIsDealtDamageNames :: (Monoid r) => Asking r -> PlayerIsDealtDamage.PlayerIsDealtDamage -> r
+playerIsDealtDamageNames asking x = case x of
+  PlayerIsDealtDamage.MkPlayerIsDealtDamage _dealt _orTheirPlaneswalkers _batching scope -> turnScopeNames asking scope
+
 stepBeginsNames :: (Monoid r) => Asking r -> StepBegins.StepBegins -> r
 stepBeginsNames asking x = case x of
   StepBegins.MkStepBegins _phase ordinal scope -> foldMap (const (history asking HistoryRead.StepBegins)) ordinal <> turnScopeNames asking scope
@@ -3175,7 +3180,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.StateIs condition -> conditionNames asking condition
   TriggerCondition.DealsDamage damageTrigger -> damageTriggerNames asking damageTrigger
   TriggerCondition.IsDealtDamage watched -> actingPermanentNames asking (DealtDamage.recipient (PermanentIsDealtDamage.dealt watched))
-  TriggerCondition.PlayerIsDealtDamage _playerIsDealtDamage -> mempty
+  TriggerCondition.PlayerIsDealtDamage watched -> playerIsDealtDamageNames asking watched
   TriggerCondition.PermanentsDealCombatDamageToPlayer permanentsDealCombatDamageToPlayer -> permanentsDealCombatDamageToPlayerNames asking permanentsDealCombatDamageToPlayer
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> mempty
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> mempty
