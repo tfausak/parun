@@ -935,11 +935,12 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- not CR 510.2's, which DamageEvent.kind already records.
   --
   -- With orTheirPlaneswalkers, CR 120.3c's planeswalker recipient too
-  -- (dealtToRelated).
+  -- (dealtToRelated); on the turns the scope names (CR 102.1).
   TriggerCondition.PlayerIsDealtDamage watched -> case event of
     GameEvent.DamageDealt ev ->
       let dealt = PlayerIsDealtDamage.dealt watched
-       in Game.damageCounts (DealtDamage.kind dealt) (DealtDamage.by dealt) ev
+       in admitsTurn (PlayerIsDealtDamage.scope watched)
+            && Game.damageCounts (DealtDamage.kind dealt) (DealtDamage.by dealt) ev
             && dealtToRelated board gs (PlayerRelation.holds (Game.teams gs) (DealtDamage.recipient dealt) you) (PlayerIsDealtDamage.orTheirPlaneswalkers watched) (DamageEvent.target ev)
     _ -> False
   -- CR 726.2: a creature dealt combat damage to the monarch, who is "you" --

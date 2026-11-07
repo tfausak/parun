@@ -70,7 +70,7 @@ data TriggerCondition
     IsDealtDamage PermanentIsDealtDamage.PermanentIsDealtDamage
   | -- | CR 120.3 / 603.2c: a player the relation admits, or one of their
     -- planeswalkers, was dealt damage of the kind, once per simultaneous batch
-    -- and damaged recipient (Lich, Chandra's Spitfire, Vengeful Pharaoh).
+    -- or per damaged recipient (Fblthp, Impossibly Lost; Lich, Vengeful Pharaoh).
     PlayerIsDealtDamage PlayerIsDealtDamage.PlayerIsDealtDamage
   | -- | CR 603.2c's batch reading of DealsDamage's combat damage to a player, with the damaged player
     -- narrowed: "whenever one or more artifact creatures you control deal combat

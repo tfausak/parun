@@ -755,6 +755,9 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- batchPartition splits the batch by. A damaged planeswalker (Vengeful
   -- Pharaoh's) goes under `became` instead, the key batchPartition splits it
   -- off by: it names no player for "that player" to read.
+  -- A OneOrMore batch names no one recipient, so it stamps the amount alone.
+  (TriggerCondition.PlayerIsDealtDamage watched, GameEvent.DamageDealt ev)
+    | PlayerIsDealtDamage.batching watched == Batching.OneOrMore -> Binding.setEventAmount (DamageEvent.amount ev) Map.empty
   (TriggerCondition.PlayerIsDealtDamage _, GameEvent.DamageDealt ev) ->
     maybe id Binding.setTriggerPlayer (Recipient.playerOf (DamageEvent.target ev)) (maybe id Binding.setBecame (Recipient.objectOf (DamageEvent.target ev)) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty))
   -- CR 603.2c's "that many" (Rakshasa Vizier): THIS event's contribution to the
@@ -851,7 +854,11 @@ batchPartition cond bindings = case cond of
   -- a planeswalker you control at once triggers it twice.
   -- data/scenarios/card-trigger/cr-603-2c-vengeful-pharaoh-triggers-once-for-you-and-once-per-planeswalker.json
   -- proves the split.
-  TriggerCondition.PlayerIsDealtDamage _ -> seat Binding.triggerPlayer <> object Binding.became
+  -- OneOrMore is the whole batch (Fblthp, Impossibly Lost), and its
+  -- eventBindings arm stamps neither.
+  TriggerCondition.PlayerIsDealtDamage watched -> case PlayerIsDealtDamage.batching watched of
+    Batching.EachOccurrence -> seat Binding.triggerPlayer <> object Binding.became
+    Batching.OneOrMore -> Seq.empty
   -- One occurrence per damaged permanent: Death Pits of Rath's "a creature is
   -- dealt damage" destroys each creature a batch damaged, and Ripjaw Raptor's
   -- Self reading has one.
@@ -1005,7 +1012,8 @@ admittedAttackers gs bearer you f attacker = Seq.fromList (filter admits (Set.to
 -- creature"); the attacked player under the reserved "that player" slot
 -- (Seifer, Balamb Rival's "that player controls"), where the attacked is a
 -- player, and CR 508.3e's attacking player beside it (Archnemesis' "attach
--- this Aura to that player"); and the declaring player, with the creatures a
+-- this Aura to that player") and the creatures attacking it (Garruk, Curse
+-- Breaker's "those creatures"); and the declaring player, with the creatures a
 -- count admitted (Tyvar the Bellicose's "they").
 attackSlots :: AttackTrigger.AttackTrigger -> Set.Set SlotName.SlotName
 attackSlots trigger = case trigger of
@@ -1014,6 +1022,7 @@ attackSlots trigger = case trigger of
     Set.fromList
       ( [Binding.triggerPlayer | AttackedTrigger.attacked t /= AttackedSubject.Source]
           <> [Binding.attackingPlayer | Maybe.isJust (AttackedTrigger.attacker t)]
+          <> [Binding.attackingCreatures]
       )
   AttackTrigger.Declaration t -> case DeclarationTrigger.attackers t of
     Nothing -> Set.singleton Binding.attackingPlayer
@@ -1265,9 +1274,20 @@ leavesBindings gs bearerBecame t event
       | otherwise = setBecameArrivals m Map.empty
     departed oid = maybe id (Binding.setTriggerPlayer . LastKnown.owner) (Game.lastKnownOf oid gs) . Binding.setDepartedPermanent oid
 
--- CR 508.3: attackSlots, stamped. A trigger whose subject is a player or a
--- permanent and not a creature names no creature, so a Source subject binds
--- nothing a match has not already pinned to the bearer.
+-- CR 508.3b / 508.3e: the creatures declared attacking the target, and for
+-- 508.3e only the attacking player's -- Garruk, Curse Breaker's "those
+-- creatures". CR 508.4's creature put onto the battlefield attacking is not in
+-- Combat.declaredAttackers.
+attackersOf :: GameState -> Bool -> PlayerId -> AttackTarget.AttackTarget -> Seq.Seq ObjectId
+attackersOf gs attackersOnly attacker target = Seq.fromList (filter admits (Set.toList (Combat.declaredAttackers combat)))
+  where
+    combat = GameState.combat gs
+    admits oid =
+      Map.lookup oid (Combat.attackers combat) == Just target
+        && (not attackersOnly || Map.lookup oid (Combat.joinedUnder combat) == Just attacker)
+
+-- CR 508.3: attackSlots, stamped. A Source subject binds no "that player":
+-- the match has already pinned the attacked to the bearer.
 attackBindings :: GameState -> ObjectId -> PlayerId -> AttackTrigger.AttackTrigger -> GameEvent -> Map.Map SlotName.SlotName Binding
 attackBindings gs bearer you trigger event = case (trigger, event) of
   (AttackTrigger.Attacker _, GameEvent.AttackerDeclared d) ->
@@ -1278,7 +1298,7 @@ attackBindings gs bearer you trigger event = case (trigger, event) of
           (_, AttackTarget.OfPlayer player) -> Binding.setTriggerPlayer player
           _ -> id
         attacking = maybe id (const (Binding.setAttackingPlayer attacker)) (AttackedTrigger.attacker t)
-     in attacking (attacked Map.empty)
+     in attacking (attacked (Binding.setAttackingCreatures (attackersOf gs (Maybe.isJust (AttackedTrigger.attacker t)) attacker target) Map.empty))
   (AttackTrigger.Declaration t, GameEvent.AttackersDeclared attacker) -> case DeclarationTrigger.attackers t of
     Nothing -> Binding.setAttackingPlayer attacker Map.empty
     Just count -> Binding.setAttackingPlayer attacker (Binding.setAttackingCreatures (admittedAttackers gs bearer you (AttackCount.filter count) attacker) Map.empty)
@@ -1441,7 +1461,7 @@ eventBindingSlots cond = case cond of
     Batching.OneOrMore -> Set.fromList [Binding.became, Binding.eventAmount]
   -- The damaged player only where no planeswalker can stand in for one.
   TriggerCondition.PlayerIsDealtDamage watched
-    | PlayerIsDealtDamage.orTheirPlaneswalkers watched -> Set.singleton Binding.eventAmount
+    | PlayerIsDealtDamage.orTheirPlaneswalkers watched || PlayerIsDealtDamage.batching watched == Batching.OneOrMore -> Set.singleton Binding.eventAmount
     | otherwise -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
   -- The damagers' CONTROLLER and the damaged player where DealsDamage binds
   -- three: the trigger event is a whole CR 510.2 step split by both (CR
@@ -1737,7 +1757,7 @@ eventBindingSlotsSometimes cond = case cond of
   -- to one: eventBindings' arm binds whichever the event's recipient is. Nothing
   -- in data/cards/ names either under it.
   TriggerCondition.PlayerIsDealtDamage watched
-    | PlayerIsDealtDamage.orTheirPlaneswalkers watched -> Set.fromList [Binding.became, Binding.triggerPlayer]
+    | PlayerIsDealtDamage.orTheirPlaneswalkers watched && PlayerIsDealtDamage.batching watched == Batching.EachOccurrence -> Set.fromList [Binding.became, Binding.triggerPlayer]
   -- A recipient's slot where the trigger also names a recipient of the other
   -- kind, bound for that kind's damage alone. Garruk's Harbinger admits both
   -- and reads neither.
