@@ -2047,6 +2047,7 @@ overlord-of-the-mistmoors
 overseer-of-vault-76
 overwhelming-forces
 overwhelming-stampede
+overwrite-the-multiverse
 pack-leader
 pack-mastiff
 pact-of-negation
@@ -2063,6 +2064,7 @@ panglacial-wurm
 panic
 panic-attack
 panopticon
+paradox-shaper-omit-variables
 paralyze
 paranormal-analyst
 parasitic-grasp
@@ -2090,6 +2092,7 @@ pentagram-of-the-ages
 pentarch-paladin
 pentavus
 perennation
+perfected-theory
 persecute
 person-of-interest
 personal-incarnation
@@ -2135,6 +2138,7 @@ pithing-needle
 pixie-guide
 plagiarize
 plague-rats
+plan-for-all-outcomes
 planar-void
 planeswalkers-mischief
 platinum-angel
@@ -2175,6 +2179,7 @@ primal-cocoon
 primal-might
 primal-plasma
 primal-whisperer
+primal-witchstalker
 prime-ministers-cabinet-room
 prime-speaker-zegana
 primeval-titan
@@ -2193,15 +2198,19 @@ professional-wrestler
 professor-hojo
 professor-onyx
 proficient-pyrodancer
+proft-consulting-detective
+proft-sinister-mastermind
 progenitus
 prologue-to-phyresis
 promise-of-tomorrow
 promising-duskmage
+prophesied-end
 protean-hydra
 proud-wildbonder
 provoke
 prowling-geistcatcher
 prowling-serpopard
+prudent-fateseer-peer-review
 psychic-corrosion
 psychic-miasma
 psychic-rebuttal
