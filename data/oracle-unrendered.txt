@@ -1732,8 +1732,10 @@ lurking-evil
 lurking-predators
 luxior-giadas-gift
 lyra-archangel-of-dawn
+lyra-tolarian-archangel
 lys-alana-dignitary
 ma-chao-western-warrior
+mabel-valley-hero
 maddening-imp
 maelstrom-pulse
 magar-of-the-magic-strings
@@ -1791,7 +1793,9 @@ mask-of-immolation
 mask-of-intolerance
 maskwood-nexus
 mass-polymorph
+massacre-girl-most-wanted
 master-chef
+master-of-barbs
 master-of-diversion
 master-of-predicaments
 master-of-the-wild-hunt
@@ -1803,6 +1807,7 @@ matoya-archon-elder
 mayhem-devil
 mazemind-tome
 meandering-towershell
+medics-kitesail
 meditate
 meekstone
 megrim
@@ -1810,6 +1815,7 @@ meletis-charlatan
 melira-sylvok-outcast
 meloku-the-clouded-mirror
 memory-lapse
+memory-trap
 mentor-of-the-meek
 mercurial-pretender
 meren-of-clan-nel-toth
@@ -1838,6 +1844,7 @@ mind-bomb
 mind-control
 mind-grind
 mind-maggots
+mind-meanderer
 mind-ravel
 mind-slash
 mind-sludge
@@ -1898,6 +1905,7 @@ mu-yanling-sky-dancer
 mudbutton-clanger
 mulch
 muldrotha-the-gravetide
+multiply-by-zero
 multiversal-recruitment
 muraganda-raceway
 murder-investigation
@@ -3413,6 +3421,7 @@ nessian-hornbeetle
 new-horizons
 nine-lives-familiar
 niv-mizzet-visionary
+null-summoner
 nullpriest-of-oblivion
 obliterating-bolt
 ordeal-of-nylea

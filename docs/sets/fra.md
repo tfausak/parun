@@ -114,31 +114,19 @@ census did not settle.
 
 
 
-- Lyra, Tolarian Archangel: `_Players:NumCardsDrawnThisTurnIs`
-
-- Mabel, Bitter Recluse: `_Action:RemoveCounters`
-
-- Mabel, Valley Hero: `_Trigger:Or`
-
-- Massacre Girl, Most Wanted: `_Trigger:WhenAPlayerIsDealtNoncombatDamage`
-
-- Master of Barbs: `_Trigger:WhenAnyNumberOfPlayersAreDealtNoncombatDamage`
-
-- Medic's Kitesail: `_Rule:TriggerA`
-
-- Memory Trap: `_Action:Exile`
 
 
-- Mind Meanderer: `_Permanents:IsPlaneswalkerType`
 
 
-- Multiply by Zero: `_LayerEffect:SetPT`
 
-- Murmuring Volume: `_Cost:DiscardACard`
 
-- No Admittance: renders differently from its Oracle text
 
-- Null Summoner: `_Condition:EnteringPermanentPassesFilter`
+
+
+
+
+
+
 
 - Omnipresence: `_Rule:PlayerEffect`
 
@@ -349,6 +337,11 @@ census did not settle.
 - Yuriko, Hope from the Shadows: `_LayerEffect:AdjustPTX`
 
 ## Needs a capability
+
+### #6560: no effect removes up to N counters of any kind
+
+- Mabel, Bitter Recluse: "remove up to three counters" from its target takes
+  any kinds; the mixed-kind removal prompt has no cap.
 
 ### #6546: no cost exiles a card from its owner's hand
 
