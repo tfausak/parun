@@ -1,0 +1,31 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {"card": "Room of Refuge", "label": "room"},
+          {"card": "Grizzly Bears", "label": "bears"},
+          {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}, {"card": "Plains", "label": "p4"}, {"card": "Plains", "label": "p5"}
+        ],
+        "library": [{"card": "Plains"}, {"card": "Plains"}],
+        "name": "alice"
+      },
+      {
+        "battlefield": [{"card": "Hill Giant", "label": "giant"}],
+        "library": [{"card": "Plains"}, {"card": "Plains"}],
+        "name": "bob"
+      }
+    ],
+    "step": "Upkeep"
+  },
+  "description": "CR 602.5d / 122.1a: Room of Refuge's {5}, tap, sacrifice ability puts two +1/+1 counters on a creature, only as a sorcery",
+  "note": "In alice's upkeep the ability is refused on the five Plains it later uses. In her main phase it goes on bob's Hill Giant, which any creature may be, and the Room is sacrificed. The enters-tapped and chosen-color wording is Uncharted Haven's, whose scenario covers it.",
+  "timeline": [
+    {"player": "alice", "refuse": {"Activate": {"ability": 1, "mana": ["$p1", "$p2", "$p3", "$p4", "$p5", null], "costOrder": [0, 1], "object": "$room", "targets": ["$giant"]}}, "step": "Upkeep", "turn": 1},
+    {"do": {"Activate": {"ability": 1, "mana": ["$p1", "$p2", "$p3", "$p4", "$p5", null], "costOrder": [0, 1], "object": "$room", "targets": ["$giant"]}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"do": "Pass", "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Counters": {"count": 2, "kind": {"type": "PlusOnePlusOne"}, "object": "$giant"}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Count": {"card": "Room of Refuge", "count": 1, "player": "alice", "zone": "Graveyard"}}, "player": "alice", "step": "PrecombatMain", "turn": 1}
+  ]
+}

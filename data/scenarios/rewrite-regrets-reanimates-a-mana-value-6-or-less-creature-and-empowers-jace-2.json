@@ -1,0 +1,33 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "graveyard": [
+          {"card": "Craw Wurm", "label": "wurm"},
+          {"card": "Ancient Hellkite", "label": "hellkite"},
+          {"card": "Exploration", "label": "exploration"}
+        ],
+        "hand": [{"card": "Rewrite Regrets", "label": "rr"}],
+        "manaPool": "BBBB",
+        "name": "alice"
+      },
+      {
+        "graveyard": [{"card": "Grizzly Bears", "label": "bears"}],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 202.3 / 701.71a: Rewrite Regrets returns a creature card of mana value 6 or less from its controller's graveyard to the battlefield, then empowers Jace 2",
+  "note": "On the same mana, Ancient Hellkite (mana value 7), Exploration (not a creature or planeswalker) and bob's Grizzly Bears (not alice's graveyard) are refused. Craw Wurm, at exactly 6, returns, and alice's new Jace token gets two loyalty counters.",
+  "timeline": [
+    {"player": "alice", "refuse": {"Cast": {"object": "$rr", "targets": ["$hellkite"]}}, "step": "PrecombatMain", "turn": 1},
+    {"player": "alice", "refuse": {"Cast": {"object": "$rr", "targets": ["$exploration"]}}, "step": "PrecombatMain", "turn": 1},
+    {"player": "alice", "refuse": {"Cast": {"object": "$rr", "targets": ["$bears"]}}, "step": "PrecombatMain", "turn": 1},
+    {"do": {"Cast": {"object": "$rr", "targets": ["$wurm"]}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"do": "Pass", "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Count": {"card": "Craw Wurm", "count": 1, "player": "alice", "zone": "Battlefield"}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Counters": {"count": 2, "kind": {"type": "Loyalty"}, "object": "Jace Token"}}, "player": "alice", "step": "PrecombatMain", "turn": 1}
+  ]
+}

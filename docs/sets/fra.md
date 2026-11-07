@@ -142,32 +142,18 @@ census did not settle.
 
 
 
-- Puppet Crafting: `_Permanents:IsNonEnchantmentType`
-
-- Pyre Rhymer: `_Action:CreateTriggerUntil`
-
-- Recursive Recruitment: `_CreatableToken:NamedTokenWithPT`
-
-- Refute Destiny: `_Action:Surveil`
-
-- Repurposed Enforcer: renders differently from its Oracle text
-
-- Restore with Empathy: `_CardsInGraveyards:IsPermanent`
-
-- Return to the Light Realms:
-  `_Action:ReturnEachCardFromPlayersGraveyardToBattlefield`
-
-- Rewrite Regrets: `_CardsInGraveyards:ManaValueIs`
-
-- Rise of the Deathbringer: `_GameNumber:TheGreatestPowerAmongPermanents`
 
 
-- Roiling Canopy: `_Permanent:Trigger_ThatPermanent`
 
-- Room of Refuge: `_ReplacementActionWouldEnter:EntersTapped`
 
-- Ruric Thar, Biomagus:
-  `_Trigger:WhenAPermanentBecomesTheTargetOfASpellOrAbility`
+
+
+
+
+
+
+
+
 
 - Ruric Thar, Magecrusher: `_Rule:FromStack`
 
@@ -324,6 +310,12 @@ census did not settle.
 - Yuriko, Hope from the Shadows: `_LayerEffect:AdjustPTX`
 
 ## Needs a capability
+
+### #6572: a delayed triggered ability can't be a mana ability
+
+- Pyre Rhymer // Molten Tide: Molten Tide's "until end of turn, whenever you
+  tap a Mountain for mana, add an additional {R}" is a delayed trigger the
+  mana-ability path never scans (CR 605.1b).
 
 ### #6568: a free-cast permission can't bound mana value by a count
 

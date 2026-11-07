@@ -476,7 +476,8 @@ counted context n comparison k = case Count.scope n of
               _ -> False
             (controllers, rest) = (filter controls conjuncts, filter (not . controls) conjuncts)
         p <- Filter.phrase (Filter.Type.And rest) (Target.keyword context)
-        (before, number) <- quantifier comparison k
+        -- Also "at least five" of what a player controls (Roiling Canopy).
+        (before, number) <- quantifier comparison k <> [(const (Text.pack "at least " <> Prose.cardinal k), Filter.Plural) | comparison == Comparison.AtLeast, k > 1]
         noun <- Filter.describe number Target.permanent p
         -- Free for one of several nouns: one article (Moonlit Scavengers'
         -- "an artifact or enchantment") or one each (Sunpetal Grove's "a Forest

@@ -3066,6 +3066,46 @@ massacreGirlSpec s registry = Spec.describe s "Massacre Girl, Most Wanted" $ do
         Spec.assertEqWith s "so no life changed" (lives settled) [Just 20, Just 20, Just 20]
       Nothing -> Spec.assertFailure s "fixture should alias the Girl"
 
+-- Roiling Canopy's "a Forest you control", "five other Forests" and "you
+-- control" (CR 603.4), each refused on a board paired with the one where the
+-- trigger fires. Asked here for Null Summoner's reason: a wrongly fired trigger
+-- raises a target prompt the scenario cannot schedule. The pump resolving is
+-- what differs, so each leg reads Grizzly Bears' power and toughness after the
+-- priority loop has played the land and emptied the stack.
+roilingCanopySpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+roilingCanopySpec s registry = Spec.describe s "Roiling Canopy" $ do
+  -- alice holds the Canopy, Grizzly Bears and `forests` Forests; bob holds two
+  -- Forests, which only a reading ignoring "you control" would count.
+  let canopyBoard active forests landInHand bobsHand =
+        let bears = S.aliased "bears" (S.cardSetup "Grizzly Bears")
+         in S.board
+              ( (S.battlefield S.alice ([S.permanent "Roiling Canopy", bears] <> replicate forests (S.permanent "Forest")))
+                  { Seat.hand = Seq.fromList (fmap S.cardSetup landInHand)
+                  }
+                  NonEmpty.:| [ (S.battlefield S.bob (replicate 2 (S.permanent "Forest"))) {Seat.hand = Seq.fromList (fmap S.cardSetup bobsHand)},
+                                S.playerSetup S.carol
+                              ]
+              )
+              active
+              S.precombatMain
+      bearsAfter board = do
+        built <- S.buildBoardOrFail s registry board
+        case aliasIn "bears" built of
+          Just bearsId -> pure (Just (S.powerToughnessOf bearsId (S.runPure S.playLandAnswer (Staged.state built) Engine.priorityLoop)))
+          Nothing -> pure Nothing
+  Spec.it s "CR 603.4 a Forest entering beside five other Forests gives Grizzly Bears +3/+3" $ do
+    after <- bearsAfter (canopyBoard S.alice 5 ["Forest"] [])
+    Spec.assertEqWith s "the Bears are 5/5" after (Just (Just (5, 5)))
+  Spec.it s "CR 603.4 four other Forests are too few, the entering one and bob's two uncounted" $ do
+    after <- bearsAfter (canopyBoard S.alice 4 ["Forest"] [])
+    Spec.assertEqWith s "the Bears stay 2/2" after (Just (Just (2, 2)))
+  Spec.it s "CR 603.4 an Island entering is no Forest, so nothing triggers" $ do
+    after <- bearsAfter (canopyBoard S.alice 5 ["Island"] [])
+    Spec.assertEqWith s "the Bears stay 2/2" after (Just (Just (2, 2)))
+  Spec.it s "CR 603.4 a Forest bob plays is not one alice controls" $ do
+    after <- bearsAfter (canopyBoard S.bob 5 [] ["Forest"])
+    Spec.assertEqWith s "the Bears stay 2/2" after (Just (Just (2, 2)))
+
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Parun.Engine.Trigger" $ do
   fireLordZukoSpec s registry
@@ -3107,3 +3147,4 @@ spec s registry = Spec.describe s "Parun.Engine.Trigger" $ do
   leylinePhantomSpec s registry
   nullSummonerSpec s registry
   massacreGirlSpec s registry
+  roilingCanopySpec s registry
