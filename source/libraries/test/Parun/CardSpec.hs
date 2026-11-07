@@ -5081,6 +5081,7 @@ entryRewriteFilters entryRewrite = case entryRewrite of
   EntryRewrite.ChooseCardNames f -> unframed [f]
   EntryRewrite.ChooseCardName f -> unframed [f]
   EntryRewrite.OrTapped (EntryPrice.Reveal f) -> unframed [f]
+  EntryRewrite.OrTapped (EntryPrice.Behold f) -> unframed [f]
   -- CR 614.1c's as-enters exile carries a criterion over a CARD IN A GRAVEYARD
   -- (Living Lore's "an instant or sorcery card"), the reveal's axis one zone over
   -- and unframed with it.

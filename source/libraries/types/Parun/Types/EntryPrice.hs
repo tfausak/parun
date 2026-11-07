@@ -11,4 +11,6 @@ data EntryPrice
     PayLife Natural.Natural
   | -- | CR 701.20a: reveal a matching card from your hand (Rustic Clachan).
     Reveal (Filter.Filter Keyword.Keyword)
+  | -- | CR 701.4a: behold a matching object (Theorist's Sanctum).
+    Behold (Filter.Filter Keyword.Keyword)
   deriving (Eq, Ord, Show)

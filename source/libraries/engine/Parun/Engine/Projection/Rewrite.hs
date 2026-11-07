@@ -2010,6 +2010,7 @@ rewriteEntryRewrite pairs rewrite = case rewrite of
   -- so CR 400.7a carries no text change onto it before it enters.
   EntryRewrite.OrTapped (EntryPrice.PayLife _) -> rewrite
   EntryRewrite.OrTapped (EntryPrice.Reveal f) -> EntryRewrite.OrTapped (EntryPrice.Reveal (Filter.rewrite pairs f))
+  EntryRewrite.OrTapped (EntryPrice.Behold f) -> EntryRewrite.OrTapped (EntryPrice.Behold (Filter.rewrite pairs f))
   EntryRewrite.EntersTransformed -> rewrite
   -- CR 614.1c's "as this enters, [do something]", the payload shared with an
   -- ability's clauses.

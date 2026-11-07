@@ -1887,6 +1887,7 @@ entryRewriteReads rewrite = case rewrite of
   EntryRewrite.Prepared -> ([], [])
   EntryRewrite.OrTapped (EntryPrice.PayLife _) -> ([], [])
   EntryRewrite.OrTapped (EntryPrice.Reveal filter_) -> ([filter_], [])
+  EntryRewrite.OrTapped (EntryPrice.Behold filter_) -> ([filter_], [])
   EntryRewrite.EntersTransformed -> ([], [])
   -- The nested effects' reads are replacementRowEffects' answer rather than this
   -- one's, for the reason replacementRowReads' header gives.

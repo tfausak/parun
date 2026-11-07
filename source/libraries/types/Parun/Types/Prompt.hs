@@ -652,9 +652,9 @@ data Prompt r where
   -- so it enters untapped; not asked below N life, a zero amount excepted (CR
   -- 119.4b).
   ChoosePayLifeOnEntry :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt OptionalDecision.OptionalDecision
-  -- | CR 614.1c with CR 701.20a: which matching hand card is revealed as the
-  -- permanent enters so it enters untapped, Nothing declining; raised at one
-  -- candidate too.
+  -- | CR 614.1c with CR 701.20a / 701.4a: which matching hand card is revealed,
+  -- or permanent beheld, as the permanent enters so it enters untapped, Nothing
+  -- declining; raised at one candidate too.
   ChooseRevealOnEntry :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt (Maybe ObjectId.ObjectId)
   -- | CR 105.4: a colour chosen for the object (Parun.Engine.Event's
   -- chooseQuality), from those (CR 105.1) not already chosen for it.

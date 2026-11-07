@@ -2902,6 +2902,7 @@ tetravus
 tetsuko-umezawa-fugitive
 tetsuko-umezawa-pursuer
 teyo-diamondblade-mage
+teyo-lightshield-expert
 tezzeret-artifice-master
 tezzeret-cruel-machinist
 tezzerets-gatebreaker
@@ -2946,6 +2947,7 @@ the-wandering-emperor
 the-weatherseed-treaty
 the-wretched
 thelonite-hermit
+theorists-sanctum
 thicket-basilisk
 thieves-auction
 thieves-guild-enforcer
@@ -3000,7 +3002,9 @@ timetwister
 timmerian-fiends
 tinybones-bauble-burglar
 tinybones-joins-up
+tinybones-pocket-nuisance
 tinybones-the-pickpocket
+titanbones-towering-heart
 titanias-song
 tithing-blade-consuming-sepulcher
 tivit-seller-of-secrets
@@ -3012,6 +3016,7 @@ tolarian-winds
 tomb-of-annihilation
 tome-anima
 tome-of-the-infinite
+tomik-izzet-sparkmage
 tomik-orzhov-lawmage
 too-greedily-too-deep
 toralfs-disciple
@@ -3042,6 +3047,8 @@ transmogrifying-wand
 trap-runner
 traumatize
 travel-through-caradhras
+traxos-academy-guardian
+traxos-scourge-eternal
 treasure-hunt
 tree-of-redemption
 treetop-defense
@@ -3070,6 +3077,7 @@ tusk-and-whiskers
 twinblade-assassins
 twincast
 twinflame-tyrant
+twinned-vision
 twisted-fealty
 twisted-image
 two-headed-dragon
