@@ -22,9 +22,9 @@ spec s = Spec.describe s "Parun.Codec.Times" $ do
       s
       codec
       ( Times.MkTimes
-          { Times.factor = 3,
+          { Times.factor = Quantity.Literal 3,
             Times.quantity = Quantity.Measure Measure.Power
           }
       )
-      " {\"factor\":3,\"quantity\":{\"type\":\"Measure\",\"value\":\"Power\"}} "
+      " {\"factor\":{\"type\":\"Literal\",\"value\":3},\"quantity\":{\"type\":\"Measure\",\"value\":\"Power\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

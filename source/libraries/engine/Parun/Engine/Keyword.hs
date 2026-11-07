@@ -6799,7 +6799,7 @@ melee =
 -- nothing of its own.
 rampage :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 rampage n =
-  let bonus = Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes n (Quantity.BlockersBeyond 1)))
+  let bonus = Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes (Quantity.Literal (toInteger n)) (Quantity.BlockersBeyond 1)))
       effect =
         Effect.ModifyTarget
           ( ModifyTarget.MkModifyTarget

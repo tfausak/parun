@@ -91,7 +91,10 @@
                             "value": {
                               "type": "Times",
                               "value": {
-                                "factor": 2,
+                                "factor": {
+                                  "type": "Literal",
+                                  "value": 2
+                                },
                                 "quantity": {
                                   "type": "Count",
                                   "value": {

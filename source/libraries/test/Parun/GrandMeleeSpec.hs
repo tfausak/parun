@@ -283,6 +283,19 @@ spec s registry = Spec.describe s "GrandMelee" $ do
     Spec.assertEqWith s "seat 0's turn is worked" (GameState.activePlayer staged) (seat 0)
     Spec.assertEqWith s "CR 807.4 seat 4's Gideon" (Projection.powerOf fours staged) (Just 4)
     Spec.assertEqWith s "CR 102.1 seat 2's Gideon" (Projection.powerOf twos staged) Nothing
+
+  -- CR 102.1 / 807.4: the same for Angry Mob's "During your turn", its count
+  -- of opponents' Swamps (two, seat 3's, in both seats' range, CR 801.11)
+  -- read while seat 0's turn is worked: seat 4's is 4/4, seat 2's 2/2.
+  Spec.it s "CR 807.4 Angry Mob counts on its controller's running turn" $ do
+    forest <- S.printingOf s registry "Forest"
+    swamp <- S.printingOf s registry "Swamp"
+    mob <- S.printingOf s registry "Angry Mob"
+    let main = S.landsFor swamp (seat 3) 2 (untilPhase Phase.PrecombatMain (melee forest 8))
+        (fours, withFours) = S.addPermanent mob (seat 4) main
+        (twos, staged) = S.addPermanent mob (seat 2) withFours
+    Spec.assertEqWith s "seat 0's turn is worked" (GameState.activePlayer staged) (seat 0)
+    Spec.assertEqWith s "CR 807.4 seat 4's and seat 2's Angry Mobs" (fmap (\o -> (Projection.powerOf o staged, Projection.toughnessOf o staged)) [fours, twos]) [(Just 4, Just 4), (Just 2, Just 2)]
   where
     seat = PlayerId.MkPlayerId
     seats :: [Natural] -> [PlayerId]

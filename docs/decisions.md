@@ -1161,7 +1161,8 @@ Entries are ordered by the first rule each cites.
   turn's step with another's player.
 - **Site**: `Parun.Engine.Turn.isActive`, `hasTurnRunning` and
   `duringRunningTurn`. `Parun.GrandMeleeSpec`'s "CR 807.4 it is your turn
-  while your marker's turn runs".
+  while your marker's turn runs" and "CR 807.4 Angry Mob counts on its
+  controller's running turn".
 - **Issue**: #6117.
 
 ## Which stack and turn a resolving Grand Melee object names

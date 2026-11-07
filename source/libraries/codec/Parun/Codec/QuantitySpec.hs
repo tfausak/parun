@@ -904,8 +904,8 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes 3 (Quantity.LifeTotal PlayerRef.Candidate))))
-      " {\"type\":\"Times\",\"value\":{\"factor\":3,\"quantity\":{\"type\":\"LifeTotal\",\"value\":{\"type\":\"Candidate\"}}}} "
+      (Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes (Quantity.Literal 3) (Quantity.LifeTotal PlayerRef.Candidate))))
+      " {\"type\":\"Times\",\"value\":{\"factor\":{\"type\":\"Literal\",\"value\":3},\"quantity\":{\"type\":\"LifeTotal\",\"value\":{\"type\":\"Candidate\"}}}} "
   -- Forcing the schema is what proves the RECURSIVE definition terminates, and
   -- it proves more of that now than it used to: Negate names `codec` itself
   -- while Plus, Quotient, Times, AgainstSlot and Count each hand it to a payload

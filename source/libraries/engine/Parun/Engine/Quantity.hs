@@ -1267,7 +1267,7 @@ calculate :: Arithmetic.Arithmetic Integer -> Integer
 calculate arithmetic = case arithmetic of
   Arithmetic.Plus (Plus.MkPlus a b) -> a + b
   Arithmetic.Quotient (Quotient.MkQuotient rounding a d) -> divide rounding a d
-  Arithmetic.Times (Times.MkTimes factor a) -> toInteger factor * a
+  Arithmetic.Times (Times.MkTimes factor a) -> factor * a
   Arithmetic.Negate a -> negate a
   Arithmetic.NonNegative a -> max 0 a
 

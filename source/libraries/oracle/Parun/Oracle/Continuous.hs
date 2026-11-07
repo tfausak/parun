@@ -156,7 +156,7 @@ powerToughness context power toughness =
     unit q = case q of
       Quantity.Literal n -> Just (n, Nothing)
       Quantity.Count _ -> Just (1, Just q)
-      Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes f c@(Quantity.Count _))) -> Just (toInteger f, Just c)
+      Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes (Quantity.Literal f) c@(Quantity.Count _))) -> Just (f, Just c)
       Quantity.Arithmetic (Arithmetic.Negate inner) -> fmap (Bifunctor.first negate) (unit inner)
       _ -> Nothing
 

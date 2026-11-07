@@ -74,7 +74,10 @@
                       "quantity": {
                         "type": "Times",
                         "value": {
-                          "factor": 4,
+                          "factor": {
+                            "type": "Literal",
+                            "value": 4
+                          },
                           "quantity": {
                             "type": "BoundCount",
                             "value": "chosen"
