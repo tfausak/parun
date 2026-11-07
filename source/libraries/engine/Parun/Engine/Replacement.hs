@@ -3134,8 +3134,8 @@ beholdableOnEntry :: PlayerId -> Filter.Type.Filter Keyword.Type.Keyword -> Game
 beholdableOnEntry pid filter_ gs =
   let viewOf = Projection.viewsOf gs
       matching oid = Filter.matches (Filter.contextIn gs Nothing Nothing) (viewOf oid) filter_
-      there oid = Set.member oid (GameState.battlefield (Projection.boardAsEntering gs))
-   in revealableFromHand pid filter_ gs <> filter (\oid -> there oid && matching oid) (List.sort (Projection.controls pid gs))
+      board = GameState.battlefield (Projection.boardAsEntering gs)
+   in revealableFromHand pid filter_ gs <> filter (\oid -> Set.member oid board && matching oid) (List.sort (Projection.controls pid gs))
 
 -- CR 702.38a: the cards a player may reveal from their hand for an amplify
 -- ability -- the ones sharing a creature type with the entering object.
