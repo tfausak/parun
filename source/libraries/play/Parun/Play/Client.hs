@@ -544,7 +544,7 @@ listedObjects view offer = foldMap (fmap optionObject) (Monad.msum [fmap (fmap s
 -- is dropped when an earlier one plays or casts a card in the seat's hand
 -- that the view shows exactly as it shows this one's, bar its id. Other
 -- actions never merge, since an offer may leave out what tells two apart
--- (#5225), and neither do cards elsewhere, which a permission may tell
+-- (#6594), and neither do cards elsewhere, which a permission may tell
 -- apart.
 distinct :: PlayerView.PlayerView -> [R.Reply] -> [(Integer, R.Reply)]
 distinct view = reverse . snd . List.foldl' keep ([], []) . zip [0 ..]
