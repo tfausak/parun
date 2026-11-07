@@ -183,17 +183,13 @@ cardTypeOf f = case f of
   Filter.HasCardType t -> Just t
   _ -> Nothing
 
--- | A disjunction of every permanent type as CR 110.4a names it, "permanent",
--- and of every one but one as "nonland permanent".
+-- | A disjunction of every permanent type as CR 110.4a names it,
+-- "permanent". All but land is not "nonland permanent": it admits an
+-- artifact land, so "nonland" conjoins @Not (HasCardType Land)@.
 permanentCard :: Set.Set CardType.CardType -> Maybe Phrase
-permanentCard ts =
-  let permanents = Set.fromList [CardType.Artifact, CardType.Battle, CardType.Creature, CardType.Enchantment, CardType.Land, CardType.Planeswalker]
-      thing = noun (Text.pack "permanent") (Just (Text.pack "permanents"))
-   in case Set.toList (Set.difference permanents ts) of
-        _ | not (Set.isSubsetOf ts permanents) -> Nothing
-        [] -> Just thing
-        [t] -> Just (merge (adjective (Text.pack "non" <> cardType Singular t)) thing)
-        _ -> Nothing
+permanentCard ts
+  | ts == Set.fromList [CardType.Artifact, CardType.Battle, CardType.Creature, CardType.Enchantment, CardType.Land, CardType.Planeswalker] = Just (noun (Text.pack "permanent") (Just (Text.pack "permanents")))
+  | otherwise = Nothing
 
 -- | Disjoined phrases: adjectives alone join into one ("attacking or
 -- blocking"), colours "and/or" in the plural, since one object may have both

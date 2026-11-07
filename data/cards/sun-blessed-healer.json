@@ -122,6 +122,10 @@
                             },
                             {
                               "type": "HasCardType",
+                              "value": "Land"
+                            },
+                            {
+                              "type": "HasCardType",
                               "value": "Planeswalker"
                             }
                           ]

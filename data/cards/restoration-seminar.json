@@ -50,27 +50,43 @@
             "targetSlots": {
               "target": {
                 "filter": {
-                  "type": "Or",
+                  "type": "And",
                   "value": [
                     {
-                      "type": "HasCardType",
-                      "value": "Artifact"
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "HasCardType",
+                          "value": "Artifact"
+                        },
+                        {
+                          "type": "HasCardType",
+                          "value": "Battle"
+                        },
+                        {
+                          "type": "HasCardType",
+                          "value": "Creature"
+                        },
+                        {
+                          "type": "HasCardType",
+                          "value": "Enchantment"
+                        },
+                        {
+                          "type": "HasCardType",
+                          "value": "Land"
+                        },
+                        {
+                          "type": "HasCardType",
+                          "value": "Planeswalker"
+                        }
+                      ]
                     },
                     {
-                      "type": "HasCardType",
-                      "value": "Battle"
-                    },
-                    {
-                      "type": "HasCardType",
-                      "value": "Creature"
-                    },
-                    {
-                      "type": "HasCardType",
-                      "value": "Enchantment"
-                    },
-                    {
-                      "type": "HasCardType",
-                      "value": "Planeswalker"
+                      "type": "Not",
+                      "value": {
+                        "type": "HasCardType",
+                        "value": "Land"
+                      }
                     }
                   ]
                 },
