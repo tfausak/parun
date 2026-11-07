@@ -88,6 +88,8 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   of `targets`. A `Cast` of a card offering both a face-up and a face-down
   cast (CR 702.37c) says which with `"faceDown": false` or `true`, and a
   `Cast` of a split card names the half it casts (CR 709.3), `"face": "Consume"`.
+  A cast's `yields` answers each `ChooseManaYield` its `mana` raises, in
+  order, by the units the yield adds, restriction and tags included.
   A cast's `cost` picks a candidate cost by its mana (CR 601.2b); where two
   share it, `costOffer` names what offered the one wanted, `{ "type":
   "ByKeyword", "value": { "type": "OfFamily", "value": "Blitz" } }`

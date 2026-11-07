@@ -59,45 +59,28 @@ census did not settle.
 
 - Fblthp, Impossibly Lost: `_Trigger:If`
 
-- Ferocity of the Hunt: `_Trigger:WhenAPermanentDies`
-
-- Flickering Hound: `_Action:PutExiledCardOntoBattlefield`
-
-- Flourishing Grapple: `_LayerEffect:LosesAllAbilities`
 
 
-- Fulminous Forte: renders differently from its Oracle text
 
-- Gallia, Tragic Host: `_Rule:FromGraveyard`
 
-- Gallia, the Merrymaker: `_Permanents:HasACounterOfType`
 
-- Gardenize: `_CounterType:ChargeCounter`
+
+
 
 - Garruk, Curse Breaker: `field: Loyalty`; verify the −4's "those creatures"
 
 - Garruk, Veiled Butcher: `field: Loyalty`; verify "for each opponent who didn't
   discard two nonland cards"
 
-- Geist of Saint Thalia: `_Rule:PlayerEffect`
 
-- Generous Revival: `_CardsInGraveyards:ManaValueIs`
 
-- Germinate Recruits: `_GameNumber:LifeGainedByPlayerThisTurn`
 
-- Ghalta the Immovable: `_Rule:CastEffect`
 
-- Ghalta the Unstoppable: `_Rule:CastEffect`
 
-- Gideon the Oathless: `_Rule:Ward`
 
-- Gideon's Memorial: `_Action:AddManaWithModifiers`
 
-- Graft Surgeon: `_ReplacementActionWouldEnter:EntersWithACounter`
 
-- Grim Repriser: `_Rule:FromGraveyard`
 
-- Guiding Hydra: `_ReplacementActionWouldEnter:EntersWithNumberCounters`
 
 - Hallway Heckler: `_Cost:DiscardACard`; shares Vicious Verse
 
