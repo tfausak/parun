@@ -1382,6 +1382,11 @@ combatReplaySpec s =
           let p = Prompt.ChooseStickerKeeper decider S.alice (PrintingId.MkPrintingId 3 NonEmpty.:| [PrintingId.MkPrintingId 4])
           Spec.assertEqWith s "choosing the second round trips" (Replay.decode p (Replay.encode p 1)) (Just 1)
           Spec.assertEqWith s "a short transcript keeps them on the first" (Replay.defaultAnswer p) 0
+        -- CR 807.5b: which stack a player with priority for several acts on.
+        Spec.it s "ChooseTurnMarker round-trips through the transcript" $ do
+          let p = Prompt.ChooseTurnMarker decider S.alice (2 NonEmpty.:| [1])
+          Spec.assertEqWith s "choosing the second round trips" (Replay.decode p (Replay.encode p 1)) (Just 1)
+          Spec.assertEqWith s "a short transcript acts on the first offered" (Replay.defaultAnswer p) 2
         -- CR 702.33h: sticker kicker's "may put" carries a declining half.
         Spec.it s "ChooseStickerOrNone round-trips through the transcript" $ do
           let a = StickerRef.MkStickerRef S.alice 0 StickerKind.Art 0

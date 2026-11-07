@@ -110,6 +110,7 @@ encode p answer = case p of
   Prompt.ChooseCoinResult {} -> Response.ChoseCoinResult answer
   Prompt.ChooseAction {} -> Response.ChoseAction answer
   Prompt.Concede _ -> Response.Conceded answer
+  Prompt.ChooseTurnMarker {} -> Response.ChoseTurnMarker answer
   Prompt.ChooseDiscard {} -> Response.ChoseDiscard answer
   Prompt.ChooseScry {} -> Response.ChoseScry answer
   Prompt.ChooseSurveil {} -> Response.ChoseSurveil answer
@@ -338,6 +339,9 @@ decode p response = case p of
     _ -> Nothing
   Prompt.Concede _ -> case response of
     Response.Conceded concession -> Just concession
+    _ -> Nothing
+  Prompt.ChooseTurnMarker {} -> case response of
+    Response.ChoseTurnMarker marker -> Just marker
     _ -> Nothing
   Prompt.ChooseDiscard {} -> case response of
     Response.ChoseDiscard ids -> Just ids
@@ -895,6 +899,8 @@ defaultAnswer p = case p of
   -- win to the other player, so a transcript whose Concede answer is lost
   -- replays to the OTHER winner. That is why 'replay' reports the desync.
   Prompt.Concede _ -> Concession.Continues
+  -- CR 807.5b: the stack the scheduler reached, offered first.
+  Prompt.ChooseTurnMarker _ _ markers -> NonEmpty.head markers
   Prompt.ChooseDiscard _ _ ids n -> List.genericTake n ids
   -- CR 701.22a: "any number" includes none, so leaving every looked-at card on
   -- top in the order it was already in is legal -- and it is the one answer that

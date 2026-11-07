@@ -1123,20 +1123,23 @@ Entries are ordered by the first rule each cites.
   its own stack (CR 807.5), so several players can hold priority at one
   moment. Whose decision comes first?
 - **Rules**: CR 101.4, 117.3d, 117.4, 500.12, 807.4b, 807.4d, 807.4e, 807.5,
-  807.5a; CR of 2026-11-06.
+  807.5a, 807.5b; CR of 2026-11-06.
 - **Decision**: One unit at a time, round robin over the running turns in
   marker-number order from the turn worked last, a unit being a step's start,
   one priority decision or a step's end. Turns that begin together begin in
-  number order. A turn running alone takes its step whole.
+  number order. A turn running alone takes its step whole. A holder reached
+  with priority for several stacks picks the one the decision is on
+  (CR 807.5b), and the round goes on from that one.
 - **Rejected**: A random order, which no rule asks for and which adds a draw to
   every window. An order a player chooses, which no rule gives anyone. Each
   turn running until its stack is quiet, which starves the others and makes
   one marker win every race. Numbers are the only order the CR supplies
   (CR 807.4b, 807.4e); CR 101.4 orders choices within one event, and CR 117.3d
   leaves a holder only acting or passing.
-- **Site**: `Parun.Engine.Engine.runMarkedUnit` and `beginReady`.
-  `Parun.GrandMeleeSpec`'s "CR 807.4b both running turns' questions
-  alternate" and "CR 807.4d eight players take turns 0, 4, 1, 5, ...".
+- **Site**: `Parun.Engine.Engine.runMarkedUnit`, `chooseStack` and
+  `beginReady`. `Parun.GrandMeleeSpec`'s "CR 807.4b both running turns'
+  questions alternate", "CR 807.4d eight players take turns 0, 4, 1, 5, ..."
+  and "CR 807.5b a player with priority for several stacks chooses one".
 - **Issue**: #6117.
 
 ## Which turn a Grand Melee read of the active player means

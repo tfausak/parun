@@ -176,6 +176,7 @@ spec s registry = Spec.describe s "Protocol" $ do
     Spec.assertEqWith s "words" (listed "options" (Prompt.ChooseColor alice S.alice o7 (Color.Red NonEmpty.:| [Color.Green]))) (Right (Just (Protocol.object o7), [Color.Red, Color.Green]))
     Spec.assertEqWith s "attack targets" (listed "options" (Prompt.ChooseAttackTarget alice S.alice o7 (AttackTarget.OfPlayer S.bob NonEmpty.:| [AttackTarget.OfPlaneswalker o9]))) (Right (Just (Protocol.object o7), [AttackTarget.OfPlayer S.bob, AttackTarget.OfPlaneswalker o9]))
     Spec.assertEqWith s "no source" (listed "players" (Prompt.ChooseActivePlayer alice S.alice (S.bob NonEmpty.:| [S.alice]))) (Right (Nothing, [S.bob, S.alice]))
+    Spec.assertEqWith s "turn markers" (listed "options" (Prompt.ChooseTurnMarker alice S.alice (2 NonEmpty.:| [1]))) (Right (Nothing, [2, 1]))
     Spec.assertBool s (all (Scenario.withinOffer hand) [o9, o11]) "every option within the offer"
     -- CR 101.4b: what earlier choosers took.
     let graveyard = Protocol.offerOf gs (Prompt.ChooseCardInGraveyard alice S.alice o7 (o9 NonEmpty.:| []) (Seq.singleton (S.bob, o11)))

@@ -229,6 +229,8 @@ offerOf gs prompt = case prompt of
   -- CR 701.23a: the searcher looks at the cards searched, so each is named.
   Prompt.Search _ _ cards count -> fields [("from", objects cards), ("names", R.Array (fmap (R.Text . Render.snapshotName . (`Projection.project` gs)) cards)), ("count", natural count)]
   Prompt.ChooseConjuredCard _ _ names -> choosing prompt "options" Nothing [] (NonEmpty.toList names)
+  -- CR 807.5b: the turn markers, by number, whose stacks the seat holds priority for.
+  Prompt.ChooseTurnMarker _ _ markers -> choosing prompt "options" Nothing [] (NonEmpty.toList markers)
   Prompt.ChooseCoinResult _ _ faces -> choosing prompt "options" Nothing [] (NonEmpty.toList faces)
   Prompt.ChooseDefender _ _ players -> choosing prompt "players" Nothing [] (NonEmpty.toList players)
   Prompt.ChooseRingBearer _ _ candidates -> choosing prompt "options" Nothing [] (NonEmpty.toList candidates)
