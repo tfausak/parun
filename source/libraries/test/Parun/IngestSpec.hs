@@ -36,15 +36,16 @@ import qualified Parun.Types.TypeLine as TypeLine
 
 spec :: (Monad n) => Spec.Spec IO n -> [(FilePath, Either Text.Text Card.Card)] -> n ()
 spec s corpus = Spec.describe s "Parun.Ingest" $ do
-  -- The invariant the renderer exists for: a card it renders says what its
-  -- Oracle text says, in one of the wordings Oracle uses for it.
+  -- The invariant the renderer exists for: each face of a card it renders
+  -- says what the face's Oracle text says, in one of the wordings Oracle uses
+  -- for it.
   Spec.it s "each card that renders says what its Oracle text says" $ do
-    let rendered = [(card, canonical) | entry@(_, Right card) <- corpus, Maybe.isJust (Registry.referenceCard entry), Just canonical <- [Oracle.render card]]
+    let rendered = [card | entry@(_, Right card) <- corpus, Maybe.isJust (Registry.referenceCard entry), Maybe.isJust (Oracle.render card)]
         disagreements =
-          [ (Text.unpack (Slug.unwrap (Registry.filedAs card)), fmap (Normalise.normalise name) text, Normalise.normalise name canonical)
-          | (card, canonical) <- rendered,
-            let face = NonEmpty.head (Card.faces card)
-                name = Face.name face
+          [ (Text.unpack (Slug.unwrap (Registry.filedAs card)), fmap (Normalise.normalise name) text, fmap (Normalise.normalise name) (Oracle.renderFace face))
+          | card <- rendered,
+            face <- NonEmpty.toList (Card.faces card),
+            let name = Face.name face
                 text = Face.oracleText face,
             maybe True (not . Oracle.says card name) text
           ]
@@ -173,14 +174,26 @@ spec s corpus = Spec.describe s "Parun.Ingest" $ do
         let staleNumber p = if p == Just (Power.MkPower Quantity.Star) then p else Just (Power.MkPower (Quantity.Literal 9))
             stale c = c {Card.faces = fmap (\f -> f {Face.manaCost = Nothing, Face.typeLine = (Face.typeLine f) {TypeLine.subtypes = Set.empty}, Face.power = staleNumber (Face.power f)}) (Card.faces c)}
         case (Common.parse (Text.pack json) >>= Ingest.printed, card) of
-          (Right record, Right (Just expected)) -> Spec.assertEqWith s name expected (Ingest.reprint record (stale expected))
+          (Right record, Right (Just expected)) -> Spec.assertEqWith s name expected (Ingest.reprint [record] (stale expected))
           _ -> Spec.assertFailure s (name <> ": no record or no card")
+
+  -- CR 723: a preparation card's record holds a record for each face, which
+  -- reprint matches to the card's faces by name.
+  Spec.it s "reprint takes each face's printed characteristics from its own record" $ do
+    registry <- Registry.defaultRoot >>= Registry.fileRegistry
+    card <- Registry.named registry "Encouraging Aviator"
+    let json = "{\"name\":\"Encouraging Aviator // Jump\",\"faces\":[{\"name\":\"Encouraging Aviator\",\"manaCost\":\"{2}{U}\",\"supertypes\":[],\"types\":[\"Creature\"],\"subtypes\":[\"Bird\",\"Wizard\"],\"power\":\"2\",\"toughness\":\"3\",\"text\":null},{\"name\":\"Jump\",\"manaCost\":\"{U}\",\"supertypes\":[],\"types\":[\"Instant\"],\"subtypes\":[],\"power\":null,\"toughness\":null,\"text\":null}]}"
+        stale c = c {Card.faces = fmap (\f -> f {Face.manaCost = Nothing, Face.typeLine = TypeLine.MkTypeLine Set.empty Set.empty Set.empty}) (Card.faces c)}
+    case (Common.parse (Text.pack json) >>= Ingest.printedFaces, card) of
+      (Right records, Right (Just expected)) -> Spec.assertEq s expected (Ingest.reprint records (stale expected))
+      _ -> Spec.assertFailure s "Encouraging Aviator // Jump: no record or no card"
 
   Spec.it s "candidate leaves out a card it would have to guess at" $ do
     let reason json = Common.parse (Text.pack json) >>= Monad.void . Ingest.candidate
     Spec.assertEq s (Left (Text.pack "text: ward\8212pay 3 life")) (reason "{\"name\":\"X\",\"manaCost\":\"{1}\",\"supertypes\":[],\"types\":[\"Creature\"],\"subtypes\":[],\"power\":\"1\",\"toughness\":\"1\",\"text\":\"Ward\8212Pay 3 life\"}")
     Spec.assertEq s (Left (Text.pack "text: equip planeswalker {1}")) (reason "{\"name\":\"X\",\"manaCost\":\"{1}\",\"supertypes\":[],\"types\":[\"Artifact\"],\"subtypes\":[\"Equipment\"],\"text\":\"Equip planeswalker {1}\"}")
     Spec.assertEq s (Left (Text.pack "power/toughness: *")) (reason "{\"name\":\"X\",\"manaCost\":\"{1}\",\"supertypes\":[],\"types\":[\"Creature\"],\"subtypes\":[],\"power\":\"*\",\"toughness\":\"1\",\"text\":null}")
+    Spec.assertEq s (Left (Text.pack "faces: more than one")) (reason "{\"name\":\"X // Y\",\"faces\":[]}")
     Spec.assertEq s (Left (Text.pack "subtype: Nonesuch")) (reason "{\"name\":\"X\",\"manaCost\":\"{1}\",\"supertypes\":[],\"types\":[\"Creature\"],\"subtypes\":[\"Nonesuch\"],\"power\":\"1\",\"toughness\":\"1\",\"text\":null}")
 
 -- A printed keyword as its constructor's name: each word capitalised, then

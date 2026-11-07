@@ -27,6 +27,7 @@ import qualified Parun.Types.AmassKind as AmassKind
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
+import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
@@ -63,6 +64,7 @@ import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.Layout as Layout
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
@@ -176,6 +178,21 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
   Spec.it s "reads entering tapped as a replacement effect of the source" $ do
     Spec.assertEq s (Right ()) (accepts charcoalDiamond)
     Spec.assertEq s [ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.Tapped)] (fmap PrintedReplacement.effect (Face.replacementEffects (translated charcoalDiamond)))
+
+  -- CR 723: a preparation card is its own face and then its prepare spell's,
+  -- each held to its own Oracle text; the first "enters prepared" (CR
+  -- 723.3a).
+  Spec.it s "reads a preparation card as its own face and its prepare spell's" $ do
+    let (ast, (creature, spell)) = emergencyPhytomedic
+    case acceptFaces ast [creature, spell] of
+      Left reason -> Spec.assertFailure s (Text.unpack reason)
+      Right card -> do
+        Spec.assertEq s Layout.Preparation (Card.layout card)
+        Spec.assertEq s [Text.pack "Emergency Phytomedic", Text.pack "Seed Suture"] (fmap (CardName.unwrap . Face.name) (NonEmpty.toList (Card.faces card)))
+        Spec.assertEq s [[ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.Prepared)], []] (fmap (fmap PrintedReplacement.effect . Face.replacementEffects) (NonEmpty.toList (Card.faces card)))
+        Spec.assertEq s [False, True] (fmap ((/= Face.defaultSpell) . Face.spell) (NonEmpty.toList (Card.faces card)))
+    Spec.assertEq s (Left (Text.pack "renders as: Put a +1/+1 counter on target creature and you gain 1 life.")) (Functor.void (acceptFaces ast [creature, "You gain 1 life."]))
+    Spec.assertEq s (Left (Text.pack "renders as: Emergency Phytomedic enters prepared.")) (Functor.void (acceptFaces ast [spell, creature]))
 
   -- CR 614.1d: "This land enters tapped unless [condition]" applies while
   -- the condition fails, so it is held as the complement of what it names.
@@ -348,6 +365,14 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
   Spec.it s "round-trips every keyword that stands alone" $ do
     let failures = [(name, result) | k <- Oracle.Keyword.standalone, name : _ <- [Oracle.Keyword.printed Text.empty k], let result = accept (keywordCard name, Text.unpack name), either (const True) (const False) result]
     Spec.assertEq s [] failures
+
+-- | The AST translated, each face stamped with its own Oracle text in
+-- order, and held to it.
+acceptFaces :: String -> [String] -> Either Text.Text Card.Card
+acceptFaces ast texts = do
+  value <- Common.parse (Text.pack ast)
+  card <- Mtgish.card value
+  Mtgish.accepted card {Card.faces = NonEmpty.fromList (zipWith (\f text -> f {Face.oracleText = Just (Text.pack text)}) (NonEmpty.toList (Card.faces card)) texts)}
 
 -- | The AST translated, stamped with the Oracle text, and held to it.
 accept :: (String, String) -> Either Text.Text Card.Card
@@ -551,6 +576,15 @@ adarkarWastes :: (String, String)
 adarkarWastes =
   ( "{\"_OracleCard\":\"Card\",\"Name\":\"Adarkar Wastes\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Land\"],\"Subtypes\":[]},\"Rules\":[{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"TapPermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"AddMana\",\"args\":{\"_ManaProduce\":\"ManaProduceC\"}}]}]},{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"TapPermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"AddMana\",\"args\":{\"_ManaProduce\":\"Or\",\"args\":[{\"_ManaProduce\":\"ManaProduceW\"},{\"_ManaProduce\":\"ManaProduceU\"}]}},{\"_Action\":\"PermanentDealsDamage\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},{\"_GameNumber\":\"Integer\",\"args\":1},{\"_DamageRecipient\":\"Player\",\"args\":{\"_Player\":\"You\"}}]}]}]}]}",
     "{T}: Add {C}.\n{T}: Add {W} or {U}. This land deals 1 damage to you."
+  )
+
+-- | Emergency Phytomedic's AST, and its faces' Oracle texts.
+emergencyPhytomedic :: (String, (String, String))
+emergencyPhytomedic =
+  ( "{\"_OracleCard\":\"Preparer\",\"Name\":\"Emergency Phytomedic\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Dryad\",\"Cleric\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGW\"}],\"Rules\":[{\"_Rule\":\"AsPermanentEnters\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_ReplacementActionWouldEnter\":\"EntersPrepared\"}]]}],\"CardPT\":{\"Power\":1,\"Toughness\":1},\"Prepared\":{\"_OracleCard\":\"Card\",\"Name\":\"Seed Suture\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Sorcery\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGW\"}],\"Rules\":[{\"_Rule\":\"SpellActions\",\"args\":{\"_Actions\":\"Targeted\",\"args\":[[{\"_Target\":\"TargetPermanent\",\"args\":{\"_Permanents\":\"IsCardtype\",\"args\":\"Creature\"}}],{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"PutCounters\",\"args\":[{\"_PutCountersAction\":\"ACounterOfTypeOnPermanent\",\"args\":[{\"_CounterType\":\"PTCounter\",\"args\":[1,1]},{\"_Permanent\":\"Ref_TargetPermanent\"}]}]},{\"_Action\":\"GainLife\",\"args\":{\"_GameNumber\":\"Integer\",\"args\":1}}]}]}}]}}",
+    ( "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+      "Put a +1/+1 counter on target creature. You gain 1 life."
+    )
   )
 
 -- | Charcoal Diamond's AST, and its Oracle text.

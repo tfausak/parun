@@ -177,7 +177,7 @@ translate mtgishPath candidatesPath options = do
         printed <- case set of
           Nothing -> Right []
           Just code -> fmap concat (traverse (inSet code) records)
-        named <- traverse (\record -> fmap (\name -> (name, Ingest.printed record)) (Common.asObject record >>= Common.field "name" >>= Common.asText)) records
+        named <- traverse (\record -> fmap (\name -> (name, Ingest.printedFaces record)) (Common.asObject record >>= Common.field "name" >>= Common.asText)) records
         pure (known, Map.fromList named, printed)
   case parsed of
     Left problem -> do
@@ -216,12 +216,22 @@ readUtf8 path = do
       IO.hPutStrLn IO.stderr $ path <> ": not valid UTF-8: " <> show err
       Exit.exitFailure
 
--- The card name an mtgish AST line is for, read without parsing the line.
+-- The card name an mtgish AST line is for, read without parsing the line; a
+-- preparation card's (CR 723) joins its prepare spell's, as MTGJSON names it,
+-- read from the parsed line, which is one of few.
 lineName :: Text.Text -> Maybe Text.Text
-lineName line = do
-  rest <- Text.stripPrefix (Text.pack "{\"_OracleCard\":\"Card\",\"Name\":") line
-  let (quoted, _) = Text.breakOn (Text.pack ",\"Typeline\"") rest
-  either (const Nothing) Just (Common.parse quoted >>= Common.asText)
+lineName line = case Text.stripPrefix (Text.pack "{\"_OracleCard\":\"Card\",\"Name\":") line of
+  Just rest -> do
+    let (quoted, _) = Text.breakOn (Text.pack ",\"Typeline\"") rest
+    either (const Nothing) Just (Common.parse quoted >>= Common.asText)
+  Nothing -> do
+    Monad.guard (Text.isPrefixOf (Text.pack "{\"_OracleCard\":\"Preparer\",") line)
+    let named fields = Common.field "Name" fields >>= Common.asText
+    either (const Nothing) Just $ do
+      fields <- Common.parse line >>= Common.asObject
+      name <- named fields
+      spell <- Common.field "Prepared" fields >>= Common.asObject >>= named
+      pure (name <> Text.pack " // " <> spell)
 
 -- One line per ability of a translated card: whether another pool card has an
 -- ability its wording matches, modulo 'Normalise.normalise', and which. Cards
@@ -238,11 +248,11 @@ sharing pool card =
   where
     joined = CardName.join . fmap Face.name . Card.Type.faces
     nameOf = CardName.unwrap . joined
-    wordings c = [(Normalise.normalise (joined c) wording, wording) | wording : _ <- Oracle.abilities c]
+    wordings c = [(Normalise.normalise (Face.name face) wording, wording) | Just faces <- [Oracle.renderable c], face <- NonEmpty.toList faces, wording : _ <- Oracle.faceAbilities face]
 
 -- What became of one card: Right with what was done and the card, or Left
 -- with why not.
-translateOne :: FilePath -> Maybe FilePath -> (Map.Map (Text.Text, Text.Text) Text.Text, Map.Map Text.Text Text.Text) -> Map.Map Text.Text (Either Text.Text (Face.Face Card.Type.Card, Maybe Text.Text, Maybe Text.Text)) -> Map.Map Text.Text [Text.Text] -> Text.Text -> IO (Either Text.Text (String, Card.Type.Card))
+translateOne :: FilePath -> Maybe FilePath -> (Map.Map (Text.Text, Text.Text) Text.Text, Map.Map Text.Text Text.Text) -> Map.Map Text.Text (Either Text.Text [(Face.Face Card.Type.Card, Maybe Text.Text, Maybe Text.Text)]) -> Map.Map Text.Text [Text.Text] -> Text.Text -> IO (Either Text.Text (String, Card.Type.Card))
 translateOne root out known records asts name = do
   let result = case (Map.findWithDefault [] name asts, Map.lookup name records) of
         ([line], Just record) -> Common.parse line >>= Mtgish.card >>= \card -> record >>= Mtgish.accepted . Ingest.stamp known . flip Ingest.reprint card
