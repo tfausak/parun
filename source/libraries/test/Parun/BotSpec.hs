@@ -64,6 +64,7 @@ import qualified Parun.Types.Observer as Observer
 import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.PayOffer as PayOffer
 import qualified Parun.Types.PaymentDecision as PaymentDecision
+import qualified Parun.Types.PlayerEffect as PlayerEffect
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
@@ -264,6 +265,40 @@ spec s registry = Spec.describe s "Bot" $ do
     Spec.assertEqWith s "reversals" (drawn (Prompt.ReverseManaAbilities decider S.alice (oid NonEmpty.:| []))) decisions
     Spec.assertEqWith s "casts" (drawn (Prompt.OfferedCast decider S.alice oid (CardName.MkCardName (Text.pack "Grizzly Bears")))) decisions
     Spec.assertEqWith s "calls" (drawn (Prompt.CallCoin decider S.alice)) (Set.fromList [CoinFace.Heads, CoinFace.Tails])
+
+  -- CR 608.2d: Alchemist's Gift's "deathtouch or lifelink" is either; Tolarian
+  -- Kraken's "you may tap or untap" also neither.
+  Spec.it s "chooses any branch of an or, or neither where offered" $ do
+    let branches = fmap ClauseIndex.MkClauseIndex (0 NonEmpty.:| [1])
+        clause neither = drawn (Prompt.ChooseClause decider S.alice oid (ModeIndex.MkModeIndex 0) branches neither Seq.empty)
+        chosen = fmap Just (NonEmpty.toList branches)
+    Spec.assertEqWith s "either" (clause False) (Set.fromList chosen)
+    Spec.assertEqWith s "or neither" (clause True) (Set.fromList (Nothing : chosen))
+
+  -- CR 614.1a: Island Sanctuary's "instead you may skip that draw", and every
+  -- other "may" or either-or of the same answer, is taken or declined.
+  Spec.it s "takes or declines each may" $ do
+    let free = Cost.MkCost {Cost.mana = Nothing, Cost.components = []}
+        other = ObjectId.MkObjectId 8
+        prompts =
+          [ ("substitutes", Prompt.ChooseSubstitute decider S.alice oid),
+            ("command zone offers", Prompt.ChooseCommandZoneOfferFirst decider S.alice oid),
+            ("dredges", Prompt.ChooseDredge decider S.alice oid 2),
+            ("exerts", Prompt.ChooseExert decider S.alice oid),
+            ("explores", Prompt.ChooseExplore decider S.alice oid other),
+            ("life on entry", Prompt.ChoosePayLifeOnEntry decider S.alice oid 2),
+            ("redirects", Prompt.ChooseRedirect decider S.alice oid other),
+            ("repeats", Prompt.ChooseRepeat decider S.alice oid 1),
+            ("riots", Prompt.ChooseRiot decider S.alice oid),
+            ("tributes", Prompt.ChooseTribute decider S.alice oid 2),
+            ("attachments", Prompt.ChooseTurnUpAttachment decider S.alice oid),
+            ("unleashes", Prompt.ChooseUnleash decider S.alice oid),
+            ("extras", Prompt.OfferedExtra decider S.alice oid PlayerEffect.CantCastSpells),
+            ("miracles", Prompt.OfferedMiracleReveal decider S.alice oid (CardName.MkCardName (Text.pack "Temporal Mastery")) free),
+            ("rerolls", Prompt.RerollDie decider S.alice 3 Nothing)
+          ]
+        both = Set.fromList [OptionalDecision.Exercises, OptionalDecision.Declines]
+    Spec.assertEqWith s "mays" (fmap (fmap drawn) prompts) (fmap (fmap (const both)) prompts)
 
   Spec.it s "chooses any one of what is offered" $ do
     let candidates = ObjectId.MkObjectId 8 NonEmpty.:| [ObjectId.MkObjectId 9]
