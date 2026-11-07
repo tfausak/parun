@@ -12,14 +12,17 @@ import qualified Data.Foldable as Foldable
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Parun.Codec.CombatDamageOption as Codec.CombatDamageOption
 import qualified Parun.Codec.Cost as Codec.Cost
+import qualified Parun.Codec.CostComponent as Codec.CostComponent
 import qualified Parun.Codec.Facing as Codec.Facing
 import qualified Parun.Codec.Filter as Codec.Filter
 import qualified Parun.Codec.Keyword as Codec.Keyword
+import qualified Parun.Codec.LibraryPosition as Codec.LibraryPosition
 import qualified Parun.Codec.ManaCost as Codec.ManaCost
 import qualified Parun.Codec.ManaSymbol as Codec.ManaSymbol
 import qualified Parun.Codec.ManaType as Codec.ManaType
@@ -29,6 +32,7 @@ import qualified Parun.Codec.Reference as Codec.Reference
 import qualified Parun.Codec.Reply as Codec.Reply
 import qualified Parun.Codec.Request as Codec.Request
 import qualified Parun.Codec.SlotName as Codec.SlotName
+import qualified Parun.Codec.Zone as Codec.Zone
 import qualified Parun.Engine.Combat as Combat
 import qualified Parun.Engine.Cost as Cost
 import qualified Parun.Engine.Driver as Driver
@@ -53,7 +57,9 @@ import qualified Parun.Types.BallotChoice as BallotChoice
 import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.Dividing as Dividing
+import qualified Parun.Types.Face as Face
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword.Type
@@ -65,6 +71,7 @@ import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.MulliganOffer as MulliganOffer
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PrintingId as PrintingId
 import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Question as Question
@@ -273,15 +280,50 @@ offerOf gs prompt = case prompt of
   Prompt.AnnounceHybridHalf _ _ source symbol halves -> choosing prompt "options" (Just source) [("symbol", Reply.encode (Reply.viaCodec Codec.ManaSymbol.codec) namer symbol)] (NonEmpty.toList halves)
   Prompt.ChooseReductionHalf _ _ source symbol halves -> choosing prompt "options" (Just source) [("symbol", Reply.encode (Reply.viaCodec Codec.ManaSymbol.codec) namer symbol)] (NonEmpty.toList halves)
   Prompt.ChooseReducedCost _ _ source costs -> choosing prompt "options" (Just source) [] (NonEmpty.toList costs)
+  -- CR 401.4 / 608.2c: from the top inward.
+  Prompt.ArrangeLibraryCards _ _ cards -> listing "order" Nothing [] (fmap object cards)
+  -- CR 401.4 / 608.2c: from the end they arrive at inward.
+  Prompt.ArrangeLibraryArrivals _ _ end cards -> listing "order" Nothing [("end", Reply.encode (Reply.viaCodec Codec.LibraryPosition.codec) namer end)] (fmap object cards)
+  -- CR 613.7m: the first named stamped earliest.
+  Prompt.OrderTimestamps _ _ permanents -> listing "order" Nothing [] (fmap object permanents)
+  -- CR 605.3: the first named activated first.
+  Prompt.OrderManaActivations _ _ permanents -> listing "order" Nothing [] (fmap object permanents)
+  -- CR 508.1j / 509.1f: each taxing permanent, the first named paid first.
+  Prompt.OrderCombatTolls _ _ permanents -> listing "order" Nothing [] (fmap object permanents)
+  -- CR 713.8a / 731.3a: each component card by name, the first named put into
+  -- the zone first.
+  Prompt.OrderComponentCards _ _ zone printings -> listing "order" Nothing [("zone", Reply.encode (Reply.viaCodec Codec.Zone.codec) namer zone)] (fmap (R.Text . printingName gs) printings)
+  -- CR 601.2h: each non-mana component, the first named paid first.
+  Prompt.OrderCostComponents _ _ source components -> listing "order" (Just source) [] (fmap (Reply.encode (Reply.viaCodec (Codec.CostComponent.codec Codec.Keyword.codec)) namer) components)
+  -- CR 122.1c / 614.3: each event's source, recipient and amount.
+  Prompt.OrderDamage _ _ events -> listing "order" Nothing [] (fmap damageEvent events)
+  -- CR 608.2f / 701.44d / 707.10d: the first named handled first.
+  Prompt.OrderForEach _ _ source recipients -> listing "order" (Just source) [] (fmap (Reply.encode Reply.recipient namer) recipients)
   _ -> R.Null
+
+-- | A prompt's source where it has one, what else the seat is told, and
+-- under @key@ its items: the options `choosing` spells, or under @"order"@
+-- what a prompt answered by a permutation of their indices orders
+-- (Parun.Engine.Game.permute), each as the client names it.
+listing :: String -> Maybe ObjectId.ObjectId -> [(String, R.Reply)] -> [R.Reply] -> R.Reply
+listing key source told items = fields ([("source", object s) | Just s <- [source]] <> told <> [(key, R.Array items)])
+
+-- | A printing by its front face's name (Game.frontFaceOfPrinting), or empty
+-- where the game knows no such printing.
+printingName :: GameState.GameState -> PrintingId.PrintingId -> Text.Text
+printingName gs = foldMap (CardName.unwrap . Face.name) . Seq.take 1 . Game.frontFaceOfPrinting gs
+
+-- | A damage event as its source, recipient and amount; its riders say
+-- nothing the seat orders by.
+damageEvent :: DamageEvent.DamageEvent -> R.Reply
+damageEvent event = fields [("source", object (DamageEvent.source event)), ("target", Reply.encode Reply.recipient namer (DamageEvent.target event)), ("amount", natural (DamageEvent.amount event))]
 
 -- | A prompt answered by one of what it lists: its source where it has one,
 -- what else the seat is told, and under @key@ each option spelled as the
 -- answer that picks it, @"players"@ for seats (which the line spells as bare
 -- ids) and @"options"@ for anything else.
 choosing :: Prompt.Prompt r -> String -> Maybe ObjectId.ObjectId -> [(String, R.Reply)] -> [r] -> R.Reply
-choosing prompt key source told options =
-  fields ([("source", object s) | Just s <- [source]] <> told <> [(key, R.Array (fmap (Reply.encode (Reply.shapeOf prompt) namer) options))])
+choosing prompt key source told = listing key source told . fmap (Reply.encode (Reply.shapeOf prompt) namer)
 
 -- | Each of a "may" prompt's options, then declining, spelled null.
 orNone :: NonEmpty.NonEmpty a -> [Maybe a]

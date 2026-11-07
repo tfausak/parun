@@ -21,6 +21,7 @@ import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Parun.Codec.CombatDamageOption as Codec.CombatDamageOption
 import qualified Parun.Codec.Cost as Codec.Cost
+import qualified Parun.Codec.CostComponent as Codec.CostComponent
 import qualified Parun.Codec.Keyword as Codec.Keyword
 import qualified Parun.Codec.ManaCost as Codec.ManaCost
 import qualified Parun.Codec.ManaType as Codec.ManaType
@@ -28,6 +29,7 @@ import qualified Parun.Codec.ManaUnit as Codec.ManaUnit
 import qualified Parun.Codec.NumberFloor as Codec.NumberFloor
 import qualified Parun.Codec.Reply as Codec.Reply
 import qualified Parun.Codec.Request as Codec.Request
+import qualified Parun.Codec.Zone as Codec.Zone
 import qualified Parun.Engine.PlayerView as PlayerView.Engine
 import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Parun.Extra.Integer as Integer
@@ -397,15 +399,13 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
   -- first; Enter keeps the order shown.
   "OrderTriggers" -> do
     entries <- arrayOf offer
-    let size = Natural.length entries
-        wrong = Text.pack ("Type each number from 1 to " <> show size <> " once, or press Enter.")
-    pure
-      ( Text.pack "Order your triggered abilities: type their numbers first to last, separated by spaces, or press Enter to keep this order. On the stack, the last resolves first:" : numbered (fmap (triggerName view) entries),
-        \typed -> case numbers typed of
-          Right [] -> Right (R.Array (fmap (R.Number . toInteger) [0 .. size - 1]))
-          Right picked | List.sort picked == [1 .. size] -> Right (R.Array (fmap (R.Number . toInteger . subtract 1) picked))
-          _ -> Left wrong
-      )
+    pure (ordered (Text.pack "Order your triggered abilities: type their numbers first to last, separated by spaces, or press Enter to keep this order. On the stack, the last resolves first:") (fmap (triggerName view) entries))
+  -- CR 601.2h: each component as Oracle text prints it, the first paid first.
+  "OrderCostComponents" -> do
+    source <- field "source" offer
+    components <- field "order" offer >>= arrayOf
+    let self = objectName view source
+    pure (ordered (orderHeading (Text.pack " for " <> self) (Text.pack "the first is paid first")) (fmap (componentName self) components))
   -- CR 601.2h: the pool's unit that pays the next symbol, sent back whole.
   "ChooseManaToSpend" -> do
     units <- arrayOf offer
@@ -426,14 +426,16 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
           picked <- some from typed
           if Natural.length picked <= n then Right (R.Array picked) else Left (Text.pack ("Choose at most " <> show n <> "."))
       )
+  -- An order over what the offer lists, sent back as a permutation of its
+  -- indices.
+  _
+    | Just items <- field "order" offer >>= arrayOf ->
+        pure (ordered (orderHeading (foldMap (\source -> Text.pack " for " <> objectName view source) (field "source" offer)) (orderNote (Question.kind question) offer)) (fmap (optionName view) items))
   -- One of what the offer lists, sent back as the answer it already is.
   _ -> do
     (options, name) <- Monad.mplus (fmap (\o -> (o, optionName view)) (field "options" offer >>= arrayOf)) (fmap (\o -> (o, playerName)) (field "players" offer >>= arrayOf))
-    let heading = case Text.uncons (Render.spaced (Question.kind question)) of
-          Just (c, rest) -> Text.cons (Char.toUpper c) rest
-          Nothing -> Text.empty
     pure
-      ( heading <> foldMap (\source -> Text.pack " for " <> objectName view source) (field "source" offer) <> Text.pack ":" : numbered (fmap name options),
+      ( kindHeading <> foldMap (\source -> Text.pack " for " <> objectName view source) (field "source" offer) <> Text.pack ":" : numbered (fmap name options),
         fmap (pickFrom options) . one (Natural.length options)
       )
   where
@@ -458,6 +460,11 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
               then Right R.Null
               else either (const (Left (Text.pack ("Type one number from 1 to " <> show (Natural.length sources)) <> others <> Text.pack "."))) (Right . pickFrom sources) (one (Natural.length sources) typed)
         )
+    -- The prompt's kind as words, capitalized.
+    kindHeading = case Text.uncons (Render.spaced (Question.kind question)) of
+      Just (c, rest) -> Text.cons (Char.toUpper c) rest
+      Nothing -> Text.empty
+    orderHeading for note = Text.concat [kindHeading, for, Text.pack ": type their numbers first to last, separated by spaces, or press Enter to keep this order; ", note, Text.pack ":"]
     pickCount purpose = do
       from <- field "from" offer >>= arrayOf
       wanted <- field "count" offer >>= naturalOf
@@ -496,9 +503,10 @@ readingByName lookUp view wanted =
     matches = any ((== Text.toCaseFold (Text.strip wanted)) . Text.toCaseFold . CardName.unwrap) . Set.toList . Render.cardNames
 
 -- | The object behind each numbered option of an offer, where it names one:
--- the offer's own list, or the cards, sources or options it chooses from.
+-- the offer's own list, the cards, sources or options it chooses from, or
+-- what it orders.
 listedObjects :: PlayerView.PlayerView -> R.Reply -> [Maybe ObjectId.ObjectId]
-listedObjects view offer = foldMap (fmap optionObject) (Monad.msum [fmap (fmap snd . distinct view) (arrayOf offer), field "from" offer >>= arrayOf, field "sources" offer >>= arrayOf, field "options" offer >>= arrayOf])
+listedObjects view offer = foldMap (fmap optionObject) (Monad.msum [fmap (fmap snd . distinct view) (arrayOf offer), field "from" offer >>= arrayOf, field "sources" offer >>= arrayOf, field "options" offer >>= arrayOf, field "order" offer >>= arrayOf])
   where
     optionObject option = Monad.msum [objectOf option, field "object" option >>= objectOf, field "source" option >>= objectOf]
 
@@ -662,6 +670,43 @@ candidateName :: Text.Text -> R.Reply -> Text.Text
 candidateName self candidate =
   Maybe.fromMaybe (Common.render (Codec.Reply.toValue candidate)) (decoded (Codec.Cost.codec Codec.Keyword.codec) candidate >>= Maybe.listToMaybe . Oracle.Cost.cost self (Oracle.Keyword.keywordWord self))
 
+-- | An order over the items shown, answered by their numbers first to last,
+-- each once, or by Enter for the order shown; sent back as a permutation of
+-- their indices (Parun.Engine.Game.permute).
+ordered :: Text.Text -> [Text.Text] -> ([Text.Text], Text.Text -> Either Text.Text R.Reply)
+ordered heading names =
+  ( heading : numbered names,
+    \typed -> case numbers typed of
+      Right [] -> Right (R.Array (fmap (R.Number . toInteger) [0 .. size - 1]))
+      Right picked | List.sort picked == [1 .. size] -> Right (R.Array (fmap (R.Number . toInteger . subtract 1) picked))
+      _ -> Left (Text.pack ("Type each number from 1 to " <> show size <> " once, or press Enter."))
+  )
+  where
+    size = Natural.length names
+
+-- | What the first item of an order is, by the prompt's kind and what its
+-- offer tells.
+orderNote :: Text.Text -> R.Reply -> Text.Text
+orderNote kind offer = case Text.unpack kind of
+  -- CR 401.4: from the top inward.
+  "ArrangeLibraryCards" -> Text.pack "the first goes on top"
+  "ArrangeLibraryArrivals" -> case field "end" offer of
+    Just (R.Text end) | end == Text.pack "Top" -> Text.pack "the first goes on top"
+    _ -> Text.pack "the first goes on the bottom"
+  -- CR 613.7m.
+  "OrderTimestamps" -> Text.pack "the first gets the earliest timestamp"
+  "OrderManaActivations" -> Text.pack "the first is activated first"
+  "OrderCombatTolls" -> Text.pack "the first is paid first"
+  -- CR 713.8a.
+  "OrderComponentCards" -> Text.pack "the first goes into " <> maybe (Text.pack "the zone") Render.zone (field "zone" offer >>= decoded Codec.Zone.codec) <> Text.pack " first"
+  _ -> Text.pack "the first goes first"
+
+-- | A cost component as Oracle text prints it (Oracle.Cost.component), or the
+-- offer itself where it does not print.
+componentName :: Text.Text -> R.Reply -> Text.Text
+componentName self component =
+  Maybe.fromMaybe (Common.render (Codec.Reply.toValue component)) (decoded (Codec.CostComponent.codec Codec.Keyword.codec) component >>= Maybe.listToMaybe . Oracle.Cost.component self (Oracle.Keyword.keywordWord self))
+
 -- | A trigger ordering's entry: its source, and its Oracle text where the
 -- offer carries it.
 triggerName :: PlayerView.PlayerView -> R.Reply -> Text.Text
@@ -784,6 +829,12 @@ optionName view reply = case reply of
   R.Text t -> if Maybe.isJust (objectOf reply) then listedName view reply else t
   R.Array [R.Text tag, _] | tag `elem` fmap Text.pack ["Player", "Planeswalker", "Battle"] -> recipientName view reply
   R.Array xs -> Text.intercalate (Text.pack ", ") (fmap (optionName view) xs)
+  -- A damage event (Parun.Play.Protocol.damageEvent).
+  R.Object _
+    | Just source <- field "source" reply,
+      Just target <- field "target" reply,
+      Just amount <- field "amount" reply >>= naturalOf ->
+        Text.concat [objectName view source, Text.pack (" deals " <> show amount <> " damage to "), recipientName view target]
   _ -> Common.render (Codec.Reply.toValue reply)
 
 -- | A seat a listed offer names by its bare id, or declining as None.
