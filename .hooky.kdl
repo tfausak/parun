@@ -49,6 +49,14 @@ hook ormolu {
     files *.hs
 }
 
+hook sorted {
+    command "script/sort-lines.sh" {
+        check_args check
+        fix_args fix
+    }
+    files "data/oracle-unrendered.txt"
+}
+
 lint_rules {
     - check_broken_symlinks
     - check_case_conflict

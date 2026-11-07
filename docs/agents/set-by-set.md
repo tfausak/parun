@@ -1,16 +1,17 @@
 # Adding cards set by set
 
-What subagents running a set follow. `CLAUDE.md` and `CONTRIBUTING.md` apply
-throughout and override this file except where it says otherwise. Rules only:
-the incidents behind them are in git history.
+What the sessions working a set's issues follow. `CLAUDE.md` and
+`CONTRIBUTING.md` apply throughout and override this file except where it says
+otherwise. Rules only: the incidents behind them are in git history.
 
 Three roles. The **orchestrator** runs the set: it reads all of this file and
-`docs/agents/orchestrating.md`, writes the briefs and owns GitHub. An
-**implementer** holds a build in its own worktree and commits; it reads "What
-every brief repeats" and "Implementing a unit". An **auditor** is read-only;
-it reads "Auditing a unit".
+`docs/agents/orchestrating.md`, writes the set's issues and dispatches each by
+labelling it `claude`. An **implementer** is the session that label starts:
+it works one issue, from the issue's body alone, and opens the PR closing it;
+it reads "What every unit repeats" and "Implementing a unit". An **auditor**
+is the orchestrator's read-only subagent; it reads "Auditing a unit".
 
-## What every brief repeats
+## What every unit repeats
 
 - Card-pool negatives ("no card does X") need the enumeration behind them.
 - `parun ingest` may restamp out-of-set cards from a newer dump; say whether
@@ -20,16 +21,17 @@ it reads "Auditing a unit".
 
 ## Implementing a unit
 
-You hold a build; the brief carries only what is specific to your unit.
-Finish in about 150 turns: nearing that with work left, commit, report, and
-leave the rest to a fresh unit.
+You hold a build; the issue carries only what is specific to your unit.
+Finish in about 150 turns: nearing that with work left, land what is done,
+file the rest as a new sub-issue of the set's tracker carrying what you
+learned, and say so in the PR.
 
-### Distrust the brief and the issue
+### Distrust the issue
 
-A brief's reading holds up (whether a blocker landed, which producer works,
+An issue's reading holds up (whether a blocker landed, which producer works,
 edit sites, CR citations); what needs a compiler does not (wire spellings,
 line numbers, mutation predictions). `curl` the Oracle text and diff it
-against the brief, grep the sibling to confirm edit sites, and re-derive the
+against the issue, grep the sibling to confirm edit sites, and re-derive the
 mutations. A predicted-red mutation that comes back green is a finding: the
 board cannot discriminate, or the site has no observer. Diagnose which;
 don't reword the prediction.
@@ -39,8 +41,8 @@ Check which issue, and which half of a split one ("the other half stays on
 one function every path to the behaviour goes through --- and read what it
 already gates or orders.
 
-Seed from the warm worktree (`CLAUDE.md`); if it is missing, say so in the PR.
-Never build in the warm worktree.
+On a local checkout, seed from the warm worktree (`CLAUDE.md`); if it is
+missing, say so in the PR. Never build in the warm worktree.
 
 ### Running the suite
 
@@ -62,7 +64,7 @@ lone TIMEOUT on a shared machine is noise until it repeats unloaded.
 ### Reading code
 
 Everything a command prints is re-read every turn after, so read narrowly.
-Run `script/tags.sh` once in the worktree; a definition is then one lookup
+Run `script/tags.sh` once in the checkout; a definition is then one lookup
 (`grep -P '^castUse\t' tags` gives file and line), and `sed -n` reads just
 that span. `grep -n` the identifier only to find its uses. Never page through
 a whole module, never re-read what is already in the context, and send long
@@ -273,6 +275,8 @@ so in the PR.
   naming the card that exercises it (a printing, or a synthetic draft) ---
   never dropped for want of a card in the pool. Only a rules reason lets a
   known problem go unfiled.
+- **File a set's issue under its tracker** (a sub-issue), so the
+  orchestrator schedules it.
 - **Blocked is a good outcome.** A unit that cannot land adds
   `needs-planning`, links its blocker as a dependency (`CLAUDE.md`), or, where
   the blocker is an owner decision, names the question. A decomposition beats
@@ -300,7 +304,8 @@ so in the PR.
 ## Auditing a unit
 
 You are read-only: no build, test, compiler, branch, checkout, edit or PR, and
-no issue comments or labels unless the brief says those are the deliverable.
+no issue comments or labels unless your prompt says those are the
+deliverable.
 Read other refs with `git show <ref>:<path>`. If `gh issue view` returns
 nothing, use `gh api repos/parun-mtg/parun/issues/N` and `.../comments`. Prior
 art is a lead, never a citation.

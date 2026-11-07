@@ -53,12 +53,15 @@ spec s corpus = Spec.describe s "Parun.Ingest" $ do
     Spec.assertEq s [] disagreements
 
   -- The check above passes over a card that does not render, so the cards
-  -- that do not are listed, one slug a line: a card that stops rendering
+  -- that do not are listed, one slug a line in byte order, so that parallel
+  -- branches adding slugs touch different lines: a card that stops rendering
   -- fails here, and one that starts is struck off the list. Not implemented:
   -- checking the abilities that do render on a listed card (#5488).
   Spec.it s "the cards that do not render are exactly those listed" $ do
     root <- Registry.defaultRoot
-    listed <- fmap (Set.fromList . filter (not . null) . lines) (readFile (root <> "/../oracle-unrendered.txt"))
+    slugs <- fmap (filter (not . null) . lines) (readFile (root <> "/../oracle-unrendered.txt"))
+    let listed = Set.fromList slugs
+    Spec.assertEqWith s "listed out of byte order (script/sort-lines.sh fix)" [] [(a, b) | (a, b) <- zip slugs (drop 1 slugs), a >= b]
     let unrendered = Set.fromList [Text.unpack (Slug.unwrap (Registry.filedAs card)) | entry@(_, Right card) <- corpus, Maybe.isJust (Registry.referenceCard entry), Maybe.isNothing (Oracle.render card)]
     Spec.assertEqWith s "listed, but renders or is no pool card" [] (Set.toList (Set.difference listed unrendered))
     Spec.assertEqWith s "does not render, but unlisted" [] (Set.toList (Set.difference unrendered listed))
