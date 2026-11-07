@@ -23,6 +23,7 @@ import qualified Parun.Engine.PlayerView as PlayerView
 import qualified Parun.Engine.Replay as Replay
 import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.Setup as Setup
+import qualified Parun.Engine.Subtype as Engine.Subtype
 import qualified Parun.ManaSourceSpec as ManaSourceSpec
 import qualified Parun.Play.Bot as Bot
 import qualified Parun.Play.Chance as Chance
@@ -54,6 +55,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GuessAnswer as GuessAnswer
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
+import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.NumberFloor as NumberFloor
@@ -69,9 +71,12 @@ import qualified Parun.Types.Result as Result
 import qualified Parun.Types.SearchPlace as SearchPlace
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SplitMix as SplitMix
+import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TargetCount as TargetCount
+import qualified Parun.Types.TextWord as TextWord
 import qualified Parun.Types.TriggerEntry as TriggerEntry
 import qualified Parun.Types.TriggerSource as TriggerSource
+import qualified Parun.Types.WordFamily as WordFamily
 import qualified Parun.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -165,6 +170,50 @@ spec s registry = Spec.describe s "Bot" $ do
   Spec.it s "sacrifices any group of the count" $ do
     let candidates = fmap ObjectId.MkObjectId [8 .. 12]
     Spec.assertEqWith s "groups" (drawn (Prompt.ChooseSacrifices decider S.alice oid candidates 4 Seq.empty)) (Set.fromList (fmap Set.fromList (filter ((== 4) . length) (List.subsequences candidates))))
+
+  -- CR 508.1e / 702.22c: Mesa Pegasus's attack declares any disjoint bands
+  -- of the attackers, none included.
+  Spec.it s "declares any disjoint bands of the attackers" $ do
+    let attackers = fmap ObjectId.MkObjectId [8 .. 11]
+        bands = filter ((> 1) . length) (List.subsequences attackers)
+        disjoint a b = null (List.intersect a b)
+        declarations = [[]] <> fmap pure bands <> [[a, b] | a <- bands, b <- bands, a < b, disjoint a b]
+    Spec.assertEqWith s "bands" (drawn (Prompt.DeclareBands decider S.alice attackers)) (Set.fromList (fmap (List.sort . fmap Set.fromList) declarations))
+
+  -- CR 612.2: Sleight of Mind swaps any color word for any other.
+  Spec.it s "swaps any two different words of the family" $ do
+    let colors = fmap TextWord.ColorWord [minBound .. maxBound]
+    Spec.assertEqWith s "swaps" (drawn (Prompt.ChooseWordSwap decider S.alice oid (SlotName.MkSlotName (Text.pack "target")) (Set.singleton WordFamily.Color) Set.empty)) (Set.fromList [(from, to) | from <- colors, to <- colors, from /= to])
+
+  -- CR 105.4 / 106.3: Traitorous Greed's "two mana of any one color" is any
+  -- of them.
+  Spec.it s "adds any mana type offered" $ do
+    let types = ManaType.Colored Color.White NonEmpty.:| fmap ManaType.Colored [Color.Blue, Color.Black, Color.Red, Color.Green]
+    Spec.assertEqWith s "types" (drawn (Prompt.ChooseManaType decider S.alice oid types)) (Set.fromList (NonEmpty.toList types))
+
+  -- CR 205.3m / 305.6: Adaptive Automaton names any creature type, of more
+  -- than 256 seeds can draw; Convincing Mirage any of the five basic land
+  -- types.
+  Spec.it s "chooses any creature type or basic land type" $ do
+    let creatureTypes = drawn (Prompt.ChooseCreatureType decider S.alice oid)
+    Spec.assertBool s (all Engine.Subtype.isCreatureType creatureTypes) "every creature type drawn is one"
+    Spec.assertGtWith s "creature types" (Set.size creatureTypes) 100
+    Spec.assertEqWith s "basic land types" (drawn (Prompt.ChooseBasicLandType decider S.alice oid)) (Set.fromList [Subtype.Plains, Subtype.Island, Subtype.Swamp, Subtype.Mountain, Subtype.Forest])
+
+  -- CR 118.1 / 601.2h / 608.2d: Zameck Guildmage's counter from any bearer;
+  -- Novijen Sages' two from among bearers of 2 and 1, any way that adds up;
+  -- Mage-Ring Network's any number, at least the floor; Sensational
+  -- Spider-Man's up to the cap.
+  Spec.it s "removes counters any way the count allows" $ do
+    let one = ObjectId.MkObjectId 8
+        two = ObjectId.MkObjectId 9
+        bearers = Map.fromList [(one, 2), (two, 1)] :: Map.Map ObjectId.ObjectId Natural
+        every = [Map.filter (> 0) (Map.fromList [(one, a), (two, b)]) | a <- [0 .. 2], b <- [0 .. 1 :: Natural]]
+        totalling p = Set.fromList (filter (p . sum) every)
+    Spec.assertEqWith s "bearer" (drawn (Prompt.ChooseCounterRemoval decider S.alice oid (one NonEmpty.:| [two]))) (Set.fromList [one, two])
+    Spec.assertEqWith s "among" (drawn (Prompt.ChooseCounterRemovalAmong decider S.alice oid 2 bearers)) (totalling (== 2))
+    Spec.assertEqWith s "at least" (drawn (Prompt.ChooseCounterRemovalAtLeast decider S.alice oid 1 bearers)) (totalling (>= 1))
+    Spec.assertEqWith s "up to" (drawn (Prompt.ChooseCounterRemovalUpTo decider S.alice oid 2 bearers)) (totalling (<= 2))
 
   Spec.it s "guesses either way" $ do
     Spec.assertEqWith s "guesses" (drawn (Prompt.ChooseGuess decider S.alice oid (Filter.And []))) (Set.fromList [GuessAnswer.Holds, GuessAnswer.DoesNotHold])
