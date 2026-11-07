@@ -81,7 +81,8 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   ending it. `ChooseTargets` names each slot's
   targets, `{ "target": ["$moon"] }`, for a target prompt no cast or activation
   of the scenario's own raises (a triggered ability's), keyed the same way; it
-  also answers that prompt's announcement of how many. A cast's own `targets`
+  also answers that prompt's announcement of how many, and a refused one
+  naming a count outside a slot's range is refused already. A cast's own `targets`
   likewise announce their count for a slot that takes a variable number. A
   spell or ability with more than one target slot names them with
   `targetsBySlot`, `{ "victim": ["$bear"], "gauge": ["$wall"] }`, in place

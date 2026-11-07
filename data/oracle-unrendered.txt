@@ -2433,6 +2433,7 @@ runed-halo
 runic-armasaur
 runic-repetition
 ruric-thar-biomagus
+ruric-thar-magecrusher
 rust-goliath
 rustic-clachan
 sabertooth-mauler
@@ -2445,12 +2446,14 @@ safewright-cavalry
 sage-aven
 sage-of-shailas-claim
 sage-owl
+saheeli-consul-of-oversight
 saheelis-lattice-mastercraft-raptor
 sakashima-the-impostor
 salt-road-skirmish
 sami-wildcat-captain
 samite-ministration
 samite-pilgrim
+samut-tyrant-of-naktamun
 sanctimony
 sanctuary-blade
 sanctum-guardian
@@ -2511,6 +2514,7 @@ sealed-fate
 seas-claim
 seasinger
 season-of-the-witch
+seasoned-cryomancer
 secluded-courtyard
 second-sight
 secret-door
@@ -2530,6 +2534,7 @@ selenia
 self-reflection
 selfless-police-captain
 selfless-squire
+semester-foreseer-peer-review
 sen-triplets
 send-to-sleep
 sengir-autocrat
@@ -2591,6 +2596,7 @@ sigil-of-valor
 sigiled-contender
 sigiled-sword-of-valeron
 silence
+silence-the-echo
 silent-arbiter
 silverquill-the-disputant
 silversmote-ghoul
@@ -2636,10 +2642,14 @@ snake-basket
 snake-of-the-golden-grove
 sneaky-homunculus
 sokka-swordmaster
+solarium-sentry
 soldevi-adnate
 soldevi-digger
 soldevi-sage
 solemnity
+solitary-cell
+solve-for-disappointment
+something-worth-saving
 song-of-the-dryads
 sonic-burst
 sonorous-howlbonder
@@ -2686,6 +2696,7 @@ sphere-of-safety
 sphinx-ambassador
 sphinx-bone-wand
 sphinx-of-clear-skies
+sphinx-of-false-conclusions
 sphinx-of-forgotten-lore
 sphinx-of-the-final-word
 sphinx-of-the-revelation
