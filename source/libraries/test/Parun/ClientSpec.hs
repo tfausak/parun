@@ -436,7 +436,7 @@ spec s registry = Spec.describe s "Client" $ do
       (filter (Text.isPrefixOf (Text.pack "Undone: ")) (takeWhile (not . menuHeading) (drop 1 (dropWhile (/= Text.pack "> stop") shown))))
       [Text.pack "Undone: Cast Grizzly Bears could not be completed (its cost was not paid), so it was reversed and its payments canceled."]
 
-  -- Ebony Charm's modes are asked as JSON (#5225), and no mode is not one.
+  -- Ebony Charm's modes are asked as JSON (#6590), and no mode is not one.
   Spec.it s "CR 601.2e a cast whose announced modes are illegal is told undone, and why" $ do
     (_, _, tapped, shown) <- castPaying "[]" s registry "Ebony Charm" ["Swamp"]
     Spec.assertEqWith s "nothing stayed tapped" tapped []

@@ -185,7 +185,9 @@ idOf label =
 -- tells the seat about each option.
 --
 -- Not implemented: the offer of every prompt not listed here, which sends
--- null (#5225).
+-- null: those answered by an index (#6589), a set or sequence (#6590), a
+-- number (#6591), an amount per item (#6592), or a name or word (#6593).
+-- A random prompt no seat answers is never sent.
 offerOf :: GameState.GameState -> Prompt.Prompt r -> R.Reply
 offerOf gs prompt = case prompt of
   Prompt.ChooseAction _ _ offered -> R.Array (fmap (actionOffer gs) offered)
@@ -213,7 +215,7 @@ offerOf gs prompt = case prompt of
   Prompt.ReverseManaAbilities _ _ sources -> fields [("sources", objects (NonEmpty.toList sources))]
   -- CR 601.2b / 702.51a: each candidate's cost.
   --
-  -- Not implemented: the keyword that offered each candidate (#5225).
+  -- Not implemented: the keyword that offered each candidate (#6594).
   Prompt.ChooseCost _ _ source candidates _ -> fields [("source", object source), ("costs", Reply.encode (Reply.list (Reply.viaCodec (Codec.Cost.codec Codec.Keyword.codec))) namer (fmap CandidateCost.cost candidates))]
   Prompt.PayLifeForMana _ _ life mana -> fields [("life", natural life), ("mana", Reply.encode (Reply.viaCodec Codec.ManaType.codec) namer mana)]
   Prompt.ChooseManaYield _ _ source options -> fields [("source", object source), ("yields", Reply.encode (Reply.list (Reply.list (Reply.viaCodec Codec.ManaType.codec))) namer (fmap (fmap ManaUnit.manaType . Mana.yieldUnits) (Foldable.toList options)))]
