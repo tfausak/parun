@@ -20,10 +20,11 @@ import qualified Parun.Types.WhichCounters as WhichCounters.Type
 -- elided when absent, Parun.Codec.RemoveCounters' posture.
 --
 -- Counters of any kind are accepted only at "any number" (Eventide's Shadow)
--- and "all" (Suncleanser): no printing states a count over any kind, and the
--- mixed-kind division prompt has no cap to carry one ('Fields.objectWith''s
--- check). "All" of one kind is refused: it is Parun.Types.RemoveCounters at
--- that kind's count (Ashling the Pilgrim).
+-- and "all" (Suncleanser) ('Fields.objectWith''s check). Not implemented: a
+-- count over any kind, Mabel, Bitter Recluse's "up to three counters", since
+-- the mixed-kind division prompt has no cap to carry one (#6560). "All" of one
+-- kind is refused: it is Parun.Types.RemoveCounters at that kind's count
+-- (Ashling the Pilgrim).
 codec :: Codec.Codec RemoveCountersAmong.RemoveCountersAmong
 codec = Fields.objectWith check $ do
   count <- Fields.required "count" RemovalCount.codec RemoveCountersAmong.count
