@@ -2739,6 +2739,54 @@ demandsNoManaSpec s registry = Spec.describe s "a cost demanding no mana" $ do
     Spec.assertEqWith s "CR 118.3 one Elf taps once" (ask 0 0 [tapping] []) (True, True)
     Spec.assertEqWith s "CR 118.3 but not twice" (ask 0 0 [tapping, tapping] []) (False, False)
 
+-- Mana.canPayCommittingGiven asks Mana.plainPayable before the walk: the pool
+-- and the plain sources alone, every other group taken no times. Each case
+-- pins the shortcut beside the walk's answer: where the shortcut says yes the
+-- walk must too, and where it says no the walk still answers, out of
+-- Springleaf Drum's tap of a creature or Treasonous Ogre's life.
+plainSourcesSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+plainSourcesSpec s registry = Spec.describe s "plain sources" $ do
+  Spec.it s "CR 118.3 the plain sources alone answer no more than the walk" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    forest <- S.printingOf s registry "Forest"
+    birds <- S.printingOf s registry "Birds of Paradise"
+    solRing <- S.printingOf s registry "Sol Ring"
+    elves <- S.printingOf s registry "Llanowar Elves"
+    drum <- S.printingOf s registry "Springleaf Drum"
+    ogre <- S.printingOf s registry "Treasonous Ogre"
+    let g0 = Setup.emptyGame S.bothPlayers
+        (mountainId, g1) = S.addPermanent mountain S.alice g0
+        (forestId, g2) = S.addPermanent forest S.alice g1
+        (birdsId, g3) = S.addPermanent birds S.alice g2
+        (solRingId, g4) = S.addPermanent solRing S.alice g3
+        (elfId, g5) = S.addPermanent elves S.alice g4
+        (drumId, g6) = S.addPermanent drum S.alice g5
+        (ogreId, gs) = S.addPermanent ogre S.alice g6
+        pcs = Projection.projectAll gs
+        sources = Mana.supplySourcesGiven Cost.manaActivations (Projection.controlGrants gs) pcs S.alice gs
+        tapping oid = Claim.Type.MkClaim {Claim.Type.axis = ClaimAxis.Tapping, Claim.Type.pool = Set.singleton oid, Claim.Type.count = 1, Claim.Type.threshold = Nothing}
+        ask life energy claims symbols =
+          let cost = ManaCost.MkManaCost symbols
+           in ( Mana.plainPayable PaymentSubject.ForNeither ManaSpending.AsProduced sources S.alice life energy claims cost gs,
+                not (null (Mana.payableResolutionsGiven PaymentSubject.ForNeither ManaSpending.AsProduced sources pcs S.alice life energy claims cost gs))
+              )
+        red = ManaSymbol.OfType (ManaType.Colored Color.Red)
+        green = ManaSymbol.OfType (ManaType.Colored Color.Green)
+        black = ManaSymbol.OfType (ManaType.Colored Color.Black)
+    Spec.assertEqWith s "lands, mana creatures and Sol Ring are plain; the Drum and the Ogre are not" (Map.keysSet (Mana.sourcePlain sources)) (Set.fromList [mountainId, forestId, birdsId, solRingId, elfId])
+    Spec.assertBool s (all (`elem` Mana.sourceIds sources) [drumId, ogreId]) "the Drum and the Ogre are still sources for the walk"
+    Spec.assertEqWith s "a red pays" (ask 0 0 [] [red]) (True, True)
+    Spec.assertEqWith s "the Birds make the black beside the Forest's green" (ask 0 0 [] [green, black]) (True, True)
+    Spec.assertEqWith s "a second black takes the Drum, which is the walk's" (ask 0 0 [] [black, black]) (False, True)
+    Spec.assertEqWith s "Sol Ring's two count toward six" (ask 0 0 [] [ManaSymbol.Generic 6]) (True, True)
+    Spec.assertEqWith s "a seventh takes the Ogre's life, which is the walk's" (ask 0 0 [] [ManaSymbol.Generic 7]) (False, True)
+    Spec.assertEqWith s "CR 118.3 the cost tapping the Mountain leaves the Birds' red" (ask 0 0 [tapping mountainId] [red]) (True, True)
+    Spec.assertEqWith s "CR 118.3 tapping the Birds too leaves the Ogre's red to the walk" (ask 0 0 [tapping mountainId, tapping birdsId] [red]) (False, True)
+    Spec.assertEqWith s "CR 118.3 a claim no assignment meets pays nothing" (ask 0 0 [tapping mountainId, tapping mountainId] [red]) (False, False)
+    Spec.assertEqWith s "CR 119.4 twenty life committed still pays" (ask 20 0 [] [red]) (True, True)
+    Spec.assertEqWith s "CR 119.4 but not twenty-one" (ask 21 0 [] [red]) (False, False)
+    Spec.assertEqWith s "CR 107.14 no energy pays none" (ask 0 1 [] [red]) (False, False)
+
 -- alice, active, in her precombat main phase: one Transmogrant Altar, one Goblin
 -- Piker for the sacrifice to take, and optionally a Swamp to pay the {B} and a
 -- pair of spells in her hand. Returns the Altar and whichever spells were dealt.
@@ -3992,6 +4040,7 @@ spec s registry = Spec.describe s "Parun.Engine.Mana" $ do
   transmograntAltarSpec s registry
   pluralBoardSpec s registry
   demandsNoManaSpec s registry
+  plainSourcesSpec s registry
   claimMatchingSpec s
   grinningIgnusSpec s registry
   mysticGateSpec s registry

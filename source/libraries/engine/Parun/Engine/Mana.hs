@@ -2606,12 +2606,92 @@ canPayCommitting subject capacity spending pid committed committedEnergy claimed
 -- option only adds claims, life and energy to what that board spends, so no
 -- board passes where it fails. Parun.ManaSpec's "a cost demanding no mana"
 -- group pins it to the walk's answer.
+--
+-- A cost the pool and the plain sources pay is answered by plainPayable,
+-- also without the walk, which then answers only what that leaves.
 canPayCommittingGiven :: PaymentSubject.PaymentSubject -> ManaSpending -> Sources -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> Natural -> Natural -> [Claim] -> ManaCost -> GameState -> Bool
 canPayCommittingGiven subject spending sources pcs pid committed committedEnergy claimed cost gs
   | any demandsNothing (resolutions spending cost) = activatingNothing pid committed committedEnergy claimed gs
+  | plainPayable subject spending sources pid committed committedEnergy claimed cost gs = True
   | otherwise = not (null (payableResolutionsGiven subject spending sources pcs pid committed committedEnergy claimed cost gs))
   where
     demandsNothing (demands, generic, life) = null demands && generic == 0 && life == 0
+
+-- A source the walk would only ever add supplies for, and what it adds: one
+-- route group (sourceOptions' `groupsOf`) eating no mana, paying no life or
+-- energy, doubling nothing, announcing no X, claiming nothing but the source
+-- itself and no yield claiming apart from its route, its mana unrestricted
+-- (CR 106.6), and either every yield one mana or one yield in all. A land, a
+-- mana creature, Sol Ring. Its option at its ceiling is `times` of what one
+-- activation adds: the union supply of its one-mana yields, or its one yield's
+-- units each on its own -- sourceOptions' collapse, at no subject's narrowing.
+--
+-- The supplies' admitting sets are empty: plainPayable asks admission of the
+-- cost's own payment alone, which every unrestricted unit has at an
+-- unnarrowed subject.
+plainSupplies :: [SpendManaAsThough.SpendManaAsThough] -> ObjectId -> [(Activations.Activations, Yield, ManaCost, Activations.Activations)] -> Maybe [(Supply, Natural)]
+plainSupplies clauses oid routes = case ListUtils.nubOrd [activations | (activations, _, _, _) <- routes] of
+  [activations]
+    | Activations.life activations == 0,
+      Activations.energy activations == 0,
+      all ownClaim (Activations.claims activations),
+      all plainRoute routes,
+      all (Maybe.isNothing . ManaUnit.restriction) units ->
+        let times = Activations.times activations
+            supply unitsOfOne = rewriteSupply clauses MkSupply {supplyTypes = typesIn unitsOfOne, supplyMade = typesIn unitsOfOne, supplyTags = Set.unions (fmap ManaUnit.tags unitsOfOne), supplyAdmits = Set.empty}
+         in if all ((<= 1) . length) yields
+              then Just [(supply units, times) | not (null units)]
+              else case yields of
+                [only] -> Just [(supply [unit], times) | unit <- only]
+                _ -> Nothing
+  _ -> Nothing
+  where
+    yields = [unitsOf (yieldMana yield) | (_, yield, _, _) <- routes]
+    units = concat yields
+    typesIn = Set.fromList . fmap ManaUnit.manaType
+    ownClaim claim = Claim.Type.pool claim == Set.singleton oid && Maybe.isNothing (Claim.Type.threshold claim)
+    plainRoute (activations, yield, manaCost, own) =
+      own == activations
+        && null (ManaCost.unwrap manaCost)
+        && Map.null (yieldDoubling yield)
+        && Maybe.isNothing (yieldX yield)
+
+-- A SUFFICIENT condition for payableResolutionsGiven, asked first because it
+-- costs no walk: the board the pool and the plain sources make (plainSupplies)
+-- with every other group taken no times. Every such board is one the walk
+-- reaches or one a board it reaches adds only supplies to -- a free
+-- uncontended group is taken at its ceiling there, and the clauses only grow
+-- with supplies -- so where this holds the walk does too (#6532). Where it
+-- does not, the walk answers.
+--
+-- A plain source some claim of the cost's own could take is left off, so the
+-- claims stay disjoint and CR 118.3's joint satisfiability is `claimed`'s
+-- alone. A subject narrowing its mana types (ActivationRestriction.SpendOnly)
+-- is left to the walk. Parun.ManaSpec's "plain sources" group pins this to
+-- the walk's answer.
+plainPayable :: PaymentSubject.PaymentSubject -> ManaSpending -> Sources -> PlayerId -> Natural -> Natural -> [Claim] -> ManaCost -> GameState -> Bool
+plainPayable subject spending swept pid committed committedEnergy claimed cost gs =
+  Maybe.isNothing (narrowingOf subject)
+    && Claim.satisfiable claimed
+    && committedEnergy <= Game.energyOf pid gs
+    && any payable (resolutions spending cost)
+  where
+    clauses = sourceClauses swept
+    costClauses = PlayerEffect.spendManaAsThoughForGiven clauses pid subject gs
+    servesCost
+      | costClauses == clauses = serves
+      | otherwise = serves . rewriteSupply costClauses
+    withheld = Map.restrictKeys (sourcePlain swept) (Set.unions (fmap Claim.Type.pool claimed))
+    lessen total less = if total > less then Just (total - less) else Nothing
+    sourced = Map.differenceWith lessen (sourcePlainTotal swept) (Map.fromListWith (+) (concat (Map.elems withheld)))
+    pooled = [rewriteSupply clauses (supplyOf (const Set.empty) unit) | unit <- unitsOf (Game.poolOf pid gs), admitsUnder subject pid gs unit]
+    supplies = Map.toList (Map.unionWith (+) sourced (Map.fromListWith (+) (fmap (\supply -> (supply, 1)) pooled)))
+    payable (demands, generic, life) =
+      let wanted_ = demands <> List.genericReplicate generic anyTypeDemand
+          couldServe subset = sum [n | (supply, n) <- supplies, any (servesCost supply) subset]
+          demandedIn subset = Natural.length (filter (`elem` subset) wanted_)
+       in sourceLifePayable swept (committed + life)
+            && all (\subset -> demandedIn subset <= couldServe subset) (List.subsequences (Set.toList (Set.fromList wanted_)))
 
 -- CR 118.3 asked of the board activating no mana ability: the claims, CR
 -- 107.14's energy and CR 119.4's life the rest of the cost spends, held by
@@ -3161,7 +3241,12 @@ data Sources = MkSources
     sourceBorrowed :: ObjectId -> [Maybe ManaRestriction.ManaRestriction],
     sourceClauses :: [SpendManaAsThough.SpendManaAsThough],
     sourceLifeForMana :: [(ObjectId, Natural, ManaType)],
-    sourceLifePayable :: Natural -> Bool
+    sourceLifePayable :: Natural -> Bool,
+    -- The PLAIN sources among `sourceIds` (plainSupplies), each with the
+    -- supplies it offers, and the same supplies summed over every plain
+    -- source: what plainPayable reads in place of the walk.
+    sourcePlain :: Map.Map ObjectId [(Supply, Natural)],
+    sourcePlainTotal :: Map.Map Supply Natural
   }
 
 -- The supply sweep of `pid`'s board under `capacity`, and what Sources measures
@@ -3172,14 +3257,19 @@ supplySourcesGiven capacity grants pcs pid gs =
       borrowed = PlayerEffect.tapForManaGrants pid gs
       watch = watchOf gs
       rewritesOf = Replacement.manaRewrites gs
+      supplies = fmap (\oid -> manaSuppliesGiven 0 capacity watch rewritesOf pcs pid (borrowed oid) oid gs) ids
+      clauses = PlayerEffect.spendManaAsThough pid gs
+      plain = Map.fromList [(oid, offered) | (oid, routes) <- zip ids supplies, Just offered <- [plainSupplies clauses oid routes]]
    in MkSources
         { sourceIds = ids,
           sourceCapacity = capacity,
           sourceWatch = watch,
           sourceRewrites = rewritesOf,
-          sourceSupplies = fmap (\oid -> manaSuppliesGiven 0 capacity watch rewritesOf pcs pid (borrowed oid) oid gs) ids,
+          sourceSupplies = supplies,
           sourceBorrowed = borrowed,
-          sourceClauses = PlayerEffect.spendManaAsThough pid gs,
+          sourceClauses = clauses,
+          sourcePlain = plain,
+          sourcePlainTotal = Map.fromListWith (+) (concat (Map.elems plain)),
           sourceLifeForMana = PlayerEffect.lifeForMana pid gs,
           sourceLifePayable = Event.lifePayable pid gs
         }
