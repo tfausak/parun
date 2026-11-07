@@ -57,20 +57,6 @@ census did not settle.
 
 
 
-- Fblthp, Impossibly Lost: `_Trigger:If`
-
-
-
-
-
-
-
-
-
-- Garruk, Curse Breaker: `field: Loyalty`; verify the −4's "those creatures"
-
-- Garruk, Veiled Butcher: `field: Loyalty`; verify "for each opponent who didn't
-  discard two nonland cards"
 
 
 
@@ -82,33 +68,35 @@ census did not settle.
 
 
 
-- Hallway Heckler: `_Cost:DiscardACard`; shares Vicious Verse
+
+
+
+
+
+
+
+
+
+
 
 - Hapatra, the Desert Fang: `_Target:UptoOneTargetPermanentEachPlayerControls`
 
 - Hapatra, the Desert Frost: `_Target:UptoOneTargetPermanentEachPlayerControls`
 
 
-- Heartstring Puller: `_CreatableToken:NamedTokenWithPT`
 
-- Heartwood Crafter: `_Action:AddManaWithModifiers`; shares Soul Tether
 
-- Hexhaven Battalion: `_CreatableToken:NamedTokenWithPT`
 
 - Hexhaven Dueling Arena: `_Permanents:AttackedThisTurn`
 
 - Hexhaven Invigorator: `_Trigger:WhenAPermanentIsDealtDamage`
 
-- Hungering Puppetbeast: `_CreatableToken:HeartwoodToken`
 
-- Hunter's Axe: `_Rule:TriggerA`
 
-- Icy Reception: `_Player:ControllerOfSpell`
 
 - Identity Echo:
   `_Action:RevealCardsFromTheTopOfLibraryUntilACardOfTypeIsRevealed`
 
-- Ingris Stingerquill: `_Trigger:WhenACreatureAttacks`
 
 
 - Inspired Tethermage:
@@ -393,3 +381,8 @@ census did not settle.
 
 - Emrakul, the Exigent Doom: its hand ability's cost, its "until this card is
   cast from exile" and its cast permission all name the card the cost exiled.
+
+### #6556: no effect counts the opponents whose discard fell short
+
+- Garruk, Veiled Butcher: the −3 draws per opponent who didn't discard two
+  nonland cards this way; the discard binds every opponent's cards together.

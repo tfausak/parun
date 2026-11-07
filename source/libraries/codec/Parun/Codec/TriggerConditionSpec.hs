@@ -152,12 +152,12 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You Nothing Nothing) False))
+      (TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.watching (DealtDamage.MkDealtDamage PlayerRelation.You Nothing Nothing)))
       " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"dealt\":{\"recipient\":\"You\"}}} "
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.Opponent (Just DamageKind.Noncombat) Nothing) False))
+      (TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.watching (DealtDamage.MkDealtDamage PlayerRelation.Opponent (Just DamageKind.Noncombat) Nothing)))
       " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"dealt\":{\"recipient\":\"Opponent\",\"kind\":\"Noncombat\"}}} "
   -- CR 603.2c's batch reading of DealsDamage's combat damage to a player, so a
   -- separate tag is the only thing that keeps Pia Nalaar's once-per-step card and

@@ -1217,7 +1217,9 @@ attackingCreature = SlotName.MkSlotName (Text.pack "thatAttackingCreature")
 -- control attack, THEY gain deathtouch". Stamped by
 -- Parun.Engine.Event.Binding.eventBindings off GameEvent.AttackersDeclared: the
 -- declared attackers that player controls which the condition's Filter admits,
--- so "they" names exactly what made the trigger fire.
+-- so "they" names exactly what made the trigger fire. CR 508.3b's "is attacked"
+-- binds it too, off GameEvent.BecameAttacked: the creatures declared attacking
+-- that target (Garruk, Curse Breaker's "those creatures").
 --
 -- A GROUP (Binding.objects), crewers' reason: named, never targeted (CR
 -- 115.10a), and a set CR 611.2c freezes when a resolution's effect begins, so a
@@ -1506,7 +1508,8 @@ setBlockedCreature oid = Map.insert blockedCreature (toObject oid)
 setAttackingCreature :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
 setAttackingCreature oid = Map.insert attackingCreature (toObject oid)
 
--- Bind the counted attackers under the reserved attackingCreatures slot (CR 508.3c).
+-- Bind the counted or attacking creatures under the reserved attackingCreatures
+-- slot (CR 508.3b / 508.3c).
 setAttackingCreatures :: Seq ObjectId -> Map SlotName Binding -> Map SlotName Binding
 setAttackingCreatures oids = Map.insert attackingCreatures (toObjects oids)
 

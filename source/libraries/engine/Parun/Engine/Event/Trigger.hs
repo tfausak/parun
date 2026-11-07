@@ -1217,9 +1217,9 @@ batchScoped condition = case condition of
   -- CR 508.3b / 805.10b: one combined declaration attacks a target once, but
   -- Parun.Engine.Combat records one GameEvent.BecameAttacked per (attacking
   -- player, target) pair, CR 508.3e's arity, bracketed as one group. "Is
-  -- attacked" names no attacking player and matches one target only, so one
-  -- trigger per group is one per target. Parun.TeamSpec's "CR 508.3b a player
-  -- two teammates attack is attacked once" is the proof.
+  -- attacked" names no attacking player, so the group is the trigger event and
+  -- Event.Binding.batchPartition splits it per attacked target. Parun.TeamSpec's
+  -- "CR 508.3b a player two teammates attack is attacked once" is the proof.
   TriggerCondition.Attacks (AttackTrigger.Attacked t) -> Maybe.isNothing (AttackedTrigger.attacker t)
   TriggerCondition.Attacks _ -> False
   -- FALSE despite naming batches in the RULES, which is the one group of answers

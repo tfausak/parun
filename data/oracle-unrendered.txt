@@ -973,6 +973,7 @@ fatehold-charm
 fatehold-chronologist-peer-review
 fathom-fleet-cutthroat
 fatigue
+fblthp-impossibly-lost
 fblthp-knows-the-way
 fblthp-lost-on-the-range
 fear-of-change
@@ -1118,6 +1119,7 @@ garland-royal-kidnapper
 garna-bloodfist-of-keld
 garruk-apex-predator
 garruk-caller-of-beasts
+garruk-curse-breaker
 garruk-primal-hunter
 garruks-horde
 garruks-packleader
@@ -1326,6 +1328,8 @@ heart-of-light
 heart-of-yavimaya
 heart-piercer-bow
 heartstone
+heartstring-puller
+heartwood-crafter-soul-tether
 heavenly-blademaster
 heavy-fog
 hei-bai-forest-guardian
@@ -1341,6 +1345,7 @@ hermes-overseer-of-elpis
 hero-of-bladehold
 heroes-bane
 hewed-stone-retainers
+hexhaven-battalion
 hickory-woodlot
 hidetsugus-second-rite
 hieromancers-cage
@@ -1372,9 +1377,11 @@ huang-zhong-shu-general
 hulk-gamma-goliath
 humility
 hungering-hydra
+hungering-puppetbeast
 hunt-the-weak
 hunted-wumpus
 hunters-ambush
+hunters-axe
 hunters-feast
 hunters-insight
 hunting-velociraptor
@@ -1391,6 +1398,7 @@ ice-floe
 ichor-rats
 icon-of-ancestry
 icy-prison
+icy-reception
 ignorant-bliss
 ill-gotten-gains
 illicit-auction
@@ -1430,6 +1438,7 @@ infinite-obliteration
 infinite-reflection
 ingenious-leonin
 ingenious-thief
+ingris-stingerquill
 initiates-of-the-ebon-hand
 inkshield
 innocent-traveler-malicious-invader
