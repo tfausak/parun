@@ -32,7 +32,10 @@
                       "quantity": {
                         "type": "Times",
                         "value": {
-                          "factor": 3,
+                          "factor": {
+                            "type": "Literal",
+                            "value": 3
+                          },
                           "quantity": {
                             "type": "Count",
                             "value": {

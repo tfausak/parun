@@ -15,8 +15,7 @@ data Arithmetic quantity
   | -- | CR 107.1a: one quantity divided by another, rounded the way the card
     -- prints; see Parun.Types.Quotient.
     Quotient (Quotient.Quotient quantity)
-  | -- | CR 107.1: the payload's factor times the inner quantity, which is the
-    -- "N for each" a card prints; see Parun.Types.Times.
+  | -- | CR 107.1: one quantity times another; see Parun.Types.Times.
     Times (Times.Times quantity)
   | -- | The negation of the inner quantity -- the minus a card prints in front
     -- of a value, as in "-X/-X". CR 107.1b: a game value may go negative; a
@@ -36,6 +35,6 @@ instance Traversable Arithmetic where
   traverse f arithmetic = case arithmetic of
     Plus (Plus.MkPlus left right) -> fmap Plus (Plus.MkPlus <$> f left <*> f right)
     Quotient (Quotient.MkQuotient rounding inner divisor) -> fmap Quotient (Quotient.MkQuotient rounding <$> f inner <*> f divisor)
-    Times (Times.MkTimes factor inner) -> fmap (Times . Times.MkTimes factor) (f inner)
+    Times (Times.MkTimes factor inner) -> fmap Times (Times.MkTimes <$> f factor <*> f inner)
     Negate inner -> fmap Negate (f inner)
     NonNegative inner -> fmap NonNegative (f inner)

@@ -655,7 +655,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let forests = countOf (Filter.HasSubtype Subtype.Forest) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
     Spec.assertEq s [[Text.pack "You gain 1 life for each Forest on the battlefield.", Text.pack "You gain life equal to the number of Forests on the battlefield."]] (Oracle.abilities (spell [clause [gainLifeBy forests]] []))
     let hand = countOf (Filter.And []) (InZone.MkInZone Zone.Hand (PlayerRef.Relative PlayerRelation.You))
-    Spec.assertEq s [[Text.pack "You gain 2 life for each card in your hand."]] (Oracle.abilities (spell [clause [gainLifeBy (Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes 2 hand)))]] []))
+    Spec.assertEq s [[Text.pack "You gain 2 life for each card in your hand."]] (Oracle.abilities (spell [clause [gainLifeBy (Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes (Quantity.Literal 2) hand)))]] []))
     let tapped = countOf (Filter.And [Filter.HasCardType CardType.Creature, Filter.IsTapped, Filter.HeldByBound Holder.Controller target]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
         opponent = [(target, TargetSlot.required Pool.Players (Just (Filter.IsPlayer PlayerRelation.Opponent)))]
     Spec.assertEq s [[Text.pack "Draw a card for each tapped creature target opponent controls.", Text.pack "Draw cards equal to the number of tapped creatures target opponent controls."]] (Oracle.abilities (spell [clause [Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) tapped Nothing)]] opponent))

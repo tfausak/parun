@@ -4,7 +4,6 @@ module Parun.Codec.Times where
 
 import qualified Data.Typeable as Typeable
 import qualified Parun.JsonCodec.Codec as Codec
-import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.Times as Times
 
@@ -15,6 +14,6 @@ import qualified Parun.Types.Times as Times
 -- neither module has to name the other.
 codec :: (Typeable.Typeable quantity) => Codec.Codec quantity -> Codec.Codec (Times.Times quantity)
 codec quantityCodec = Fields.object $ do
-  factor <- Fields.required "factor" Common.natural Times.factor
+  factor <- Fields.required "factor" quantityCodec Times.factor
   quantity <- Fields.required "quantity" quantityCodec Times.quantity
   pure Times.MkTimes {Times.factor = factor, Times.quantity = quantity}

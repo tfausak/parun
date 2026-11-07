@@ -46,7 +46,10 @@
                               "power": {
                                 "type": "Times",
                                 "value": {
-                                  "factor": 1,
+                                  "factor": {
+                                    "type": "Literal",
+                                    "value": 1
+                                  },
                                   "quantity": {
                                     "type": "BlockersBeyond",
                                     "value": 0
@@ -56,7 +59,10 @@
                               "toughness": {
                                 "type": "Times",
                                 "value": {
-                                  "factor": 1,
+                                  "factor": {
+                                    "type": "Literal",
+                                    "value": 1
+                                  },
                                   "quantity": {
                                     "type": "BlockersBeyond",
                                     "value": 0

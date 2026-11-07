@@ -3055,9 +3055,9 @@ theseDiscardNames :: (Monoid r) => Asking r -> TheseDiscard.TheseDiscard -> r
 theseDiscardNames asking x = case x of
   TheseDiscard.MkTheseDiscard cards discarded -> objectRefNames asking cards <> foldMap (slotNames asking) discarded
 
-timesNames :: Asking r -> (quantity -> r) -> Times.Times quantity -> r
+timesNames :: (Monoid r) => Asking r -> (quantity -> r) -> Times.Times quantity -> r
 timesNames _asking onQuantity x = case x of
-  Times.MkTimes _factor quantity -> onQuantity quantity
+  Times.MkTimes factor quantity -> onQuantity factor <> onQuantity quantity
 
 tokenPatternNames :: (Monoid r) => Asking r -> TokenPattern.TokenPattern -> r
 tokenPatternNames asking x = case x of

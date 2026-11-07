@@ -175,10 +175,10 @@ amounts context q = case q of
   Quantity.Count c -> do
     (one, many, ms) <- counting context c
     [MkAmount (ForEach 1 one) ms, MkAmount (EqualTo (Text.pack "the number of " <> many)) ms]
-  Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes f (Quantity.Count c)))
+  Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes (Quantity.Literal f) (Quantity.Count c)))
     | f > 1 -> do
         (one, _, ms) <- counting context c
-        [MkAmount (ForEach (toInteger f) one) ms]
+        [MkAmount (ForEach f one) ms]
   Quantity.Measure m -> do
     word <- measure m
     [MkAmount (EqualTo (possessive (self context) <> Text.pack " " <> word)) []]

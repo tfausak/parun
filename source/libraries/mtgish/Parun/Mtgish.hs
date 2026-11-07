@@ -1326,7 +1326,7 @@ playerEffects context who n = case Node.tag n of
       c <- quantity context counted
       case (factor, c) of
         (1, Quantity.Count _) -> Right c
-        (_, Quantity.Count _) | factor > 1 -> Right (Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes factor c)))
+        (_, Quantity.Count _) | factor > 1 -> Right (Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes (Quantity.Literal (toInteger factor)) c)))
         _ -> Node.untranslated n
     discard q = pure [Effect.Discard (Discard.Counted CountedDiscard.MkCountedDiscard {CountedDiscard.player = who, CountedDiscard.quantity = q, CountedDiscard.discarded = Nothing})]
 
