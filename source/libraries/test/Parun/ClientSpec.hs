@@ -57,6 +57,8 @@ import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Convoking as Convoking
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CountersPlaced as CountersPlaced
+import qualified Parun.Types.DamageEvent as DamageEvent
+import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Deck as Deck
 import qualified Parun.Types.Dividing as Dividing
@@ -71,6 +73,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GraveyardArrangement as GraveyardArrangement
 import qualified Parun.Types.Hotseat as Hotseat
 import qualified Parun.Types.Hybrid as Hybrid
+import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
@@ -243,6 +246,7 @@ spec s registry = Spec.describe s "Client" $ do
     -- Asked while Mindslaver is on the battlefield; the stack shown then and
     -- once its sacrifice has moved it, a witnessed move naming it.
     Spec.assertBool s (Text.pack "Choose 1 target for Mindslaver's ability:" `elem` shown) "the target prompt names it"
+    Spec.assertEqWith s "CR 601.2h its cost's components, numbered" (takeWhile (Text.isPrefixOf (Text.pack "  ")) (drop 1 (dropWhile (not . Text.isPrefixOf (Text.pack "Order cost components for Mindslaver:")) shown))) [Text.pack "  1. {T}", Text.pack "  2. Sacrifice Mindslaver"]
     Spec.assertEqWith s "the stack names it, then once it is sacrificed" (Set.toList (Set.fromList (stacks shown)), take 1 (stacks (dropWhile (/= Text.pack "  Graveyard: Mindslaver") shown))) ([stackLine], [stackLine])
     Spec.assertEqWith s "no face-down card" (filter (Text.isInfixOf (Text.pack "face-down")) shown) []
     Spec.assertEqWith s "CR 602.2 the activation names its player and source" (filter (Text.isInfixOf (Text.pack "activate")) shown) [Text.pack "Player 1 activates Mindslaver's ability."]
@@ -878,6 +882,26 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "declined" assistant (Right Nothing)
     Spec.assertEqWith s "past the list is refused" (fst (asking facing ["3"] gs (Prompt.ChooseCardInHand alice S.alice f (b NonEmpty.:| [g])))) (Left (Text.pack "end of input"))
 
+  Spec.it s "CR 401.4 a prompt answered by a permutation numbers what it orders, and the numbers first to last order it" $ do
+    bears <- S.printingOf s registry "Grizzly Bears"
+    giant <- S.printingOf s registry "Hill Giant"
+    forest <- S.printingOf s registry "Forest"
+    let (b, g1) = S.addHandCard bears S.alice (Setup.emptyGame S.bothPlayers)
+        (g, g2) = S.addPermanent giant S.alice g1
+        (f, gs) = S.addPermanent forest S.alice g2
+        facing = Hotseat.fresh {Hotseat.facing = Just S.alice}
+        alice = Decider.MkDecider S.alice
+        listedAfter heading screenLines = takeWhile (Text.isPrefixOf (Text.pack "  ")) (drop 1 (dropWhile (/= Text.pack heading) screenLines))
+        arrange = Prompt.ArrangeLibraryArrivals alice S.alice LibraryPosition.Top [b, g]
+        (reordered, shown) = asking facing ["2 1"] gs arrange
+        hit target n = DamageEvent.MkDamageEvent f target n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
+        (_, damage) = asking facing [""] gs (Prompt.OrderDamage alice S.alice [hit (Recipient.ToPlayer S.bob) 2, hit (Recipient.ToCreature g) 3])
+    Spec.assertEqWith s "cards listed, the first going on top" (listedAfter "Arrange library arrivals: type their numbers first to last, separated by spaces, or press Enter to keep this order; the first goes on top:" shown) [Text.pack "  1. Grizzly Bears", Text.pack "  2. Your Hill Giant 3/3"]
+    Spec.assertEqWith s "the order typed" reordered (Right [1, 0])
+    Spec.assertEqWith s "Enter keeps the order shown" (fst (asking facing [""] gs arrange)) (Right [0, 1])
+    Spec.assertEqWith s "a number twice is refused" (fst (asking facing ["1 1"] gs arrange)) (Left (Text.pack "end of input"))
+    Spec.assertEqWith s "damage events listed" (listedAfter "Order damage: type their numbers first to last, separated by spaces, or press Enter to keep this order; the first goes first:" damage) [Text.pack "  1. Forest deals 2 damage to Player 2", Text.pack "  2. Forest deals 3 damage to Your Hill Giant 3/3"]
+
 -- The seat across the table.
 otherSeat :: Natural -> Natural
 otherSeat n = if n == 1 then 2 else 1
@@ -1058,8 +1082,8 @@ slavesBob :: Screen -> Maybe Text.Text
 slavesBob sc
   | any (Text.isPrefixOf (Text.pack "Paying ")) shown = Just (Text.pack "auto")
   | any (Text.isPrefixOf (Text.pack "Choose 1 target for ")) shown = numberOf ". Player 2"
-  -- Tap, then sacrifice: the protocol offers nothing for this prompt (#5225).
-  | Text.pack "order cost components:" `elem` shown = Just (Text.pack "[0,1]")
+  -- Tap, then sacrifice: the order shown.
+  | Text.pack "Order cost components for Mindslaver: type their numbers first to last, separated by spaces, or press Enter to keep this order; the first is paid first:" `elem` shown = Just Text.empty
   | any menuHeading shown, Just n <- numberOf ". Activate ability 1 of Mindslaver" = Just n
   | any (Text.isPrefixOf (Text.pack "Choose 1 card to discard")) shown = Monad.mplus (numberOf ". Hill Giant") (Just (Text.pack "1"))
   | otherwise = discardsGiant sc

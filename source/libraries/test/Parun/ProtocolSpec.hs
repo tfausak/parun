@@ -14,6 +14,7 @@ import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Parun.Cards as Cards
 import qualified Parun.Codec.Cost as Codec.Cost
+import qualified Parun.Codec.CostComponent as Codec.CostComponent
 import qualified Parun.Codec.Filter as Codec.Filter
 import qualified Parun.Codec.Keyword as Codec.Keyword
 import qualified Parun.Codec.Reply as Codec.Reply
@@ -32,6 +33,7 @@ import qualified Parun.Play.Protocol as Protocol
 import qualified Parun.Registry as Registry
 import qualified Parun.Scenario as Scenario
 import qualified Parun.Scenario.Prompt as Scenario.Prompt
+import qualified Parun.Scenario.Reply as Reply
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
 import qualified Parun.Types.Action as Action
@@ -44,6 +46,9 @@ import qualified Parun.Types.ClauseIndex as ClauseIndex
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.Comparison as Comparison
+import qualified Parun.Types.CostComponent as CostComponent
+import qualified Parun.Types.DamageEvent as DamageEvent
+import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Deck as Deck
 import qualified Parun.Types.Filter as Filter.Type
@@ -51,6 +56,7 @@ import qualified Parun.Types.Game as Game.Type
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GraveyardArrangement as GraveyardArrangement
+import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Measures as Measures
 import qualified Parun.Types.ModeIndex as ModeIndex
@@ -174,6 +180,32 @@ spec s registry = Spec.describe s "Protocol" $ do
     -- CR 101.4b: what earlier choosers took.
     let graveyard = Protocol.offerOf gs (Prompt.ChooseCardInGraveyard alice S.alice o7 (o9 NonEmpty.:| []) (Seq.singleton (S.bob, o11)))
     Spec.assertEqWith s "earlier" (field "earlier" graveyard) (Just (R.Array [R.Array [R.Text (Text.pack "1"), Protocol.object o11]]))
+
+  Spec.it s "CR 401.4 a prompt answered by a permutation offers each item it orders, and every permutation is within the offer" $ do
+    giant <- S.printingOf s registry "Hill Giant"
+    let o7 = ObjectId.MkObjectId 7
+        o9 = ObjectId.MkObjectId 9
+        o11 = ObjectId.MkObjectId 11
+        alice = Decider.MkDecider S.alice
+        (printing, gs) = Game.intern giant (Setup.emptyGame S.bothPlayers)
+        offerOf = Protocol.offerOf gs
+        both = Just (R.Array [Protocol.object o9, Protocol.object o11])
+        components = [CostComponent.TapThis, CostComponent.SacrificeThis]
+        hit = DamageEvent.MkDamageEvent o7 (Recipient.ToPlayer S.bob) 2 False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
+        arrivals = Prompt.ArrangeLibraryArrivals alice S.alice LibraryPosition.Bottom [o9, o11]
+        cost = Prompt.OrderCostComponents alice S.alice o7 components
+        cards = Prompt.OrderComponentCards alice S.alice Zone.Graveyard [printing, printing]
+        each = Prompt.OrderForEach alice S.alice o7 [Recipient.ToCreature o9, Recipient.ToPlayer S.bob]
+    Spec.assertEqWith s "library cards" (field "order" (offerOf (Prompt.ArrangeLibraryCards alice S.alice [o9, o11]))) both
+    Spec.assertEqWith s "library arrivals, beside their end" (fmap (\key -> field key (offerOf arrivals)) ["end", "order"]) [Just (R.Text (Text.pack "Bottom")), both]
+    Spec.assertEqWith s "timestamps" (field "order" (offerOf (Prompt.OrderTimestamps alice S.alice [o9, o11]))) both
+    Spec.assertEqWith s "mana activations" (field "order" (offerOf (Prompt.OrderManaActivations alice S.alice [o9, o11]))) both
+    Spec.assertEqWith s "combat tolls" (field "order" (offerOf (Prompt.OrderCombatTolls alice S.alice [o9, o11]))) both
+    Spec.assertEqWith s "component cards by name, beside their zone" (fmap (\key -> field key (offerOf cards)) ["zone", "order"]) [Just (R.Text (Text.pack "Graveyard")), Just (R.Array (replicate 2 (R.Text (Text.pack "Hill Giant"))))]
+    Spec.assertEqWith s "cost components, beside their source" (field "source" (offerOf cost), fmap (traverse (either (const Nothing) Just . Codec.decode (Codec.CostComponent.codec Codec.Keyword.codec) . Codec.Reply.toValue)) (field "order" (offerOf cost) >>= arrayOf)) (Just (Protocol.object o7), Just (Just components))
+    Spec.assertEqWith s "damage events" (field "order" (offerOf (Prompt.OrderDamage alice S.alice [hit]))) (Just (R.Array [R.Object [(Text.pack "source", Protocol.object o7), (Text.pack "target", R.Array [R.Text (Text.pack "Player"), R.Text (Text.pack "1")]), (Text.pack "amount", R.Number 2)]]))
+    Spec.assertEqWith s "recipients, beside their source" (field "source" (offerOf each), field "order" (offerOf each)) (Just (Protocol.object o7), Just (Reply.encode (Reply.list Reply.recipient) Protocol.namer [Recipient.ToCreature o9, Recipient.ToPlayer S.bob]))
+    Spec.assertBool s (all (Scenario.withinOffer arrivals) [[0, 1], [1, 0]] && not (Scenario.withinOffer arrivals [0, 0])) "each permutation within the offer, and only those"
 
   Spec.it s "a hidden card reaches no line sent to the other seat" $ do
     gs <- started s registry
