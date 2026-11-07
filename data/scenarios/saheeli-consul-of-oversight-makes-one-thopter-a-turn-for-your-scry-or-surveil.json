@@ -1,0 +1,348 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Saheeli, Consul of Oversight",
+            "label": "saheeli"
+          },
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          },
+          {
+            "card": "Island",
+            "label": "i3"
+          },
+          {
+            "card": "Island",
+            "label": "i4"
+          },
+          {
+            "card": "Island",
+            "label": "i5"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Opt",
+            "label": "opt"
+          },
+          {
+            "card": "Curate",
+            "label": "curate"
+          },
+          {
+            "card": "Opt",
+            "label": "opt2"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains",
+            "label": "lp1"
+          },
+          {
+            "card": "Plains",
+            "label": "lp2"
+          },
+          {
+            "card": "Plains",
+            "label": "lp3"
+          },
+          {
+            "card": "Mountain",
+            "label": "lp4"
+          },
+          {
+            "card": "Plains",
+            "label": "lp5"
+          },
+          {
+            "card": "Plains",
+            "label": "lp6"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "bi1"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Opt",
+            "label": "bopt"
+          }
+        ],
+        "library": [
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Swamp"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 701.22a / 701.25a / 603.2: Saheeli, Consul of Oversight makes a Thopter for its controller's scry, not for an opponent's, and only once each turn",
+  "note": "Bob scries first, so a trigger on any player's scry stands on the stack. Alice's second Opt scries after her first, so a second trigger the same turn stands on the stack; her Curate's surveil on bob's turn makes the second Thopter.",
+  "timeline": [
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$bi1"
+          ],
+          "object": "$bopt"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseScry",
+          "with": [
+            [
+              "Swamp"
+            ],
+            []
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$i1",
+            null
+          ],
+          "object": "$opt"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseScry",
+          "with": [
+            [
+              "$lp1"
+            ],
+            []
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of $saheeli"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Thopter Token",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$i2",
+            null
+          ],
+          "object": "$opt2"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseScry",
+          "with": [
+            [
+              "$lp3"
+            ],
+            []
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$i3",
+            "$i4",
+            null
+          ],
+          "object": "$curate"
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 2
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 2
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseSurveil",
+          "with": [
+            [
+              "$lp5"
+            ],
+            [
+              "$lp6"
+            ]
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 2
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of $saheeli"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 2
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 2
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Thopter Token",
+          "count": 2,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 2
+    }
+  ]
+}

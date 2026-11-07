@@ -1991,6 +1991,7 @@ library extra
 library interpreter
   import: library
   build-depends:
+    containers ^>={0.7, 0.8},
     parun:engine,
     parun:exceptions,
     parun:registry,

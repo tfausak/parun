@@ -801,7 +801,8 @@ answerDedicated decider asked =
         Prompt.Type.AnnounceTargets who _ asking offered -> do
           key <- whenOf gs (Decider.unwrap who)
           let named = Maybe.fromMaybe asking (Game.abilitySourceOf asking gs)
-              -- A refused entry naming a target no slot offers is refused
+              -- A refused entry naming a target no slot offers, or a count
+              -- outside a slot's range (a slot it omits naming 0), is refused
               -- already, so the announcement reads the entry after it.
               announce = do
                 found <- takeForSource gs key named
@@ -809,8 +810,8 @@ answerDedicated decider asked =
                   Just (_, Timed.MkTimed {Timed.entry = Entry.Do verb@(Move.ChooseTargets chosen)}) -> announceSlots key verb offered chosen
                   Just (index, Timed.MkTimed {Timed.entry = Entry.Refuse verb@(Move.ChooseTargets chosen)}) -> do
                     everyOffered <- offersAll gs offered chosen
-                    if everyOffered
-                      then announceSlots key verb offered chosen
+                    if everyOffered && countsOffered offered chosen
+                      then announceCounts key verb offered chosen
                       else popAt key index >> announce
                   Just (_, timed) -> failWith (Failure.MkUnexpectedPrompt key (Timed.entry timed) kind [])
                   Nothing -> unscheduled []
@@ -1803,21 +1804,35 @@ offersAll gs offered chosen =
 
 -- | How many targets each offered slot's entry names, within CR 601.2c's range.
 announceSlots :: When.When -> Move.Move -> Map.Map SlotName.SlotName (TargetCount.TargetCount, Set.Set Recipient.Recipient) -> Map.Map SlotName.SlotName (Seq.Seq Reference.Reference) -> Run (Map.Map SlotName.SlotName Natural)
-announceSlots key verb offered chosen =
-  let refused :: Run b
-      refused = failWith (Failure.MkActionNotOffered key verb (fmap SlotName.unwrap (Map.keys offered)))
-   in -- A superset: a fixed-count slot beside the announced ones is named by the
-      -- entry but announced by nobody (Capricious Efreet's "target ... you
-      -- control"); the ChooseTargets that follows holds the entry to every key.
-      if not (Map.keysSet offered `Set.isSubsetOf` Map.keysSet chosen)
-        then refused
-        else
-          Map.traverseWithKey
-            ( \slot (range, candidates) ->
-                let n = Natural.length (Map.findWithDefault Seq.empty slot chosen)
-                 in if TargetCount.least range <= n && n <= TargetCount.ceilingOn (Natural.length candidates) range then pure n else refused
-            )
-            offered
+announceSlots key verb offered chosen
+  -- A superset: a fixed-count slot beside the announced ones is named by the
+  -- entry but announced by nobody (Capricious Efreet's "target ... you
+  -- control"); the ChooseTargets that follows holds the entry to every key.
+  | Map.keysSet offered `Set.isSubsetOf` Map.keysSet chosen = announceCounts key verb offered chosen
+  | otherwise = failWith (Failure.MkActionNotOffered key verb (fmap SlotName.unwrap (Map.keys offered)))
+
+-- | The counts an entry names, a slot it omits naming 0, failing unless each
+-- is within its slot's range.
+announceCounts :: When.When -> Move.Move -> Map.Map SlotName.SlotName (TargetCount.TargetCount, Set.Set Recipient.Recipient) -> Map.Map SlotName.SlotName (Seq.Seq Reference.Reference) -> Run (Map.Map SlotName.SlotName Natural)
+announceCounts key verb offered chosen
+  | countsOffered offered chosen = pure (Map.mapWithKey (\slot _ -> namedIn chosen slot) offered)
+  | otherwise = failWith (Failure.MkActionNotOffered key verb (fmap SlotName.unwrap (Map.keys offered)))
+
+-- | Whether an entry names, for every offered slot, a count within its range;
+-- a slot it omits names 0 targets.
+countsOffered :: Map.Map SlotName.SlotName (TargetCount.TargetCount, Set.Set Recipient.Recipient) -> Map.Map SlotName.SlotName (Seq.Seq Reference.Reference) -> Bool
+countsOffered offered chosen =
+  and
+    ( Map.mapWithKey
+        ( \slot (range, candidates) ->
+            let n = namedIn chosen slot
+             in TargetCount.least range <= n && n <= TargetCount.ceilingOn (Natural.length candidates) range
+        )
+        offered
+    )
+
+namedIn :: Map.Map SlotName.SlotName (Seq.Seq Reference.Reference) -> SlotName.SlotName -> Natural
+namedIn chosen slot = Natural.length (Map.findWithDefault Seq.empty slot chosen)
 
 -- | Whether a recipient is the player or object a reference resolved to.
 matchesRecipient :: Either PlayerId.PlayerId ObjectId.ObjectId -> Recipient.Recipient -> Bool

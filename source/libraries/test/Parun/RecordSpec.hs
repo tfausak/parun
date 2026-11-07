@@ -53,7 +53,7 @@ spec s registry = Spec.describe s "Record" $ do
 
   Spec.it s "a game cut short replays to where it stopped" $ do
     matchup <- BotSpec.bears s registry
-    let seats = Map.fromList [(S.alice, Game.human (lifted (ClientSpec.screen 40 ClientSpec.plays)) (const (Right Nothing))), (S.bob, Game.bot)]
+    let seats = Map.fromList [(S.alice, Game.human (lifted (ClientSpec.screen 40 ClientSpec.plays)) (const (Right Nothing))), (S.bob, Game.bot (S.fixtureRegistry []))]
         (outcome, (timeline, cut)) = watched 1 seats Map.empty matchup
     replayed <- Scenario.run registry (saved matchup timeline)
     Spec.assertEqWith s "cut" (fmap fst outcome) (Left (Text.pack "end of input"))
@@ -141,7 +141,7 @@ recorded seats matchup = fmap fst (watched 1 seats Map.empty matchup)
 -- recorded's game at a seed, each seat at its graveyard order in `orders`.
 watched :: Word.Word64 -> Map.Map PlayerId.PlayerId (Answerer.Answerer (Asked.Asked GameState.GameState) (Game.Play Base)) -> Map.Map PlayerId.PlayerId GraveyardOrder.GraveyardOrder -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), (Seq.Seq Timed.Timed, Maybe GameState.GameState))
 watched seed seats orders matchup =
-  let played = Game.run [Record.recording labels sink, lastAsked] seats (const (pure ())) Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix seed) orders matchup
+  let played = Game.run (S.fixtureRegistry []) [Record.recording labels sink, lastAsked] seats (const (pure ())) Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix seed) orders matchup
    in State.evalState (State.runStateT played (Seq.empty, Nothing)) ClientSpec.blank
 
 lastAsked :: Observer.Observer (Game.Play Base)
@@ -151,7 +151,7 @@ sink :: Timed.Timed -> Game.Play Base ()
 sink entry = Game.underneath (State.modify' (Bifunctor.first (Seq.|> entry)))
 
 bots :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Asked.Asked GameState.GameState) (Game.Play Base))
-bots = Map.fromList [(S.alice, Game.bot), (S.bob, Game.bot)]
+bots = Map.fromList [(S.alice, Game.bot (S.fixtureRegistry [])), (S.bob, Game.bot (S.fixtureRegistry []))]
 
 lifted :: Terminal.Terminal (State.State ClientSpec.Screen) -> Terminal.Terminal Base
 lifted terminal =

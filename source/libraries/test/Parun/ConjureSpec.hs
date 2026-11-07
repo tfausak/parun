@@ -868,7 +868,7 @@ spec s registry = Spec.describe s "Parun.Conjure" $ do
     elves <- S.printingOf s registry "Llanowar Elves"
     let (_, withElves) = S.addPermanent elves S.alice (Setup.emptyGame S.bothPlayers)
         (_, entered) = S.entersWithTrigger fear S.alice withElves
-        lifted = Registry.MkRegistry {Registry.fetchCard = Trans.lift . Registry.fetchCard registry, Registry.cards = Trans.lift (Registry.cards registry)}
+        lifted = Registry.hoist Trans.lift registry
         synthetic name = Text.pack "Synthetic " `Text.isPrefixOf` CardName.unwrap name
         answer :: (Monad m) => Asked.Asked GameState.GameState r -> State.StateT [[CardName.CardName]] m r
         answer asked = case Asked.prompt asked of

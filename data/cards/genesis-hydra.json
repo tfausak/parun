@@ -132,9 +132,20 @@
                                       },
                                       {
                                         "type": "HasCardType",
+                                        "value": "Land"
+                                      },
+                                      {
+                                        "type": "HasCardType",
                                         "value": "Planeswalker"
                                       }
                                     ]
+                                  },
+                                  {
+                                    "type": "Not",
+                                    "value": {
+                                      "type": "HasCardType",
+                                      "value": "Land"
+                                    }
                                   },
                                   {
                                     "type": "Measures",

@@ -1,0 +1,91 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": "Blue"
+          }
+        }
+      ],
+      "name": "Samut, Tyrant of Naktamun",
+      "oracleText": "Instant and sorcery spells you control have split second. (As long as a spell with split second is on the stack, players can't cast spells or activate abilities that aren't mana abilities.)",
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "MatchingAnywhere",
+            "value": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "IsInZone",
+                  "value": "Stack"
+                },
+                {
+                  "type": "Not",
+                  "value": {
+                    "type": "IsAbility"
+                  }
+                },
+                {
+                  "type": "HeldBy",
+                  "value": {
+                    "holder": "Controller",
+                    "relation": "You"
+                  }
+                },
+                {
+                  "type": "Or",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": "Instant"
+                    },
+                    {
+                      "type": "HasCardType",
+                      "value": "Sorcery"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "modifications": [
+            {
+              "type": "GainKeyword",
+              "value": {
+                "type": "SplitSecond"
+              }
+            }
+          ]
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 1
+      },
+      "typeLine": {
+        "subtypes": [
+          "Human",
+          "Wizard"
+        ],
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ]
+      }
+    }
+  ]
+}
