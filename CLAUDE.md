@@ -169,7 +169,7 @@ to agents as written. What it doesn't say:
   usually ruling boilerplate.
 
 - `_scratch/` (gitignored; a missing input is a fetch,
-  `docs/agents/orchestrating.md`'s "Machine setup", and missing prior art a
+  `docs/agents/orchestrating.md`'s "Session setup", and missing prior art a
   skipped step, not a blocker) holds
   prior art --- `phase`, `mtgish`, `argentum-engine`; see
   `docs/agents/set-by-set.md`, "Prior art". Consult it AFTER deriving the rule

@@ -145,16 +145,15 @@ summary, and its title carries no CR numbers.
   where they are reachable): every turn re-reads the whole context, so cost
   grows with the square of a session's length. Record it on the tracker as
   each unit merges.
-- **Merging.** The unit marks its PR ready (`CLAUDE.md`). The orchestrator
-  arms auto-merge (`gh pr merge --auto`, or from a cloud session `PUT
-  repos/parun-mtg/parun/pulls/P/ccr/auto_merge`; the merge queue sets the
-  method), then reads `gh api repos/parun-mtg/parun/issues/P/events`: the
-  last `auto_merge_*` or `*_merge_queue` event must be neither a disabling
-  nor a removal, since a queued PR shows no `autoMergeRequest`. On a conflict
-  or a CI failure that needs `main`, a fresh agent merges `origin/main` into
-  the branch (`docs/agents/set-by-set.md`, "Git and the PR"). Don't update a
-  `BEHIND` branch: the queue tests each PR against main. Read a failed job's
-  log first: one that died in `Set up job` is not a real failure.
+- **Merging.** The unit's session marks its PR ready and arms auto-merge
+  itself; the orchestrator only watches. A PR stalled out of the queue is
+  read from `gh api repos/parun-mtg/parun/issues/P/events`: a queued PR shows
+  no `autoMergeRequest`, so the last `auto_merge_*` or `*_merge_queue` event
+  says whether it is still queued. On a conflict or a CI failure that needs
+  `main`, a fresh agent merges `origin/main` into the branch
+  (`docs/agents/set-by-set.md`, "Git and the PR"). Don't update a `BEHIND`
+  branch: the queue tests each PR against main. Read a failed job's log
+  first: one that died in `Set up job` is not a real failure.
 - **Waiting** is a scheduled check-in or a PR subscription, never a polling
   loop.
 
