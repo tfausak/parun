@@ -11,48 +11,27 @@ These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at; "verify" marks a clause the
 census did not settle.
 
-- Aerid Konstrari: `_CreatableToken:HeartwoodToken`
-
-- Afterthought Sentry: `_Target:UptoOneTargetGraveyardCard`
-
-- Ajani Resolute: `field: Loyalty`
-
-- Ajani Unrelenting: `field: Loyalty`
-
-- Apex Witchstalker: `_Rule:TypeCycling`
 
 
-- Arni, Renowned Champion: `_LayerEffect:AdjustPTX`
-
-- Avatar of Burgeoning Echoes: `_Rule:Activated`
-
-- Awaken the Inferno: `_Rule:TypeCycling`
-
-- Blazing Crescendo: `_Action:Exile`
-
-- Blessed Ghoul: `_Rule:FromGraveyard`
-
-- Bloodline Recollector // Ancestral Craving:
-  `_Condition:ANumberOfPermanentsDiedThisTurn`
-
-- Bloombrute: `_Rule:TriggerOnceEachTurn`
 
 
-- Budding Insurgent: `_Action:If`
 
-- Carnivorous Cultivator: `_SearchLibraryAction:PutFoundCardsIntoGraveyard`
 
-- Chandra, Torch of Defiance: `field: Loyalty`
 
-- Clash of Elements: `_Action:PlayerMayCost`
 
-- Compel Brutality: `_GameNumber:LoyaltyOfPermanent`
 
-- Countersculpt: `_Rule:CastEffect`
 
-- Craftwork Crusher: `_Actions:Modal_ChooseTwo`
 
-- Craterclaw Colossus: `_LayerEffect:AdjustPTX`
+
+
+
+
+
+
+
+
+
+
 
 - Cruel Calculations:
   `_GameNumber:TheNumberOfCardsPutIntoAPlayersGraveyardFromTheirLibraryThisTurn`;

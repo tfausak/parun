@@ -33,6 +33,7 @@ advancing-the-spirit
 aegis-angel
 aegis-of-the-legion
 aeon-chronicler
+aerid-konstrari
 aether-hub
 aether-rift
 aether-storm
@@ -51,7 +52,9 @@ airbending-lesson
 ajani-adversary-of-tyrants
 ajani-caller-of-the-pride
 ajani-goldmane
+ajani-resolute
 ajani-steadfast
+ajani-unrelenting
 ajanis-chosen
 ajanis-pridemate
 ajanis-response
@@ -115,6 +118,7 @@ animists-awakening
 ankh-of-mishra
 annex
 anointed-procession
+apex-witchstalker
 aphotic-wisps
 apocalypse-chime
 approach-of-the-second-sun
@@ -152,6 +156,7 @@ armed-with-proof
 armored-galleon
 armory-automaton
 arms-depot
+arni-renowned-champion
 arrest
 artificers-hex
 artificial-evolution
@@ -190,6 +195,7 @@ avarice-amulet
 avarice-totem
 avaricious-dragon
 avatar-aang-aang-master-of-elements
+avatar-of-burgeoning-echoes
 avatar-of-hope
 avatar-of-might
 avatar-roku-firebender
@@ -201,6 +207,7 @@ avenge
 avenger-of-the-fallen
 averna-the-chaos-bloom
 awaken-the-ancient
+awaken-the-inferno
 awakener-druid
 ayli-eternal-pilgrim
 azorius-arrester
@@ -284,6 +291,7 @@ blastfire-bolt
 blatant-thievery
 blaze-of-glory
 blazing-archon
+blazing-crescendo
 blessed-reversal
 blight
 blightcaster
@@ -301,10 +309,12 @@ blood-tithe
 bloodcrazed-goblin
 bloodghast
 bloodletter-of-aclazotz
+bloodline-recollector-ancestral-craving
 bloodrock-cyclops
 bloodshot-cyclops
 bloodthirsty-conqueror
 bloodtithe-collector
+bloombrute
 blooming-blast
 blorbian-buddy
 blossoming-calm
@@ -365,6 +375,7 @@ brutal-suppression
 bruvac-the-grandiloquent
 bubble-smuggler
 bubbling-cauldron
+budding-insurgent
 bulk-up
 bumper-cars
 bureau-headmaster
@@ -400,6 +411,7 @@ captivating-vampire
 capture-of-jingzhou
 capture-sphere
 carnelian-orb-of-dragonkind
+carnivorous-cultivator-enroot
 carom
 carrion-grub
 carry-away
@@ -445,6 +457,7 @@ chandra-flameshaper
 chandra-heart-of-fire
 chandra-nalaar
 chandra-pyromaster
+chandra-torch-of-defiance
 chandras-firemaw
 chandra-the-firebrand
 chandras-embercat
@@ -488,6 +501,7 @@ city-in-a-bottle
 city-of-brass
 clam-i-am
 clarion-spirit
+clash-of-elements
 claustrophobia
 clavileno-first-of-the-blessed
 cleansing
@@ -565,12 +579,14 @@ cosmic-horror
 council-guardian
 councils-judgment
 count-on-luck
+countersculpt
 courageous-goblin
 courtly-provocateur
 covetous-elegy
 cowardice
 crabomination
 crackling-doom
+craftwork-crusher
 crafty-pathmage
 cragganwick-cremator
 cram-session
