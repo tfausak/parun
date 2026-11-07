@@ -314,6 +314,13 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
       ( Text.pack "Choose how to pay for " <> self <> Text.pack ":" : numbered (fmap (candidateName self) costs),
         fmap (R.Number . toInteger . subtract 1) . one (Natural.length costs)
       )
+  -- CR 201.4: any card's name, typed in full; one the rules refuse is asked
+  -- again (Parun.Play.Game.consulting).
+  "ChooseCardName" ->
+    pure
+      ( [Text.pack "Choose a card name: type the name of a card."],
+        \typed -> if Text.null typed then Left (Text.pack "Type the name of a card.") else Right (R.Text typed)
+      )
   "ChooseManaYield" -> do
     source <- field "source" offer
     yields <- field "yields" offer >>= decoded (Common.list (Common.list Codec.ManaType.codec))

@@ -11,6 +11,7 @@ import qualified Control.Monad.Trans.Except as Except
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Either as Either
 import qualified Data.Foldable as Foldable
+import qualified Data.Functor.Identity as Identity
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
@@ -21,6 +22,7 @@ import qualified Data.Text as Text
 import qualified Data.Word as Word
 import Numeric.Natural (Natural)
 import qualified Parun.BotSpec as BotSpec
+import qualified Parun.CastProhibitionSpec as CastProhibitionSpec
 import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Driver as Driver
 import qualified Parun.Engine.Engine as Engine
@@ -31,6 +33,7 @@ import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Replay as Replay
 import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.Setup as Setup
+import qualified Parun.Engine.Stack as Stack
 import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.ManaSpec as ManaSpec
@@ -41,6 +44,7 @@ import qualified Parun.Play.Render as Render
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
+import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.Action as Action
 import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
@@ -67,6 +71,7 @@ import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.FaceDownReason as FaceDownReason
 import qualified Parun.Types.Facing as Facing
+import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
@@ -134,7 +139,7 @@ spec s registry = Spec.describe s "Client" $ do
   Spec.it s "a change of seat waits for the seat leaving to finish reading, clears the screen, and waits before showing the next seat" $ do
     matchup <- BotSpec.bears s registry
     let people = Map.fromList [(S.alice, Game.human (screen 300 plays) (const (Right Nothing))), (S.bob, Game.human (screen 300 plays) (const (Right Nothing)))]
-        shown = reverse (written (State.execState (Game.run [] people (const (pure ())) Hotseat.fresh (SplitMix.MkSplitMix 1) Map.empty matchup) blank))
+        shown = reverse (written (State.execState (Game.run (S.fixtureRegistry []) [] people (const (pure ())) Hotseat.fresh (SplitMix.MkSplitMix 1) Map.empty matchup) blank))
         handOffs = [i | (i, l) <- zip [0 :: Int ..] shown, Text.isPrefixOf (Text.pack "Pass to ") l]
         at i = Maybe.listToMaybe (drop i shown)
         -- The last hand-off may be cut short by the end of input.
@@ -733,8 +738,8 @@ spec s registry = Spec.describe s "Client" $ do
   Spec.it s "CR 104.3 the entries that end the game are shown before its result" $ do
     matchup <- BotSpec.bears s registry
     let terminal = screen 3000 plays
-        seats = Map.fromList [(S.alice, Game.human terminal (const (Right Nothing))), (S.bob, Game.bot)]
-        (outcome, sc) = State.runState (Game.run [] seats (Client.ending terminal [S.alice]) Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) Map.empty matchup) blank
+        seats = Map.fromList [(S.alice, Game.human terminal (const (Right Nothing))), (S.bob, Game.bot (S.fixtureRegistry []))]
+        (outcome, sc) = State.runState (Game.run (S.fixtureRegistry []) [] seats (Client.ending terminal [S.alice]) Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) Map.empty matchup) blank
         loser = case outcome of
           Right (Result.Won winner, _) -> Just (if winner == S.alice then S.bob else S.alice)
           _ -> Nothing
@@ -902,6 +907,49 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "a number twice is refused" (fst (asking facing ["1 1"] gs arrange)) (Left (Text.pack "end of input"))
     Spec.assertEqWith s "damage events listed" (listedAfter "Order damage: type their numbers first to last, separated by spaces, or press Enter to keep this order; the first goes first:" damage) [Text.pack "  1. Forest deals 2 damage to Player 2", Text.pack "  2. Forest deals 3 damage to Your Hill Giant 3/3"]
 
+  -- CR 201.4: a seat at the terminal types a card's name; an empty line is
+  -- refused.
+  Spec.it s "CR 201.4 a person names a card by typing its name" $ do
+    let facing = Hotseat.fresh {Hotseat.facing = Just S.alice}
+        naming = Prompt.ChooseCardName (Decider.MkDecider S.alice) S.alice (ObjectId.MkObjectId 7) (Filter.Type.And []) Seq.empty
+        (named, shown) = asking facing ["", "Goblin Piker"] (Setup.emptyGame S.bothPlayers) naming
+    Spec.assertEqWith s "the name typed" named (Right (CardName.MkCardName (Text.pack "Goblin Piker")))
+    Spec.assertBool s (Text.pack "Choose a card name: type the name of a card." `elem` shown) "asked for a name"
+    Spec.assertBool s (Text.pack "Type the name of a card." `elem` shown) "an empty line refused"
+
+  -- CR 201.4 / 201.4a / 108.1: Null Chamber's two names, each chosen by a bot
+  -- seat through Game.consulting over a reference of Plains, Goblin Piker and
+  -- Cancel. Plains is refused by the card's restriction and asked again, so
+  -- each seat names one of the other two, each over the seeds; each name is
+  -- looked up in that reference.
+  Spec.it s "CR 201.4 a bot seat names a card the reference holds and the restriction allows" $ do
+    plains <- S.printingOf s registry "Plains"
+    mountain <- S.printingOf s registry "Mountain"
+    nullChamber <- S.printingOf s registry "Null Chamber"
+    reference <- mapM (S.cardOf s registry) ["Plains", "Goblin Piker", "Cancel"]
+    let (oid, board) = CastProhibitionSpec.nullChamberBoard plains mountain nullChamber
+        fixture :: Registry.Registry Identity.Identity
+        fixture = S.fixtureRegistry reference
+        seats = Map.fromList [(S.alice, Game.bot fixture), (S.bob, Game.bot fixture)]
+        answer :: Asked.Asked GameState.GameState r -> Game.Play Identity.Identity r
+        answer asked = case Asked.prompt asked of
+          Prompt.ChooseCardName {} -> Answerer.unwrap (Game.consulting fixture seats) asked
+          Prompt.LookUpCard {} -> Answerer.unwrap (Game.consulting fixture seats) asked
+          p -> pure (CastProhibitionSpec.chamberAnswer S.bob (const (CardName.MkCardName Text.empty)) p)
+        played seed = Identity.runIdentity (Except.runExceptT (State.evalStateT (State.evalStateT (Engine.runGameAsked answer board (S.cast S.alice oid >> Stack.resolveTop)) (SplitMix.MkSplitMix seed)) Hotseat.fresh))
+        chosen seed = case played seed of
+          Right (_, after) -> do
+            chamber <- CastProhibitionSpec.enteredOne board after >>= (`Game.Engine.lookupObject` after)
+            Just (Map.findWithDefault Map.empty Acquisition.Own (Object.chosenNames chamber), Game.Engine.referenceFaces after)
+          Left _ -> Nothing
+        runs = fmap chosen [1 .. 32 :: Word.Word64]
+        allowed = Set.fromList (fmap CardName.MkCardName [Text.pack "Goblin Piker", Text.pack "Cancel"])
+        namedBy pid = Set.fromList [name | Just (names, _) <- runs, Just name <- [Map.lookup pid names]]
+    Spec.assertBool s (all Maybe.isJust runs) "Null Chamber reached the battlefield every time"
+    Spec.assertEqWith s "alice named each allowed name, and only those" (namedBy S.alice) allowed
+    Spec.assertEqWith s "bob named each allowed name, and only those" (namedBy S.bob) allowed
+    Spec.assertBool s (and [all (`Map.member` faces) (Map.elems names) | Just (names, faces) <- runs]) "CR 108.1 each name was looked up in the reference"
+
 -- The seat across the table.
 otherSeat :: Natural -> Natural
 otherSeat n = if n == 1 then 2 else 1
@@ -937,13 +985,13 @@ screen budget typist =
 -- The bot for each seat no person holds; every other prompt gets its default
 -- answer.
 botOrDefault :: (Monad m) => Answerer.Answerer (Asked.Asked GameState.GameState) (State.StateT SplitMix.SplitMix m)
-botOrDefault = Driver.seated Bot.bot (Answerer.MkAnswerer (pure . Replay.defaultAnswer . Asked.prompt))
+botOrDefault = Driver.seated (Bot.bot []) (Answerer.MkAnswerer (pure . Replay.defaultAnswer . Asked.prompt))
 
 -- Alice at the terminal, the bot as bob.
 against :: (Screen -> Maybe Text.Text) -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), [Text.Text])
 against typist matchup =
-  let seats = Map.fromList [(S.alice, Game.human (screen 3000 typist) (const (Right Nothing))), (S.bob, Game.bot)]
-      (outcome, sc) = State.runState (Game.run [] seats (const (pure ())) Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) Map.empty matchup) blank
+  let seats = Map.fromList [(S.alice, Game.human (screen 3000 typist) (const (Right Nothing))), (S.bob, Game.bot (S.fixtureRegistry []))]
+      (outcome, sc) = State.runState (Game.run (S.fixtureRegistry []) [] seats (const (pure ())) Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) Map.empty matchup) blank
    in (outcome, reverse (written sc))
 
 -- Since the last line typed.

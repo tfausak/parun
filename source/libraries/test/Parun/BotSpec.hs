@@ -102,6 +102,12 @@ spec s registry = Spec.describe s "Bot" $ do
     let options = ReplaySpec.oneMana Color.Red NonEmpty.:| [ReplaySpec.oneMana Color.Green, ReplaySpec.oneMana Color.Blue]
     Spec.assertEqWith s "yields" (drawn (Prompt.ChooseManaYield decider S.alice oid options)) (Set.fromList (NonEmpty.toList options))
 
+  -- CR 201.4: any name it is handed; Parun.Interpreter.policingCardNames
+  -- judges CR 201.4a, where the reference is.
+  Spec.it s "CR 201.4 names a card from among the reference's names" $ do
+    let names = fmap (CardName.MkCardName . Text.pack) ["Forest", "Grizzly Bears", "Hill Giant"]
+    Spec.assertEqWith s "names" (drawnNaming names (Prompt.ChooseCardName decider S.alice oid (Filter.And []) Seq.empty)) (Set.fromList names)
+
   Spec.it s "puts triggers on the stack in every order" $ do
     let entries =
           [ TriggerEntry.MkTriggerEntry (TriggerSource.OfObject oid) Monarch.crownSteal,
@@ -300,7 +306,12 @@ spec s registry = Spec.describe s "Bot" $ do
 
 -- Every answer the bot gives the prompt over many seeds.
 drawn :: (Ord r) => Prompt.Prompt r -> Set.Set r
-drawn prompt = Set.fromList (fmap (State.evalState (Answerer.unwrap Bot.bot (Asked.mapGames (PlayerView.viewFor S.alice) (Asked.MkAsked [] (Setup.emptyGame S.bothPlayers) prompt))) . SplitMix.MkSplitMix) [1 .. 256])
+drawn = drawnNaming []
+
+-- Every answer the bot gives the prompt over many seeds, naming a card from
+-- `names`.
+drawnNaming :: (Ord r) => [CardName.CardName] -> Prompt.Prompt r -> Set.Set r
+drawnNaming names prompt = Set.fromList (fmap (State.evalState (Answerer.unwrap (Bot.bot names) (Asked.mapGames (PlayerView.viewFor S.alice) (Asked.MkAsked [] (Setup.emptyGame S.bothPlayers) prompt))) . SplitMix.MkSplitMix) [1 .. 256])
 
 decider :: Decider.Decider
 decider = Decide.deciderFor S.alice (Setup.emptyGame S.bothPlayers)
@@ -315,7 +326,7 @@ data Answered = MkAnswered {within :: Bool, attacked :: Bool}
 played :: Word.Word64 -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> ((Result.Result, GameState.GameState), [Answered])
 played seed matchup =
   let seats :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Asked.Asked GameState.GameState) (State.StateT SplitMix.SplitMix (State.State [Answered])))
-      seats = Map.fromList [(S.alice, Driver.seated Bot.bot Chance.chance), (S.bob, Driver.seated Bot.bot Chance.chance)]
+      seats = Map.fromList [(S.alice, Driver.seated (Bot.bot []) Chance.chance), (S.bob, Driver.seated (Bot.bot []) Chance.chance)]
    in State.runState (State.evalStateT (Driver.match [watching] (Driver.bySeat seats Chance.chance) GameSettings.plain Map.empty matchup) (SplitMix.MkSplitMix seed)) []
 
 watching :: Observer.Observer (State.StateT SplitMix.SplitMix (State.State [Answered]))

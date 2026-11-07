@@ -14,6 +14,7 @@ module Parun.Interpreter where
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Maybe as Maybe
+import qualified Data.Set as Set
 import qualified Parun.Engine.Card as Card
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
@@ -100,10 +101,19 @@ chosenFace registry name = do
   case fmap (>>= Card.faceNamed name) found of
     Right Nothing -> fmap (fmap (Maybe.listToMaybe . concatMap (Maybe.mapMaybe (Card.faceNamed name) . melded))) (Registry.cards registry)
     answer -> pure answer
+
+-- CR 201.4e: a meld card's combined back faces, none for any other card.
+melded :: Card.Type.Card -> [Card.Type.Card]
+melded card = case Card.Type.layout card of
+  Layout.Meld {} -> Mentions.combinedBackFaces card
+  _ -> []
+
+-- CR 201.4: every name chosenFace answers to, once each, sorted: each face of
+-- each card in the reference and of each combined back face.
+cardNames :: (Monad m) => Registry.Registry m -> m (Either InvalidCorpus.InvalidCorpus [CardName.CardName])
+cardNames registry = fmap (fmap (Set.toList . Set.fromList . concatMap names)) (Registry.cards registry)
   where
-    melded card = case Card.Type.layout card of
-      Layout.Meld {} -> Mentions.combinedBackFaces card
-      _ -> []
+    names card = concatMap (fmap Face.name . NonEmpty.toList . Card.Type.faces) (card : melded card)
 
 -- CR 201.4 / 723.5: the card a chosen name answers to. The card the registry
 -- answers with, else, for a name several cards hold only as an alternative and

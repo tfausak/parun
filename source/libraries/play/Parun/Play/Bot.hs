@@ -25,6 +25,7 @@ import qualified Parun.Play.SplitMix as SplitMix
 import qualified Parun.Types.Action as Action
 import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
+import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CoinFace as CoinFace
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.Dividing as Dividing
@@ -40,13 +41,13 @@ import qualified Parun.Types.TargetCount as TargetCount
 -- | Each prompt a bot game over the decks in data/decks reaches, plus
 -- ChooseGuess, ChooseNumber and the prompts sharing an arm's shape, answered
 -- with one of its legal answers, each equally likely, an unbounded number
--- capped one past its floor. Never concedes.
+-- capped one past its floor. Never concedes. A card name is any of `names`,
+-- the reference's (Parun.Play.Game.bot).
 --
 -- Not implemented: a random answer to every other prompt, which gets
--- 'Replay.defaultAnswer' (#5227); ChooseCardName among them, its names in no
--- reference the client holds (#6569).
-bot :: (Monad m) => Answerer.Answerer (Asked.Asked PlayerView.PlayerView) (State.StateT SplitMix.Type.SplitMix m)
-bot = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
+-- 'Replay.defaultAnswer' (#5227).
+bot :: (Monad m) => [CardName.CardName] -> Answerer.Answerer (Asked.Asked PlayerView.PlayerView) (State.StateT SplitMix.Type.SplitMix m)
+bot names = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.ChooseAction _ _ actions -> maybe (pure Action.Pass) SplitMix.pick (NonEmpty.nonEmpty actions)
   Prompt.DeclareMulligan {} -> SplitMix.pick (MulliganDecision.Keep NonEmpty.:| [MulliganDecision.Mulligan])
   Prompt.Bottom _ _ cards count -> fmap (List.genericTake count) (SplitMix.shuffle cards)
@@ -137,6 +138,9 @@ bot = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.ChooseNumber _ _ _ least _ greatest -> SplitMix.between least (Maybe.fromMaybe (least + 1) greatest)
   -- CR 612.2: any two different words of a family the text change names.
   Prompt.ChooseWordSwap _ _ _ _ families forbidden -> pickOr (Replay.defaultAnswer (Asked.prompt asked)) (TextWord.swaps families forbidden)
+  -- CR 201.4: any name; CR 201.4a's restriction is judged where the
+  -- reference is (Parun.Interpreter.policingCardNames), which asks again.
+  Prompt.ChooseCardName {} -> pickOr (Replay.defaultAnswer (Asked.prompt asked)) names
   prompt -> pure (Replay.defaultAnswer prompt)
 
 -- | Any of the options, each equally likely, or the fallback where there is

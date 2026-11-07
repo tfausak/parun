@@ -1,3 +1,5 @@
+{-# LANGUAGE RankNTypes #-}
+
 -- Answering two questions: given a card's name, what card is that? And which
 -- cards are there?
 --
@@ -56,6 +58,10 @@ data Registry m = MkRegistry
     -- synthetic test fixture is in the pool without being such a card.
     cards :: m (Either InvalidCorpus.InvalidCorpus [Card.Card])
   }
+
+-- The same registry answering in another monad, each lookup carried over.
+hoist :: (forall a. m a -> n a) -> Registry m -> Registry n
+hoist lift registry = MkRegistry {fetchCard = lift . fetchCard registry, cards = lift (cards registry)}
 
 -- A card by name ("Goblin Piker") or by slug ("goblin-piker") -- a file-backed
 -- registry slugifies, and slugify is idempotent, so both are the same lookup.

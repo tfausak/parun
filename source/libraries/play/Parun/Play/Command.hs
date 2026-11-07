@@ -20,7 +20,6 @@ import qualified Data.Time.Clock.System as Clock
 import Numeric.Natural (Natural)
 import qualified Parun.Codec.Scenario as Codec.Scenario
 import qualified Parun.DeckList as DeckList
-import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Interpreter as Interpreter
 import qualified Parun.JsonCodec.Codec as Codec
@@ -32,8 +31,6 @@ import qualified Parun.Play.Record as Record
 import qualified Parun.Play.Render as Render
 import qualified Parun.Play.SplitMix as SplitMix.Play
 import qualified Parun.Registry as Registry
-import qualified Parun.Types.Card as Card
-import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.Deck as Deck
 import qualified Parun.Types.GraveyardOrder as GraveyardOrder
 import qualified Parun.Types.Hotseat as Hotseat
@@ -54,7 +51,7 @@ main arguments = case GetOpt.getOpt GetOpt.Permute flags arguments of
     Right options -> do
       registry <- Registry.defaultRoot >>= Registry.fileRegistry
       decks <- (,) <$> load registry one <*> load registry two
-      play options (Identity.runIdentity . Interpreter.chosenCard registry) decks
+      play options registry decks
   (_, _, problems) -> usage problems
 
 flags :: [GetOpt.OptDescr (PlayOptions.PlayOptions -> Either String PlayOptions.PlayOptions)]
@@ -94,9 +91,12 @@ load registry path = do
 nanoseconds :: Clock.SystemTime -> Natural
 nanoseconds t = Integer.toNaturalSaturating (toInteger (Clock.systemSeconds t) * 1000000000 + toInteger (Clock.systemNanoseconds t))
 
-play :: PlayOptions.PlayOptions -> (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> (Deck.Deck, Deck.Deck) -> IO ()
-play options lookUp (one, two) = do
+play :: PlayOptions.PlayOptions -> Registry.Registry Identity.Identity -> (Deck.Deck, Deck.Deck) -> IO ()
+play options registry (one, two) = do
   IO.hSetBuffering IO.stdout IO.LineBuffering
+  let reference :: Registry.Registry IO
+      reference = Registry.hoist (pure . Identity.runIdentity) registry
+      lookUp = Identity.runIdentity . Interpreter.chosenCard registry
   seed <- maybe (fmap (SplitMix.Play.fromClock . nanoseconds) Clock.getSystemTime) pure (PlayOptions.seed options)
   IO.hPutStrLn IO.stderr ("Seed " <> show seed <> ".")
   let people = filter (`Set.notMember` PlayOptions.bots options) [1, 2]
@@ -110,7 +110,7 @@ play options lookUp (one, two) = do
           then (idOf 2, two) NonEmpty.:| [(idOf 1, one)]
           else (idOf 1, one) NonEmpty.:| [(idOf 2, two)]
       answerer n
-        | Set.member n (PlayOptions.bots options) = Game.bot
+        | Set.member n (PlayOptions.bots options) = Game.bot reference
         | PlayOptions.json options = Game.wired exchange
         | otherwise = Game.human terminal lookUp
       seats = Map.fromList [(idOf n, answerer n) | n <- [1, 2]]
@@ -126,7 +126,7 @@ play options lookUp (one, two) = do
         Exception.UserInterrupt -> pure (Left (Text.pack "interrupted"))
         _ -> Exception.throwIO e
       finish = if PlayOptions.json options then const (pure ()) else Client.ending terminal (fmap idOf people)
-  outcome <- Exception.catch (Game.run observers seats finish hotseat generator orders matchup) interrupted
+  outcome <- Exception.catch (Game.run reference observers seats finish hotseat generator orders matchup) interrupted
   Monad.forM_ (PlayOptions.save options) $ \path -> do
     timeline <- IORef.readIORef entries
     let entrants = fmap (\(pid, deck) -> (Record.labelOf labels pid, Map.findWithDefault GraveyardOrder.Indifferent pid orders, deck)) matchup
