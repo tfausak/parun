@@ -59,6 +59,7 @@ import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Convoking as Convoking
+import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.DamageEvent as DamageEvent
@@ -78,6 +79,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GraveyardArrangement as GraveyardArrangement
 import qualified Parun.Types.Hotseat as Hotseat
 import qualified Parun.Types.Hybrid as Hybrid
+import qualified Parun.Types.HybridPayment as HybridPayment
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.ManaCost as ManaCost
@@ -906,6 +908,39 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "Enter keeps the order shown" (fst (asking facing [""] gs arrange)) (Right [0, 1])
     Spec.assertEqWith s "a number twice is refused" (fst (asking facing ["1 1"] gs arrange)) (Left (Text.pack "end of input"))
     Spec.assertEqWith s "damage events listed" (listedAfter "Order damage: type their numbers first to last, separated by spaces, or press Enter to keep this order; the first goes first:" damage) [Text.pack "  1. Forest deals 2 damage to Player 2", Text.pack "  2. Forest deals 3 damage to Your Hill Giant 3/3"]
+
+  Spec.it s "CR 702.136a riot is offered as yes or no through the client, and yes enters the creature with its counter" $ do
+    let heading = Text.pack "Choose riot for Zhur-Taa Goblin:"
+        riots sc
+          | heading `elem` pending sc = Just (Text.pack "1")
+          | otherwise = castsOnce "auto" "Zhur-Taa Goblin" sc
+    (_, resolved, _, shown) <- castTyping riots s registry "Zhur-Taa Goblin" ["Mountain", "Forest"]
+    Spec.assertEqWith s "yes and no listed" (takeWhile (Text.isPrefixOf (Text.pack "  ")) (drop 1 (dropWhile (/= heading) shown))) [Text.pack "  1. Yes", Text.pack "  2. No"]
+    Spec.assertBool s resolved "resolved"
+    Spec.assertBool s (any (\l -> Text.isPrefixOf (Text.pack "  Creatures: ") l && Text.isInfixOf (Text.pack "Zhur-Taa Goblin 3/3") l) shown) "entered with its counter"
+
+  Spec.it s "CR 608.2d a prompt answered by one of a fixed set lists it, after what the offer tells" $ do
+    forest <- S.printingOf s registry "Forest"
+    giant <- S.printingOf s registry "Hill Giant"
+    let (f, g1) = S.addPermanent forest S.alice (Setup.emptyGame S.bothPlayers)
+        (g, gs) = S.addPermanent giant S.bob g1
+        facing = Hotseat.fresh {Hotseat.facing = Just S.alice}
+        alice = Decider.MkDecider S.alice
+        upTo heading screenLines = takeWhile (\l -> not (any (`Text.isPrefixOf` l) [Text.pack "Type ", Text.pack "> "])) (dropWhile (not . Text.isPrefixOf heading) screenLines)
+        cost = Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 3])) []
+        (paid, life) = asking facing ["2"] gs (Prompt.ChoosePayLifeOnEntry alice S.alice f 2)
+        (_, buyback) = asking facing [""] gs (Prompt.ChooseBuyback alice S.alice f cost)
+        (end, clash) = asking facing ["2"] gs (Prompt.ChooseClash alice S.alice f f ((S.alice, f) NonEmpty.:| [(S.bob, g)]) (Seq.singleton (S.bob, LibraryPosition.Top)))
+    Spec.assertEqWith s "life told, then yes or no" (upTo (Text.pack "Life: ") life) (fmap Text.pack ["Life: 2", "Choose pay life on entry for Forest:", "  1. Yes", "  2. No"])
+    Spec.assertEqWith s "declined" paid (Right OptionalDecision.Declines)
+    Spec.assertEqWith s "the cost as Oracle text prints it, and a tag as words" (upTo (Text.pack "Cost: ") buyback) (fmap Text.pack ["Cost: {3}", "Choose buyback for Forest:", "  1. Buys back", "  2. No"])
+    Spec.assertEqWith s "CR 701.30c / 101.4b the cards revealed and what earlier clashers chose, beside who" (upTo (Text.pack "Card: ") clash) (fmap Text.pack ["Card: Your Forest", "Revealed: Player 1: Your Forest; Player 2: Player 2's Hill Giant 3/3", "Earlier: Player 2: Top", "Choose clash for Forest:", "  1. Top", "  2. Bottom"])
+    Spec.assertEqWith s "the end picked" end (Right LibraryPosition.Bottom)
+    let hybrid = ManaSymbol.Hybrid (Hybrid.MkHybrid (ManaType.Colored Color.White) (ManaType.Colored Color.Blue))
+        (_, half) = asking facing ["1"] gs (Prompt.AnnounceHybridHalf alice S.alice f hybrid (ManaType.Colored Color.White NonEmpty.:| [ManaType.Colored Color.Blue]))
+    Spec.assertEqWith s "CR 601.2b a mana symbol as Oracle text prints it" (take 1 (upTo (Text.pack "Symbol: ") half)) [Text.pack "Symbol: {W/U}"]
+    let (_, payment) = asking facing ["1"] gs (Prompt.AnnounceHybridPayment alice S.alice f (ManaType.Colored Color.Black) (HybridPayment.PaysTyped NonEmpty.:| [HybridPayment.PaysGeneric]))
+    Spec.assertEqWith s "a mana type as its symbol, and tags as words" (upTo (Text.pack "Mana: ") payment) (fmap Text.pack ["Mana: B", "Announce hybrid payment for Forest:", "  1. Pays typed", "  2. Pays generic"])
 
   -- CR 201.4: a seat at the terminal types a card's name; an empty line is
   -- refused.

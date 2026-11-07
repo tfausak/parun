@@ -28,6 +28,7 @@ import qualified Parun.Codec.ManaSymbol as Codec.ManaSymbol
 import qualified Parun.Codec.ManaType as Codec.ManaType
 import qualified Parun.Codec.ManaUnit as Codec.ManaUnit
 import qualified Parun.Codec.NumberFloor as Codec.NumberFloor
+import qualified Parun.Codec.PlayerEffect as Codec.PlayerEffect
 import qualified Parun.Codec.Reference as Codec.Reference
 import qualified Parun.Codec.Reply as Codec.Reply
 import qualified Parun.Codec.Request as Codec.Request
@@ -54,22 +55,32 @@ import qualified Parun.Types.Action as Action
 import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.BallotChoice as BallotChoice
+import qualified Parun.Types.BuybackDecision as BuybackDecision
 import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.CoinFace as CoinFace
+import qualified Parun.Types.CommandZoneDecision as CommandZoneDecision
+import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.Dividing as Dividing
+import qualified Parun.Types.EntwineDecision as EntwineDecision
 import qualified Parun.Types.Face as Face
+import qualified Parun.Types.ForageMode as ForageMode
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.Label as Label
+import qualified Parun.Types.LandOrNonland as LandOrNonland
+import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Mana as Mana.Type
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.MulliganOffer as MulliganOffer
+import qualified Parun.Types.MutateSide as MutateSide
 import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PrintingId as PrintingId
 import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristics
@@ -214,7 +225,7 @@ offerOf gs prompt = case prompt of
   Prompt.AssignCombatDamage _ _ source lethal total ->
     fields [("source", object source), ("lethal", Reply.encode (Reply.mapOf Reply.recipient Reply.natural) namer lethal), ("total", natural total)]
   Prompt.ChooseCombatDamageOption _ _ source option -> fields [("source", object source), ("option", Reply.encode (Reply.viaCodec Codec.CombatDamageOption.codec) namer option)]
-  Prompt.ChooseToPay _ _ source _ cost _ -> fields [("source", object source), ("cost", Reply.encode (Reply.viaCodec (Codec.Cost.codec Codec.Keyword.codec)) namer cost)]
+  Prompt.ChooseToPay _ _ source _ cost _ -> fields [("source", object source), ("cost", payment cost)]
   Prompt.ChooseDivision _ _ source dividing targets ->
     fields
       ( [("source", object source), ("targets", Reply.encode (Reply.list Reply.recipient) namer (NonEmpty.toList targets))]
@@ -301,7 +312,49 @@ offerOf gs prompt = case prompt of
   Prompt.OrderDamage _ _ events -> listing "order" Nothing [] (fmap damageEvent events)
   -- CR 608.2f / 701.44d / 707.10d: the first named handled first.
   Prompt.OrderForEach _ _ source recipients -> listing "order" (Just source) [] (fmap (Reply.encode Reply.recipient namer) recipients)
+  -- CR 705.2.
+  Prompt.CallCoin _ _ -> choosing prompt "options" Nothing [] [CoinFace.Heads, CoinFace.Tails]
+  -- CR 701.30c: the seat's own card, every card revealed beside who revealed
+  -- it, and (CR 101.4b) where earlier clashers put theirs.
+  Prompt.ChooseClash _ _ source card revealed earlier ->
+    choosing prompt "options" (Just source) [("card", object card), ("revealed", Reply.encode (Reply.list (Reply.pairOf Reply.player Reply.object)) namer (NonEmpty.toList revealed)), ("earlier", Reply.encode (Reply.seqOf (Reply.pairOf Reply.player (Reply.viaCodec Codec.LibraryPosition.codec))) namer earlier)] [LibraryPosition.Top, LibraryPosition.Bottom]
+  -- CR 608.2d: how many cards stay above the upper option.
+  Prompt.ChooseLibraryEnd _ _ source above -> choosing prompt "options" (Just source) [("above", natural above)] [LibraryPosition.Top, LibraryPosition.Bottom]
+  Prompt.ChooseForage _ _ source -> choosing prompt "options" (Just source) [] [ForageMode.ExileCards, ForageMode.SacrificeFood]
+  -- CR 702.140c: the creature it merges with.
+  Prompt.ChooseMutateSide _ _ source onto -> choosing prompt "options" (Just source) [("onto", object onto)] [MutateSide.Over, MutateSide.Under]
+  Prompt.ChooseBuyback _ _ source cost -> choosing prompt "options" (Just source) [("cost", payment cost)] [BuybackDecision.BuysBack, BuybackDecision.Declines]
+  Prompt.ChooseEntwine _ _ source cost -> choosing prompt "options" (Just source) [("cost", payment cost)] [EntwineDecision.Entwines, EntwineDecision.Declines]
+  Prompt.ReturnCommander _ _ source -> choosing prompt "options" (Just source) [] [CommandZoneDecision.Returns, CommandZoneDecision.Leaves]
+  Prompt.ChooseLandOrNonland _ _ source -> choosing prompt "options" (Just source) [] [Just LandOrNonland.Land, Just LandOrNonland.Nonland, Nothing]
+  -- Each a yes or no, with what the seat decides about.
+  Prompt.ChooseCommandZoneOfferFirst _ _ source -> choosing prompt "options" (Just source) [] yesOrNo
+  Prompt.ChooseDredge _ _ source count -> choosing prompt "options" (Just source) [("count", natural count)] yesOrNo
+  Prompt.ChooseExert _ _ source -> choosing prompt "options" (Just source) [] yesOrNo
+  Prompt.ChooseExplore _ _ source card -> choosing prompt "options" (Just source) [("card", object card)] yesOrNo
+  Prompt.ChoosePayLifeOnEntry _ _ source life -> choosing prompt "options" (Just source) [("life", natural life)] yesOrNo
+  Prompt.ChooseRedirect _ _ source card -> choosing prompt "options" (Just source) [("card", object card)] yesOrNo
+  -- How many times the body has run.
+  Prompt.ChooseRepeat _ _ source times -> choosing prompt "options" (Just source) [("times", natural times)] yesOrNo
+  Prompt.ChooseRiot _ _ source -> choosing prompt "options" (Just source) [] yesOrNo
+  Prompt.ChooseSubstitute _ _ source -> choosing prompt "options" (Just source) [] yesOrNo
+  Prompt.ChooseTribute _ _ source count -> choosing prompt "options" (Just source) [("count", natural count)] yesOrNo
+  Prompt.ChooseTurnUpAttachment _ _ source -> choosing prompt "options" (Just source) [] yesOrNo
+  Prompt.ChooseUnleash _ _ source -> choosing prompt "options" (Just source) [] yesOrNo
+  Prompt.OfferedCast _ _ source name -> choosing prompt "options" (Just source) [("name", R.Text (CardName.unwrap name))] yesOrNo
+  Prompt.OfferedMiracleReveal _ _ source name cost -> choosing prompt "options" (Just source) [("name", R.Text (CardName.unwrap name)), ("cost", payment cost)] yesOrNo
+  Prompt.OfferedExtra _ _ source effect -> choosing prompt "options" (Just source) [("effect", Reply.encode (Reply.viaCodec Codec.PlayerEffect.codec) namer effect)] yesOrNo
+  -- CR 706.2a: the result rerolled, and what rerolling costs where it costs.
+  Prompt.RerollDie _ _ result cost -> choosing prompt "options" Nothing ([("result", natural result)] <> [("cost", payment c) | Just c <- [cost]]) yesOrNo
   _ -> R.Null
+
+-- | A yes or no, yes first.
+yesOrNo :: [OptionalDecision.OptionalDecision]
+yesOrNo = [OptionalDecision.Exercises, OptionalDecision.Declines]
+
+-- | A cost in ChooseToPay's spelling.
+payment :: Cost.Type.Cost Keyword.Type.Keyword -> R.Reply
+payment = Reply.encode (Reply.viaCodec (Codec.Cost.codec Codec.Keyword.codec)) namer
 
 -- | A prompt's source where it has one, what else the seat is told, and
 -- under @key@ its items: the options `choosing` spells, or under @"order"@

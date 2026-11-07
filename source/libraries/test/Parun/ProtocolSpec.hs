@@ -43,6 +43,7 @@ import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.ClauseIndex as ClauseIndex
+import qualified Parun.Types.CoinFace as CoinFace
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.Comparison as Comparison
@@ -56,13 +57,16 @@ import qualified Parun.Types.Game as Game.Type
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GraveyardArrangement as GraveyardArrangement
+import qualified Parun.Types.LandOrNonland as LandOrNonland
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Measures as Measures
 import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.MutateSide as MutateSide
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.Observer as Observer
 import qualified Parun.Types.Operand as Operand
+import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.PayOffer as PayOffer
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerView as PlayerView
@@ -207,6 +211,22 @@ spec s registry = Spec.describe s "Protocol" $ do
     Spec.assertEqWith s "damage events" (field "order" (offerOf (Prompt.OrderDamage alice S.alice [hit]))) (Just (R.Array [R.Object [(Text.pack "source", Protocol.object o7), (Text.pack "target", R.Array [R.Text (Text.pack "Player"), R.Text (Text.pack "1")]), (Text.pack "amount", R.Number 2)]]))
     Spec.assertEqWith s "recipients, beside their source" (field "source" (offerOf each), field "order" (offerOf each)) (Just (Protocol.object o7), Just (Reply.encode (Reply.list Reply.recipient) Protocol.namer [Recipient.ToCreature o9, Recipient.ToPlayer S.bob]))
     Spec.assertBool s (all (Scenario.withinOffer arrivals) [[0, 1], [1, 0]] && not (Scenario.withinOffer arrivals [0, 0])) "each permutation within the offer, and only those"
+
+  Spec.it s "a prompt answered by one of a fixed set offers each value as the answer that picks it, beside what it decides about" $ do
+    let o7 = ObjectId.MkObjectId 7
+        o9 = ObjectId.MkObjectId 9
+        alice = Decider.MkDecider S.alice
+        gs = Setup.emptyGame S.bothPlayers
+        options prompt = maybe (Left (Text.pack "no options")) Right (field "options" (Protocol.offerOf gs prompt) >>= arrayOf) >>= traverse (Protocol.decodeAnswer prompt)
+        dredge = Prompt.ChooseDredge alice S.alice o7 3
+    Spec.assertEqWith s "a yes or no, yes first" (options dredge) (Right [OptionalDecision.Exercises, OptionalDecision.Declines])
+    Spec.assertEqWith s "beside its source and count" (fmap (\key -> field key (Protocol.offerOf gs dredge)) ["source", "count"]) [Just (Protocol.object o7), Just (R.Number 3)]
+    Spec.assertEqWith s "a coin's faces" (options (Prompt.CallCoin alice S.alice)) (Right [CoinFace.Heads, CoinFace.Tails])
+    Spec.assertEqWith s "a land, a nonland, or neither" (options (Prompt.ChooseLandOrNonland alice S.alice o7)) (Right [Just LandOrNonland.Land, Just LandOrNonland.Nonland, Nothing])
+    Spec.assertEqWith s "a mutate's sides" (options (Prompt.ChooseMutateSide alice S.alice o7 o9)) (Right [MutateSide.Over, MutateSide.Under])
+    Spec.assertEqWith s "a library's ends" (options (Prompt.ChooseLibraryEnd alice S.alice o7 0)) (Right [LibraryPosition.Top, LibraryPosition.Bottom])
+    Spec.assertEqWith s "a die reroll, with no source" (fmap (\key -> field key (Protocol.offerOf gs (Prompt.RerollDie alice S.alice 4 Nothing))) ["source", "result", "cost"]) [Nothing, Just (R.Number 4), Nothing]
+    Spec.assertBool s (all (Scenario.withinOffer dredge) [OptionalDecision.Exercises, OptionalDecision.Declines]) "every option within the offer"
 
   Spec.it s "a hidden card reaches no line sent to the other seat" $ do
     gs <- started s registry
