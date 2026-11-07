@@ -65,6 +65,9 @@ data Joining
     -- "two artifacts and/or creatures" (Adaptive Gemguard), where one object
     -- may be both.
     Inclusive
+  | -- | "each creature and planeswalker your opponents control" (Fulminous
+    -- Forte): singular nouns joined with "and", qualified in the plural.
+    Conjoined
   deriving (Eq, Show)
 
 -- | 'phrase', joining a disjunction's nouns as given.
@@ -215,6 +218,7 @@ disjunction joining ps
       let (one', many') = case joining of
             Plain -> ("or", "and")
             Inclusive -> ("and/or", "and/or")
+            Conjoined -> ("and", "and")
       singulars <- traverse (describe Singular (MkNoun Text.empty Nothing)) ps
       let bare p = null (adjectives p) && null (qualifiers p)
           plurals = traverse (Maybe.listToMaybe . describe Plural (MkNoun Text.empty Nothing)) ps
