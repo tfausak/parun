@@ -33,52 +33,29 @@ census did not settle.
 
 
 
-- Cruel Calculations:
-  `_GameNumber:TheNumberOfCardsPutIntoAPlayersGraveyardFromTheirLibraryThisTurn`;
-  verify a history count by owner
-
-- Cryotheory Adept: `_Rule:FromGraveyard`
-
-- Curse-Marred Demon: `_Action:DiscardACardAtRandom`
-
-- Danitha, Spear of Agony: `_Spells:TargetsAPlayer`
-
-- Danitha, Sword of Hope: `_Rule:TriggerOnceEachTurn`
-
-- Dark Matter Manipulator: `_StaticLayerEffect:AdjustPTForEach`
-
-- Darklight Phoenix: `_Rule:FromGraveyard`
 
 
-- Denzilore Fatehold: `_Trigger:Or`
 
 
-- Diviner of Victory: `_Trigger:Or`
-
-- Divining Duelist: `_Actions:Modal_ChooseOne`
-
-- Eardrum Rattler: `_Permanents:PowerIs`
-
-- Edgar, Ancient Bloodlord: renders differently from its Oracle text
-
-- Edgar, Moonlit Sovereign: `_Players:HasntCastASpellThisTurn`
 
 
-- Emrakul, the Exigent Doom: `_Rule:FromStack`; verify "until this card is cast
-  from exile" over a `SpellCast` duration and the exile-from-hand cost
-
-- Essence Burn: `_Action:CreateReplaceWouldPutIntoGraveyardUntil`
-
-- Eye of Jace: `_Action:Surveil`
-
-- Face Yourself: `_CreatableToken:TokenCopyOfEachPermanent`
 
 
-- Fatehold Charm: `_Target:TargetSpellOrTargetPermanent`
 
-- Fatehold Chronologist: `_CreatableToken:NamedTokenWithPT`; shares Peer Review
 
-- Fateshaper Aspirant: `_Actions:Modal_ChooseOne`
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 - Fblthp, Impossibly Lost: `_Trigger:If`
 
@@ -429,4 +406,7 @@ census did not settle.
 
 ## Needs a capability
 
-None.
+### #6546: no cost exiles a card from its owner's hand
+
+- Emrakul, the Exigent Doom: its hand ability's cost, its "until this card is
+  cast from exile" and its cast permission all name the card the cost exiled.

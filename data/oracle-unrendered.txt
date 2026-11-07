@@ -603,6 +603,7 @@ crown-of-empires
 crown-of-the-ages
 crucible-of-worlds
 cruel-bargain
+cruel-calculations
 cruel-edict
 cruel-fate
 crumb-and-get-it
@@ -647,8 +648,12 @@ damping-engine
 dance-of-many
 dan-lewis
 danitha-benalias-hope
+danitha-spear-of-agony
+danitha-sword-of-hope
+dark-matter-manipulator
 dark-tutelage
 darkest-hour
+darklight-phoenix
 darkpact
 darksteel-colossus
 darksteel-garrison
@@ -694,6 +699,7 @@ demonic-embrace
 denethor-stone-seer
 dense-foliage
 denying-wind
+denzilore-fatehold
 departed-deckhand
 dermotaxi
 desecrated-tomb
@@ -739,6 +745,7 @@ disturbed-slumber
 divine-deflection
 divine-intervention
 divine-resilience
+diviner-of-victory-unwind-history
 diviners-lockbox
 diviners-portent
 djinn-of-wishes
@@ -813,6 +820,7 @@ dwell-on-the-past
 dwindle
 eager-construct
 eager-trufflesnout
+eardrum-rattler
 early-harvest
 earthbending-lesson
 eaten-alive
@@ -823,6 +831,7 @@ ebony-horse
 eccentric-farmer
 echo-of-eons
 edgar-king-of-figaro
+edgar-moonlit-sovereign
 edgewalker
 eightfold-maze
 elbrus-the-binding-blade-withengar-unbound
@@ -891,6 +900,7 @@ errantry
 ersatz-gnomes
 ertais-scorn
 erudite-wizard
+essence-burn
 essence-of-the-wild
 etali-primal-storm
 etchings-of-the-chosen
@@ -933,10 +943,12 @@ extrapolate-the-impossible
 extravagant-replication
 extus-oriq-overlord-awaken-the-blood-avatar
 eye-for-an-eye
+eye-of-jace
 eye-spy
 eyes-of-gitaxias
 ezuri-claw-of-progress
 ezuri-stalker-of-spheres
+face-yourself
 fact-or-fiction
 fae-of-wishes-granted
 faebloom-trick
@@ -957,6 +969,8 @@ fastbond
 fatal-blow
 fatal-lore
 fate-transfer
+fatehold-charm
+fatehold-chronologist-peer-review
 fathom-fleet-cutthroat
 fatigue
 fblthp-knows-the-way

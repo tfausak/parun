@@ -653,7 +653,10 @@ joined context predicates = case predicates of
         ]
       together = [(Prose.sentence (clauseText p <> Text.pack " and " <> clauseText q) <> trailing q, allMentions p <> allMentions q)]
       apart = [(text, allMentions p <> allMentions q) | text <- followedBy context (sentences p) (sentences q)]
-      thenImperative = [(Prose.sentence (clauseText p <> Text.pack ", then " <> verb q) <> trailing q, allMentions p <> mentions q) | Maybe.isNothing (subject p), implied q]
+      -- Free: a series, whose last step alone keeps "then" (Curse-Marred
+      -- Demon's "put it into your hand, shuffle, then discard a card at random").
+      thenImperative = [(Prose.sentence (first <> Text.pack ", then " <> verb q) <> trailing q, allMentions p <> mentions q) | Maybe.isNothing (subject p), implied q, first <- clauseText p : serial (clauseText p)]
+      serial t = [Text.dropEnd 5 before <> rest | let (before, rest) = Text.breakOnEnd (Text.pack ", then ") t, not (Text.null before)]
       andImperative = [(Prose.sentence (clauseText p <> Text.pack " and " <> verb q) <> trailing q, allMentions p <> mentions q) | Maybe.isNothing (subject p), implied q]
       -- Free: an imperative joined to a stated subject (Vampire Gourmand).
       imperativeAnd = [(Prose.sentence (verb p <> Text.pack " and " <> clauseText q) <> trailing q, allMentions p <> allMentions q) | implied p, not (implied q)]
