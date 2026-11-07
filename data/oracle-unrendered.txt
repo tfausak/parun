@@ -2701,6 +2701,7 @@ sphinx-of-forgotten-lore
 sphinx-of-the-final-word
 sphinx-of-the-revelation
 sphinx-of-uthuun
+sphinxs-approach
 sphinxs-decree
 sphinxs-tutelage
 spider-punk
@@ -2756,6 +2757,10 @@ steel-hellkite
 steeling-stance
 steward-of-the-harvest
 stifle
+stingcaster-mage
+stingerquill-charm
+stingerquill-voxmancer-vicious-verse
+stinging-vitriol
 stir-the-grave
 stone-giant
 stonebinders-familiar
@@ -2808,6 +2813,8 @@ superior-spider-man
 suppression-bonds
 suppression-field
 suqata-assassin
+sureshot-sower
+surgical-precision
 surrak-the-hunt-caller
 surrounded-by-orcs
 surveillance-monitor
@@ -2884,12 +2891,17 @@ temporal-manipulation
 temporary-truce
 tenacious-dead
 tenacious-underdog
+tenured-tethermage
 terra-stomper
 territorial-kavu
 territorial-maro
 terror-of-the-peaks
 test-of-faith
+tether-technician
 tetravus
+tetsuko-umezawa-fugitive
+tetsuko-umezawa-pursuer
+teyo-diamondblade-mage
 tezzeret-artifice-master
 tezzeret-cruel-machinist
 tezzerets-gatebreaker

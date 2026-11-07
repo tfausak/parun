@@ -168,33 +168,19 @@ census did not settle.
 
 
 
-- Sphinx's Approach: `_Cost:Exile`; verify the optional "exile this spell and
-  four cards named" step
-
-- Stingcaster Mage: `_Action:CreateGraveyardCardEffectUntil`
 
 
-- Stingerquill Charm: `_CreatableToken:NamedTokenWithPT`
-
-- Stingerquill Voxmancer // Vicious Verse: `_Permanents:IsntPrepared`; shares
-  Vicious Verse
-
-- Stinging Vitriol: `_Action:RevealHandAndPlayerChoosesACardToDiscard`
-
-- Sureshot Sower: `_Rule:FromHand`
-
-- Surgical Precision: `_Permanents:ToughnessIs`
 
 
-- Tenured Tethermage: `_Action:CreateTokens`
 
-- Tether Technician: `_Action:Reflexive_Discard_WhenYouDo`
 
-- Tetsuko Umezawa, Fugitive: `_Permanents:PowerIs`
 
-- Tetsuko Umezawa, Pursuer: `_Trigger:WhenACreatureBlocks`
 
-- Teyo, Diamondblade Mage: `_Action:If`
+
+
+
+
+
 
 - Teyo, Lightshield Expert: `_Action:If`
 
