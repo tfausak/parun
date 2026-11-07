@@ -1,0 +1,57 @@
+{
+  "description": "CR 603.2 / 702.177a Liliana the Repentant mills two as each other creature or planeswalker alice controls enters, and exhausts once, at sorcery speed, to return one from her graveyard and grow",
+  "note": "Liliana entering herself, alice's Swamp and bob's Grizzly Bears mill nothing. The exhaust is refused with Dark Ritual on the stack, at alice's Lightning Bolt and at bob's Hill Giant in his graveyard; it returns Ajani Goldmane, whose entering mills the Mountain and the Plains and leaves the Islands, and Liliana becomes 3/3. A second activation, at alice's Hill Giant, is refused with mana to spare.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "BBBBBBBBBBBB",
+        "hand": [
+          { "card": "Liliana the Repentant", "label": "liliana" },
+          { "card": "Swamp", "label": "swamp" },
+          { "card": "Dark Ritual", "label": "ritual" }
+        ],
+        "graveyard": [
+          { "card": "Ajani Goldmane", "label": "ajani" },
+          { "card": "Hill Giant", "label": "giant" },
+          { "card": "Lightning Bolt", "label": "bolt" }
+        ],
+        "library": [{ "card": "Mountain" }, { "card": "Plains" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Forest", "label": "f1" }, { "card": "Forest", "label": "f2" }],
+        "hand": [{ "card": "Grizzly Bears", "label": "bobbears" }],
+        "graveyard": [{ "card": "Hill Giant", "label": "bobgiant" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$liliana" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "PlayLand": "$swamp" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$ritual", "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "Liliana the Repentant", "targets": ["$ajani"], "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "Liliana the Repentant", "targets": ["$bolt"], "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "Liliana the Repentant", "targets": ["$bobgiant"], "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Graveyard", "is": ["$ajani", "$giant", "$bolt", "Dark Ritual"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Liliana the Repentant", "targets": ["$ajani"], "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "Liliana the Repentant", "kind": { "type": "PlusOnePlusOne" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Ajani Goldmane", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Graveyard", "is": ["$giant", "$bolt", "Dark Ritual", "Mountain", "Plains"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Liliana the Repentant", "power": 3, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "Liliana the Repentant", "targets": ["$giant"], "mana": [null] } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$bobbears", "mana": ["$f1", "$f2"] } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Island", "count": 0 } } }
+  ]
+}

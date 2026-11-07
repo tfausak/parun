@@ -1567,9 +1567,11 @@ kindle-the-carnage
 kindle-the-inner-flame
 kindred-boon
 kindred-discovery
+kindred-judgment
 kinetic-augur
 king-haralds-revenge
 kiora-behemoth-beckoner
+kiora-of-salt-and-sand
 kiora-the-rising-tide
 kishla-skimmer
 kismet
@@ -1582,9 +1584,11 @@ knight-of-the-ebon-legion
 knight-of-the-white-orchid
 koma-world-eater
 kongmings-contraptions
+konstrari-improviser-soul-tether
 kopala-warden-of-waves
 kormus-bell
 koth-fire-of-resistance
+koth-the-geomancer
 kothophed-soul-hoarder
 krarks-thumb
 krav-the-unredeemed
@@ -1592,6 +1596,7 @@ krosan-vorine
 krovikan-fetish
 krovikan-sorcerer
 kurkesh-onakke-ancient
+kwia-vigorbloom
 kykar-zephyr-awakener
 kytheon-hero-of-akros-gideon-battle-forged
 labyrinth-minotaur
@@ -1638,6 +1643,7 @@ library-of-lat-nam
 library-of-leng
 lich
 lichs-mirror
+lichs-relic
 lier-disciple-of-the-drowned
 life-and-limb
 lifebane-zombie
@@ -1660,6 +1666,7 @@ lilianas-scorn
 lilianas-scrounger
 lilianas-standard-bearer
 liliana-the-necromancer
+liliana-the-repentant
 liliana-untouched-by-death
 liliana-vess
 lilianas-caress
@@ -1677,6 +1684,7 @@ liu-bei-lord-of-shu
 living-artifact
 living-destiny
 living-lands
+living-library
 living-lore
 living-plane
 living-terrain
@@ -1723,6 +1731,7 @@ lure
 lurking-evil
 lurking-predators
 luxior-giadas-gift
+lyra-archangel-of-dawn
 lys-alana-dignitary
 ma-chao-western-warrior
 maddening-imp

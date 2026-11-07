@@ -192,11 +192,14 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (fmap Text.pack ["haste", "horsemanship"]) (Normalise.normalise x (Text.pack "Haste; horsemanship (This creature can't be blocked except by creatures with horsemanship.)"))
 
   -- CR 201.5 / 201.5c / 700.7: a card names itself by its name, a legendary one by
-  -- the part before the comma, and newer Oracle text as "this creature".
+  -- the part before the comma or the word before " of ", and newer Oracle text
+  -- as "this creature".
   Spec.it s "normalise writes every self-reference alike, and only whole words" $ do
     let rograkh = CardName.MkCardName (Text.pack "Rograkh, Son of Rohgahh")
         shock = CardName.MkCardName (Text.pack "Shock")
+        kiora = CardName.MkCardName (Text.pack "Kiora of Fire and Ashes")
     Spec.assertEq s (Normalise.normalise rograkh (Text.pack "Rograkh, Son of Rohgahh deals 1 damage.")) (Normalise.normalise rograkh (Text.pack "Rograkh deals 1 damage."))
+    Spec.assertEq s [Text.pack "when ~ enters"] (Normalise.normalise kiora (Text.pack "When Kiora enters"))
     Spec.assertEq s (Normalise.normalise rograkh (Text.pack "Rograkh deals 1 damage.")) (Normalise.normalise rograkh (Text.pack "This creature deals 1 damage."))
     Spec.assertEq s [Text.pack "~ deals 2 damage to any target."] (Normalise.normalise shock (Text.pack "Shock deals 2 damage to any target."))
     Spec.assertEq s [Text.pack "shockwave."] (Normalise.normalise shock (Text.pack "Shockwave."))

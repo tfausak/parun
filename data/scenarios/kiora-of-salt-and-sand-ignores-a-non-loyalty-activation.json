@@ -1,0 +1,34 @@
+{
+  "description": "CR 603.4 / 606.2 Kiora of Salt and Sand does not trigger when alice has activated only a non-loyalty ability this turn",
+  "note": "The board of kiora-of-salt-and-sand-untaps-an-attacker-after-a-loyalty-activation, with Shivan Dragon's {R}: +1/+0 activated in place of Ajani Goldmane's granted [-8]. The intervening if fails, so nothing triggers: the Bears stay tapped and bob's Hill Giant blocks them.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "R",
+        "battlefield": [
+          { "card": "Kiora of Salt and Sand", "label": "kiora", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true },
+          { "card": "Shivan Dragon", "label": "shivan" },
+          { "card": "Ajani Goldmane", "label": "ajani", "counters": [{ "key": { "type": "Loyalty" }, "value": 9 }] }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$shivan", "ability": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$shivan", "power": 6, "toughness": 5 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$kiora", "$bears"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Tapped": { "object": "$bears", "tapped": true } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$giant": ["$bears"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$bears", "blockers": ["$giant"] } } }
+  ]
+}

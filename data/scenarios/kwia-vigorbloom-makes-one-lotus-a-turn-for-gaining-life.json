@@ -1,0 +1,48 @@
+{
+  "description": "CR 119.9 / 603.2 Kwia Vigorbloom makes a Lotus the first time alice gains life each turn, and a Lotus taps and sacrifices for three mana of one color",
+  "note": "alice gains life twice on her turn and once on bob's: one Lotus on turn 1, a second on turn 2. On turn 2 she sacrifices one Lotus for three green, leaving one.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Kwia Vigorbloom", "label": "kwia" },
+          { "card": "Plains", "label": "p1" },
+          { "card": "Plains", "label": "p2" },
+          { "card": "Plains", "label": "p3" }
+        ],
+        "hand": [
+          { "card": "Healing Salve", "label": "salve1" },
+          { "card": "Healing Salve", "label": "salve2" },
+          { "card": "Healing Salve", "label": "salve3" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      { "name": "bob", "library": [{ "card": "Island" }, { "card": "Island" }] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$salve1", "modes": [0], "targets": ["$alice"], "mana": ["$p1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Lotus", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$salve2", "modes": [0], "targets": ["$alice"], "mana": ["$p2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 26 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Lotus", "count": 1 } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "do": { "Cast": { "object": "$salve3", "modes": [0], "targets": ["$alice"], "mana": ["$p3", null] } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass" },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Life": { "player": "alice", "life": 29 } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass" },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Lotus", "count": 2 } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "do": { "Take": { "action": "ActivateManaAbility Lotus", "costOrder": [0, 1], "yields": [[{ "manaType": { "type": "Colored", "value": "Green" }, "tags": ["Artifact"], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null }, { "manaType": { "type": "Colored", "value": "Green" }, "tags": ["Artifact"], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null }, { "manaType": { "type": "Colored", "value": "Green" }, "tags": ["Artifact"], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null }]] } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Lotus", "count": 1 } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "View": { "of": "ManaPool", "player": "alice", "is": [
+      { "manaType": { "type": "Colored", "value": "Green" }, "tags": ["Artifact"], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null },
+      { "manaType": { "type": "Colored", "value": "Green" }, "tags": ["Artifact"], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null },
+      { "manaType": { "type": "Colored", "value": "Green" }, "tags": ["Artifact"], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null }
+    ] } } }
+  ]
+}

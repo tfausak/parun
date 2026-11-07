@@ -1,0 +1,31 @@
+{
+  "description": "CR 207.2c / 603.2 Koth, the Geomancer's landfall deals 1 damage to each opponent and adds {R} when the land that entered is a Mountain",
+  "note": "alice plays a Mountain beside the one she already controls. The trigger uses the stack (CR 605.1b: it does not trigger from a mana ability), bob and carol each go to 19, alice stays at 20, and her pool holds one {R}. The paired board plays a Forest and adds nothing.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Koth, the Geomancer", "label": "koth" },
+          { "card": "Mountain", "label": "old" }
+        ],
+        "hand": [{ "card": "Mountain", "label": "new" }, { "card": "Forest", "label": "forest" }]
+      },
+      { "name": "bob" },
+      { "name": "carol" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "PlayLand": "$new" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of $koth"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 19 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "carol", "life": 19 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 20 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "ManaPool", "player": "alice", "is": [
+      { "manaType": { "type": "Colored", "value": "Red" }, "tags": [], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null }
+    ] } } }
+  ]
+}

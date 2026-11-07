@@ -1,0 +1,46 @@
+{
+  "description": "CR 603.12 / 601.2c Lich's Relic, paid {2} as it enters, destroys up to one creature or planeswalker of each opponent, then equips for +2/+1",
+  "note": "bob's slot refuses carol's Hill Giant and bob's own Sol Ring, which is neither a creature nor a planeswalker; carol's slot refuses alice's Grizzly Bears. bob's Ajani Goldmane and carol's Hill Giant die; bob's Raging Goblin, untargeted, lives. Equipped, the Bears are 4/3.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "BCCCC",
+        "battlefield": [{ "card": "Grizzly Bears", "label": "bears" }],
+        "hand": [{ "card": "Lich's Relic", "label": "relic" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Ajani Goldmane", "label": "ajani", "counters": [{ "key": { "type": "Loyalty" }, "value": 4 }] },
+          { "card": "Raging Goblin", "label": "raging" },
+          { "card": "Sol Ring", "label": "ring" }
+        ]
+      },
+      {
+        "name": "carol",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$relic" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseToPay": { "decision": "Pays" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "ChooseTargets": { "target#player1": ["$giant"], "target#player2": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "ChooseTargets": { "target#player1": ["$ring"], "target#player2": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "ChooseTargets": { "target#player1": [], "target#player2": ["$bears"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTargets": { "target#player1": ["$ajani"], "target#player2": ["$giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Ajani Goldmane", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Raging Goblin", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Lich's Relic", "targets": ["$bears"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$bears", "power": 4, "toughness": 3 } } }
+  ]
+}

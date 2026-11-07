@@ -3320,6 +3320,8 @@ namedTokens =
       CardName.MkCardName (Text.pack "Koma's Coil"),
       -- Goblin Kaboomist's "a colorless artifact token named Land Mine".
       CardName.MkCardName (Text.pack "Land Mine"),
+      -- Kwia Vigorbloom's "a colorless artifact token named Lotus".
+      CardName.MkCardName (Text.pack "Lotus"),
       CardName.MkCardName (Text.pack "Nalaar Aetherjet"),
       -- Yotia Declares War's "a 0/2 colorless Thopter artifact creature token
       -- with flying named Ornithopter".
