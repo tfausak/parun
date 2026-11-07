@@ -3123,15 +3123,19 @@ revealableFromHand pid filter_ gs =
       matching oid = Filter.matches (Filter.contextIn gs Nothing Nothing) (viewOf oid) filter_
    in filter matching (Game.cardsIn Zone.Hand pid gs)
 
--- CR 701.4a: what a player may behold as `entering` enters -- revealableFromHand
+-- CR 701.4a: what a player may behold as a permanent enters -- revealableFromHand
 -- above, then the permanents they control matched the same way, in id order.
--- The entering object is left out: CR 614.12 applies the replacement before
--- it enters.
-beholdableOnEntry :: PlayerId -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
-beholdableOnEntry pid entering filter_ gs =
+-- The permanents are Projection.boardAsEntering's, CR 614.12a: the choice is
+-- made before the permanent enters, so neither it nor anything entering beside
+-- it is there to choose (Drowned Catacomb, Gatherer 2009-10-01: "It won't see
+-- lands that are entering at the same time").
+-- theorists-sanctum-co-entering-with-jace-enters-tapped proves the batch half.
+beholdableOnEntry :: PlayerId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
+beholdableOnEntry pid filter_ gs =
   let viewOf = Projection.viewsOf gs
       matching oid = Filter.matches (Filter.contextIn gs Nothing Nothing) (viewOf oid) filter_
-   in revealableFromHand pid filter_ gs <> filter (\oid -> oid /= entering && matching oid) (List.sort (Projection.controls pid gs))
+      there oid = Set.member oid (GameState.battlefield (Projection.boardAsEntering gs))
+   in revealableFromHand pid filter_ gs <> filter (\oid -> there oid && matching oid) (List.sort (Projection.controls pid gs))
 
 -- CR 702.38a: the cards a player may reveal from their hand for an amplify
 -- ability -- the ones sharing a creature type with the entering object.

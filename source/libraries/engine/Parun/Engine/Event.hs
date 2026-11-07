@@ -4154,7 +4154,7 @@ apply settle batch applied batchPrevented candidate event =
             -- controls offered beside the hand, on the same prompt and posture.
             -- A beheld permanent is only chosen, so nothing is logged for it.
             EntryPrice.Behold filter_ -> do
-              let candidates = Replacement.beholdableOnEntry controller oid filter_ gs
+              let candidates = Replacement.beholdableOnEntry controller filter_ gs
               answer <- case NonEmpty.nonEmpty candidates of
                 Nothing -> pure Nothing
                 Just offered -> Game.choose (Prompt.ChooseRevealOnEntry (Decide.deciderFor controller gs) controller oid offered)
