@@ -7,6 +7,7 @@ module Parun.ScenarioSpec where
 import qualified Control.Monad.IO.Class as MonadIO
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.ByteString as ByteString
+import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
@@ -31,6 +32,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
 import qualified Parun.Types.Action as A
 import qualified Parun.Types.Answer as Answer
+import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.Board as Board
 import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.CardName as CardName
@@ -39,6 +41,7 @@ import qualified Parun.Types.Concession as Concession
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Discrepancy as Discrepancy
+import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.Game as Game.Type
 import qualified Parun.Types.GameState as GameState
@@ -49,6 +52,7 @@ import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Move as Move
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.Placement as Placement
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Readiness as Readiness
@@ -61,6 +65,7 @@ import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.Staged as Staged
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TeamId as TeamId
+import qualified Parun.Types.Timed as Timed
 import qualified Parun.Types.When as When
 import qualified System.Directory as Directory
 
@@ -657,9 +662,10 @@ spec s registry = Spec.describe s "Scenario" $ do
   Spec.it s "a check that reads false fails as a false check, naming what it saw" $ do
     result <- runJson s registry (attackThen "{\"turn\":1,\"step\":\"EndOfCombat\",\"player\":\"alice\",\"check\":{\"Life\":{\"player\":\"bob\",\"life\":17}}}" "[]")
     case result of
-      Left (ScenarioFailure.MkCheckFailed (Just key) _ observed) -> do
+      Left (ScenarioFailure.MkCheckFailed (Just key) _ observed skipped) -> do
         Spec.assertEqWith s "the moment it ran at" key (When.MkWhen 1 S.endOfCombat (S.seatLabel S.alice))
         Spec.assertEqWith s "what it saw" observed (Text.pack "18")
+        Spec.assertEqWith s "nothing skipped before it" (length skipped) 0
       Left failure -> Spec.assertFailure s (S.renderFailure failure)
       Right _ -> Spec.assertFailure s "a false check passed"
 
@@ -672,12 +678,24 @@ spec s registry = Spec.describe s "Scenario" $ do
       Left failure -> Spec.assertFailure s (S.renderFailure failure)
       Right _ -> Spec.assertFailure s "an unrun check passed"
 
+  Spec.it s "a false check names the earlier checks that never ran" $ do
+    -- CR 514.3: the turn-1 cleanup check never runs; bob's turn-2 upkeep check
+    -- then reads false and stops the run, which must not hide the first.
+    result <- runJson s registry (attackThen "{\"turn\":1,\"step\":\"Cleanup\",\"player\":\"alice\",\"check\":{\"Life\":{\"player\":\"bob\",\"life\":18}}},{\"turn\":2,\"step\":\"Upkeep\",\"player\":\"bob\",\"check\":{\"Life\":{\"player\":\"bob\",\"life\":17}}}" "[]")
+    case result of
+      Left failure@(ScenarioFailure.MkCheckFailed (Just key) _ _ skipped) -> do
+        Spec.assertEqWith s "the false check" key (When.MkWhen 2 (Phase.Beginning BeginningStep.Upkeep) (S.seatLabel S.bob))
+        Spec.assertEqWith s "the unrun check" (fmap Timed.when (Foldable.toList skipped)) [When.MkWhen 1 (Phase.Ending EndingStep.Cleanup) (S.seatLabel S.alice)]
+        Spec.assertBool s (List.isInfixOf "never ran" (S.renderFailure failure)) "the unrun check is rendered"
+      Left failure -> Spec.assertFailure s (S.renderFailure failure)
+      Right _ -> Spec.assertFailure s "a false check passed"
+
   Spec.it s "a final check runs where the run stopped, once the timeline is spent" $ do
     -- The attack is the last entry, so the run stops after the declare
     -- attackers step, before any damage: bob is still at 20 there.
     result <- runJson s registry (attackThen "" "[{\"Life\":{\"player\":\"bob\",\"life\":18}}]")
     case result of
-      Left (ScenarioFailure.MkCheckFailed Nothing _ observed) -> Spec.assertEqWith s "bob before damage" observed (Text.pack "20")
+      Left (ScenarioFailure.MkCheckFailed Nothing _ observed _) -> Spec.assertEqWith s "bob before damage" observed (Text.pack "20")
       Left failure -> Spec.assertFailure s (S.renderFailure failure)
       Right _ -> Spec.assertFailure s "the final check read a state past the run's end"
 
