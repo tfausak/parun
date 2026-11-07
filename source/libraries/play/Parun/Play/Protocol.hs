@@ -346,7 +346,38 @@ offerOf gs prompt = case prompt of
   Prompt.OfferedExtra _ _ source effect -> choosing prompt "options" (Just source) [("effect", Reply.encode (Reply.viaCodec Codec.PlayerEffect.codec) namer effect)] yesOrNo
   -- CR 706.2a: the result rerolled, and what rerolling costs where it costs.
   Prompt.RerollDie _ _ result cost -> choosing prompt "options" Nothing ([("result", natural result)] <> [("cost", payment c) | Just c <- [cost]]) yesOrNo
+  -- Exactly the count, as many as there are where fewer (CR 701.21a).
+  Prompt.ChooseSacrifices _ _ source candidates count earlier -> subset (Just source) [("earlier", Reply.encode (Reply.seqOf (Reply.pairOf Reply.player (Reply.setOf Reply.object))) namer earlier)] (exactly count candidates) (fmap object candidates)
+  -- CR 118.1 / 406.2.
+  Prompt.ChooseExiles _ _ source candidates count -> subset (Just source) [] (exactly count candidates) (fmap object candidates)
+  Prompt.ChooseExilesFromGraveyard _ _ source candidates count -> subset (Just source) [] (exactly count candidates) (fmap object candidates)
+  -- CR 118.1.
+  Prompt.ChooseReturns _ _ source candidates count -> subset (Just source) [] (exactly count candidates) (fmap object candidates)
+  -- CR 601.2f.
+  Prompt.ChooseTaps _ _ source candidates count -> subset (Just source) [] (exactly count candidates) (fmap object candidates)
+  -- CR 702.167a: "one or more" makes the count a least.
+  Prompt.ChooseMaterials _ _ source candidates count orMore -> subset (Just source) [] (if orMore then (Just count, Nothing) else exactly count candidates) (fmap object candidates)
+  -- CR 702.122a: any of them, whose total power the engine judges.
+  Prompt.ChooseTapsForTotalPower _ _ source candidates power -> subset (Just source) [("power", natural power)] (Nothing, Nothing) (fmap object candidates)
+  -- CR 701.59a: any of them, whose total mana value the engine judges.
+  Prompt.ChooseCollectEvidence _ _ source candidates total -> subset (Just source) [("manaValue", natural total)] (Nothing, Nothing) (fmap object candidates)
+  -- CR 608.2d: up to the most where there is one; CR 101.4b: what earlier
+  -- choosers picked.
+  Prompt.ChooseAnyNumber _ _ source purpose candidates most earlier ->
+    subset (Just source) [("purpose", R.Text (Text.pack (show purpose))), ("earlier", Reply.encode (Reply.seqOf (Reply.pairOf Reply.player (Reply.setOf Reply.object))) namer earlier)] (Just 0, most) (fmap object candidates)
+  -- CR 608.2d.
+  Prompt.ChooseLoopMembers _ _ source members -> subset (Just source) [] (Just 0, Nothing) (fmap (Reply.encode Reply.recipient namer) members)
   _ -> R.Null
+
+-- | A prompt answered by a set of what it lists: its source, what else the
+-- seat is told, the least and most it may pick where the rules bound them, and
+-- under @"among"@ each candidate spelled as an element of the answer.
+subset :: Maybe ObjectId.ObjectId -> [(String, R.Reply)] -> (Maybe Natural, Maybe Natural) -> [R.Reply] -> R.Reply
+subset source told (least, most) = listing "among" source (told <> [("least", natural n) | Just n <- [least]] <> [("most", natural n) | Just n <- [most]])
+
+-- | Exactly a count, or every candidate where there are fewer.
+exactly :: Natural -> [a] -> (Maybe Natural, Maybe Natural)
+exactly count candidates = let n = min count (Natural.length candidates) in (Just n, Just n)
 
 -- | A yes or no, yes first.
 yesOrNo :: [OptionalDecision.OptionalDecision]

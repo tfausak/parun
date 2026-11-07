@@ -9,6 +9,7 @@ import qualified Control.Exception as Exception
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.Except as Except
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Char as Char
 import qualified Data.Either as Either
 import qualified Data.Foldable as Foldable
 import qualified Data.Functor.Identity as Identity
@@ -47,6 +48,7 @@ import qualified Parun.Support as S
 import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.Action as Action
 import qualified Parun.Types.Answerer as Answerer
+import qualified Parun.Types.AnyNumberOf as AnyNumberOf
 import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.BecameAttached as BecameAttached
@@ -984,6 +986,47 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "alice named each allowed name, and only those" (namedBy S.alice) allowed
     Spec.assertEqWith s "bob named each allowed name, and only those" (namedBy S.bob) allowed
     Spec.assertBool s (and [all (`Map.member` faces) (Map.elems names) | Just (names, faces) <- runs]) "CR 108.1 each name was looked up in the reference"
+
+  Spec.it s "CR 701.21a a sacrifice cost is offered through the client as a numbered list, and the number picks what is sacrificed" $ do
+    gs <- started s registry
+    swamp <- S.printingOf s registry "Swamp"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    giant <- S.printingOf s registry "Hill Giant"
+    rites <- S.printingOf s registry "Village Rites"
+    let board = snd (S.addHandCard rites S.alice (List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) gs [swamp, bears, giant]))
+        heading = Text.pack "Choose sacrifices for Village Rites: choose exactly 1, by number or range such as 1-3, separated by spaces:"
+        listed at = takeWhile (Text.isPrefixOf (Text.pack "  ")) (drop 1 (dropWhile (/= heading) (pending at)))
+        sacrifices at
+          | heading `elem` pending at = Maybe.listToMaybe [n | line <- listed at, Text.isInfixOf (Text.pack "Hill Giant") line, let n = Text.takeWhile Char.isDigit (Text.strip line)]
+          | otherwise = castsOnce "auto" "Village Rites" at
+        onBattlefield name = S.countOnBattlefieldByName (CardName.MkCardName (Text.pack name)) S.alice
+        seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 sacrifices) (const (Right Nothing)))) botOrDefault
+        run = Driver.drive [] seats 40 (pure . (== 0) . onBattlefield "Hill Giant") board
+        (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
+        shown = reverse (written sc)
+    Spec.assertEqWith s "both creatures listed" (List.sort (fmap (Text.drop 5) (takeWhile (Text.isPrefixOf (Text.pack "  ")) (drop 1 (dropWhile (/= heading) shown))))) (fmap Text.pack ["Your Grizzly Bears 2/2", "Your Hill Giant 3/3"])
+    Spec.assertEqWith s "the creature picked was sacrificed, and only it" (fmap (\after -> (onBattlefield "Hill Giant" after, onBattlefield "Grizzly Bears" after)) outcome) (Right (0, 1))
+
+  Spec.it s "CR 608.2d a prompt answered by a set lists its candidates within their bounds, and refuses a pick outside them" $ do
+    forest <- S.printingOf s registry "Forest"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    giant <- S.printingOf s registry "Hill Giant"
+    let (f, g1) = S.addPermanent forest S.alice (Setup.emptyGame S.bothPlayers)
+        (b, g2) = S.addPermanent bears S.alice g1
+        (g, gs) = S.addPermanent giant S.alice g2
+        facing = Hotseat.fresh {Hotseat.facing = Just S.alice}
+        alice = Decider.MkDecider S.alice
+        upTo prefix screenLines = takeWhile (\l -> not (any (`Text.isPrefixOf` l) [Text.pack "Type ", Text.pack "> "])) (dropWhile (not . Text.isPrefixOf prefix) screenLines)
+        crew = Prompt.ChooseTapsForTotalPower alice S.alice f [b, g] 3
+        (crewed, crewShown) = asking facing ["1-2"] gs crew
+        taps = Prompt.ChooseTaps alice S.alice f [b, g] 1
+    Spec.assertEqWith s "CR 702.122a the power told, then any number" (upTo (Text.pack "Power: ") crewShown) (fmap Text.pack ["Power: 3", "Choose taps for total power for Forest: choose any number, by number or range such as 1-3, separated by spaces, or press Enter for none:", "  1. Your Grizzly Bears 2/2", "  2. Your Hill Giant 3/3"])
+    Spec.assertEqWith s "a range picks both" crewed (Right (Set.fromList [b, g]))
+    Spec.assertEqWith s "CR 701.59a the mana value told, in words" (take 1 (upTo (Text.pack "Mana value: ") (snd (asking facing [""] gs (Prompt.ChooseCollectEvidence alice S.alice f [b, g] 4))))) [Text.pack "Mana value: 4"]
+    Spec.assertEqWith s "an exact count refuses one too many" (fst (asking facing ["1 2"] gs taps)) (Left (Text.pack "end of input"))
+    Spec.assertEqWith s "and takes the count" (fst (asking facing ["2"] gs taps)) (Right (Set.singleton g))
+    Spec.assertEqWith s "a most refuses past it" (fst (asking facing ["all"] gs (Prompt.ChooseAnyNumber alice S.alice f AnyNumberOf.ToSacrifice [b, g] (Just 1) Seq.empty))) (Left (Text.pack "end of input"))
+    Spec.assertEqWith s "and takes none" (fst (asking facing [""] gs (Prompt.ChooseAnyNumber alice S.alice f AnyNumberOf.ToSacrifice [b, g] (Just 1) Seq.empty))) (Right Set.empty)
 
 -- The seat across the table.
 otherSeat :: Natural -> Natural

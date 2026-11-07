@@ -439,6 +439,26 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
   _
     | Just items <- field "order" offer >>= arrayOf ->
         pure (ordered (orderHeading (foldMap (\source -> Text.pack " for " <> objectName view source) (field "source" offer)) (orderNote (Question.kind question) offer)) (fmap (optionName view) items))
+  -- A set of what the offer lists, within its least and most.
+  _
+    | Just among <- field "among" offer >>= arrayOf ->
+        let least = Maybe.fromMaybe 0 (field "least" offer >>= naturalOf)
+            most = field "most" offer >>= naturalOf
+            bound = case most of
+              Just m | m == least -> "exactly " <> show m
+              Just m -> "from " <> show least <> " to " <> show m
+              Nothing | least > 0 -> "at least " <> show least
+              Nothing -> "any number"
+            self = foldMap (objectName view) (field "source" offer)
+            none = if least == 0 then ", or press Enter for none" else ""
+         in pure
+              ( told view self offer
+                  <> (kindHeading <> foldMap (const (Text.pack " for " <> self)) (field "source" offer) <> Text.pack (": choose " <> bound <> ", by number or range such as 1-3, separated by spaces" <> none <> ":") : numbered (fmap (optionName view) among)),
+                \typed -> do
+                  picked <- some among typed
+                  let n = Natural.length picked
+                  if n >= least && all (n <=) most then Right (R.Array picked) else Left (Text.pack ("Choose " <> bound <> "."))
+              )
   -- One of what the offer lists, sent back as the answer it already is.
   _ -> do
     (options, name) <- Monad.mplus (fmap (\o -> (o, optionName view)) (field "options" offer >>= arrayOf)) (fmap (\o -> (o, playerName)) (field "players" offer >>= arrayOf))
@@ -514,9 +534,9 @@ readingByName lookUp view wanted =
 
 -- | The object behind each numbered option of an offer, where it names one:
 -- the offer's own list, the cards, sources or options it chooses from, or
--- what it orders.
+-- what it orders or picks a set among.
 listedObjects :: PlayerView.PlayerView -> R.Reply -> [Maybe ObjectId.ObjectId]
-listedObjects view offer = foldMap (fmap optionObject) (Monad.msum [fmap (fmap snd . distinct view) (arrayOf offer), field "from" offer >>= arrayOf, field "sources" offer >>= arrayOf, field "options" offer >>= arrayOf, field "order" offer >>= arrayOf])
+listedObjects view offer = foldMap (fmap optionObject) (Monad.msum [fmap (fmap snd . distinct view) (arrayOf offer), field "from" offer >>= arrayOf, field "sources" offer >>= arrayOf, field "options" offer >>= arrayOf, field "order" offer >>= arrayOf, field "among" offer >>= arrayOf])
   where
     optionObject option = Monad.msum [objectOf option, field "object" option >>= objectOf, field "source" option >>= objectOf]
 
@@ -872,12 +892,12 @@ told view self offer = case offer of
   R.Object pairs ->
     [ label key <> Text.pack ": " <> value key reply
     | (key, reply) <- pairs,
-      key `notElem` fmap Text.pack ["source", "options", "players"],
+      key `notElem` fmap Text.pack ["source", "options", "players", "among", "least", "most"],
       reply /= R.Array []
     ]
   _ -> []
   where
-    label key = case Text.uncons key of
+    label key = case Text.uncons (Render.spaced key) of
       Just (c, rest) -> Text.cons (Char.toUpper c) rest
       Nothing -> key
     value key reply
