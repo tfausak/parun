@@ -1,0 +1,53 @@
+{
+  "description": "CR 601.2c / 122.1d Hapatra, the Desert Frost taps and stuns up to one creature of each opponent, and its untap spends the stun counter",
+  "note": "bob's slot refuses carol's Giant and carol's slot refuses alice's own Lions. bob's Bears and carol's Giant end tapped with a stun counter each; bob's Ogre, untargeted, stays untapped. Hapatra's {2}{U} then untaps the Bears, which removes the stun counter in place of untapping it.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Island", "label": "i4" },
+          { "card": "Island", "label": "i5" },
+          { "card": "Island", "label": "i6" },
+          { "card": "Island", "label": "i7" },
+          { "card": "Savannah Lions", "label": "lions" }
+        ],
+        "hand": [{ "card": "Hapatra, the Desert Frost", "label": "hapatra" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Gray Ogre", "label": "ogre" }
+        ]
+      },
+      {
+        "name": "carol",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$hapatra", "mana": ["$i1", "$i2", "$i3", "$i4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "ChooseTargets": { "target#player1": ["$giant"], "target#player2": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "ChooseTargets": { "target#player1": ["$bears"], "target#player2": ["$lions"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTargets": { "target#player1": ["$bears"], "target#player2": ["$giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$bears", "tapped": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$giant", "tapped": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$ogre", "tapped": false } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$bears", "kind": { "type": "Stun" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$giant", "kind": { "type": "Stun" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$lions", "kind": { "type": "Stun" }, "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Hapatra, the Desert Frost", "ability": 0, "targets": ["$bears"], "mana": ["$i5", "$i6", "$i7"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$bears", "tapped": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$bears", "kind": { "type": "Stun" }, "count": 0 } } }
+  ]
+}

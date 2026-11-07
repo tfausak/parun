@@ -1,0 +1,27 @@
+{
+  "description": "CR 723.3a Hexhaven Dueling Arena's {4} prepares a creature that has not attacked, during combat",
+  "note": "No creature attacks. In the beginning of combat the {4} ability, which has no sorcery restriction, prepares the Heckler.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Hexhaven Dueling Arena", "label": "arena" },
+          { "card": "Swamp", "label": "s1" },
+          { "card": "Swamp", "label": "s2" },
+          { "card": "Swamp", "label": "s3" },
+          { "card": "Swamp", "label": "s4" },
+          { "card": "Hallway Heckler", "label": "heckler", "ready": true }
+        ]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "do": { "Activate": { "object": "$arena", "ability": 2, "targets": ["$heckler"], "mana": ["$s1", "$s2", "$s3", "$s4", null] } } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": { "View": { "of": "Designations", "object": "$heckler", "is": ["Prepared"] } } }
+  ]
+}

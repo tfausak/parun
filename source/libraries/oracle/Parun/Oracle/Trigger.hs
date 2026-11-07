@@ -12,6 +12,7 @@ import qualified Parun.Oracle.Prose as Prose
 import qualified Parun.Oracle.Target as Target
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Aggregation as Aggregation
+import qualified Parun.Types.AloneAmong as AloneAmong
 import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackTrigger as AttackTrigger
 import qualified Parun.Types.AttackerTarget as AttackerTarget
@@ -213,7 +214,7 @@ selfEvent context creature c = case c of
     | Filter.Type.IsSource <- creature', AttackCompany.AnyCompany <- company, TriggerFrequency.EveryTime <- frequency -> [(recurring, "attacks", [(thatPlayer, "defending player")])]
     | Filter.Type.IsSource <- creature', AttackCompany.AnyCompany <- company, TriggerFrequency.FirstTimeEachTurn <- frequency -> [(recurring, "attacks for the first time each turn", [(thatPlayer, "defending player")])]
     | Filter.Type.And [Filter.Type.IsSource, Filter.Type.HasDesignation Designation.Saddled] <- creature', AttackCompany.AnyCompany <- company, TriggerFrequency.EveryTime <- frequency -> [(recurring, "attacks while saddled", [])]
-    | Filter.Type.IsSource <- creature', AttackCompany.Alone <- company, TriggerFrequency.EveryTime <- frequency -> [(recurring, "attacks alone", [(attackingCreature, "it")])]
+    | Filter.Type.IsSource <- creature', AttackCompany.Alone AloneAmong.EveryAttacker <- company, TriggerFrequency.EveryTime <- frequency -> [(recurring, "attacks alone", [(attackingCreature, "it")])]
   TriggerCondition.Attacks (AttackTrigger.Unblocked Filter.Type.IsSource) -> [(recurring, "attacks and isn't blocked", [(thatPlayer, "defending player"), (attackingCreature, "it")])]
   TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource BlockCount.Once) -> [(recurring, "blocks", [])]
   TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.Type.IsSource BlockCount.Once) -> [(recurring, "becomes blocked", [(thatPlayer, "defending player"), (attackingCreature, "it")])]

@@ -3154,7 +3154,7 @@ attackerTargetNames asking x = case x of
 attackCompanyNames :: (Monoid r) => Asking r -> AttackCompany.AttackCompany -> r
 attackCompanyNames asking x = case x of
   AttackCompany.AnyCompany -> mempty
-  AttackCompany.Alone -> mempty
+  AttackCompany.Alone _among -> mempty
   AttackCompany.WithAnother filter_ -> filterNames asking filter_
 
 declarationTriggerNames :: (Monoid r) => Asking r -> DeclarationTrigger.DeclarationTrigger -> r

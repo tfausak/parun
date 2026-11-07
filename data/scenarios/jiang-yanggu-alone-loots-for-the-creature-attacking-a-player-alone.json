@@ -1,0 +1,51 @@
+{
+  "description": "CR 506.6 / 508.3a Jiang Yanggu, Alone triggers for a creature alice controls that attacks a player alone, and counts every card alice discarded this turn",
+  "note": "Jiang attacks bob alone, the Bears attack bob's Ajani Goldmane (a planeswalker, so not bob: CR 506.6 counts only creatures attacking the player), and the Hill Giant and the Lions both attack carol, so neither is alone. One trigger: alice discards the Bolt and draws, and Jiang takes two counters, one for the Shock alice discarded to Catalog in her first main phase and one for the Bolt.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "UUU",
+        "battlefield": [
+          { "card": "Jiang Yanggu, Alone", "label": "jiang", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true },
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Savannah Lions", "label": "lions", "ready": true }
+        ],
+        "hand": [
+          { "card": "Catalog", "label": "catalog" },
+          { "card": "Shock", "label": "shock" },
+          { "card": "Lightning Bolt", "label": "bolt" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Ajani Goldmane", "label": "goldmane", "counters": [{ "key": { "type": "Loyalty" }, "value": 4 }] }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$catalog" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseDiscard", "with": ["$shock"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$jiang", "$bears", "$giant", "$lions"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$jiang", "do": { "ChooseAttackTarget": "$bob" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$bears", "do": { "ChooseAttackTarget": "$goldmane" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$giant", "do": { "ChooseAttackTarget": "$carol" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$lions", "do": { "ChooseAttackTarget": "$carol" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of $jiang"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Answer": { "prompt": "ChooseDiscard", "with": ["$bolt"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Counters": { "object": "$jiang", "kind": { "type": "PlusOnePlusOne" }, "count": 2 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Lightning Bolt", "count": 1 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Island", "count": 3 } } }
+  ]
+}

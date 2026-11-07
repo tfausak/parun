@@ -37,6 +37,7 @@ import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActingPermanent as ActingPermanent
+import qualified Parun.Types.AloneAmong as AloneAmong
 import qualified Parun.Types.AttachDirection as AttachDirection
 import qualified Parun.Types.AttachmentEnd as AttachmentEnd
 import qualified Parun.Types.AttachmentTrigger as AttachmentTrigger
@@ -2333,7 +2334,8 @@ everyTriggerCondition =
     TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.target = AttackerTarget.Defending PlayerRelation.You}),
     TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.target = AttackerTarget.Permanent (Filter.Type.And [])}),
     TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.target = AttackerTarget.PlayerWithMostLife}),
-    TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.company = AttackCompany.Alone}),
+    TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.company = AttackCompany.Alone AloneAmong.EveryAttacker}),
+    TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.company = AttackCompany.Alone AloneAmong.AttackersOfItsPlayer}),
     TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.company = AttackCompany.WithAnother (Filter.Type.And [])}),
     TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.frequency = TriggerFrequency.FirstTimeEachTurn}),
     TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.while = Just (Condition.Type.Compares (Compares.MkCompares (Quantity.Type.Literal 0) Comparison.Exactly (Quantity.Type.Literal 0)))}),

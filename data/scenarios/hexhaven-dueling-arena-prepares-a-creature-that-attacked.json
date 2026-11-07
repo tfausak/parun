@@ -1,0 +1,31 @@
+{
+  "description": "CR 602.5d / 723.3a Hexhaven Dueling Arena's {2} prepares only a creature that attacked this turn, and only as a sorcery",
+  "note": "The Recollector attacks and the Heckler stays home. The {2} ability is refused at end of combat (sorcery timing) and, in the second main phase, refused for the Heckler; it then prepares the Recollector, with the same two Swamps each time.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Hexhaven Dueling Arena", "label": "arena" },
+          { "card": "Swamp", "label": "s1" },
+          { "card": "Swamp", "label": "s2" },
+          { "card": "Bloodline Recollector", "label": "recollector", "ready": true },
+          { "card": "Hallway Heckler", "label": "heckler", "ready": true }
+        ]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$recollector"] } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "refuse": { "Activate": { "object": "$arena", "ability": 1, "targets": ["$recollector"], "mana": ["$s1", "$s2", null] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "refuse": { "Activate": { "object": "$arena", "ability": 1, "targets": ["$heckler"], "mana": ["$s1", "$s2", null] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": { "Activate": { "object": "$arena", "ability": 1, "targets": ["$recollector"], "mana": ["$s1", "$s2", null] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "View": { "of": "Designations", "object": "$recollector", "is": ["Prepared"] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "View": { "of": "Designations", "object": "$heckler", "is": [] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Tapped": { "object": "$arena", "tapped": true } } }
+  ]
+}

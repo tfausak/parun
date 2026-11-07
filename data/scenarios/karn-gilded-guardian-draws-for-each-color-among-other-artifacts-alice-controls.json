@@ -1,0 +1,33 @@
+{
+  "description": "CR 105.2 / 603.6a Karn, Gilded Guardian draws a card for each color among the other artifacts alice controls",
+  "note": "alice's other artifacts are black (Hullcarver), white (Swooping Lookout) and colorless (Ornithopter): two draws. Counting nonartifacts too (red Hill Giant, green Llanowar Elves) would give 4, bob's blue-white Esper Cormorants 3, and Karn itself, which is all five colors, 5.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "WUBRG",
+        "battlefield": [
+          { "card": "Hullcarver" },
+          { "card": "Swooping Lookout" },
+          { "card": "Ornithopter" },
+          { "card": "Hill Giant" },
+          { "card": "Llanowar Elves" }
+        ],
+        "hand": [{ "card": "Karn, Gilded Guardian", "label": "karn" }],
+        "library": [{ "card": "Shock" }, { "card": "Lightning Bolt" }, { "card": "Divination" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Esper Cormorants" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$karn" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Hand", "is": ["Shock", "Lightning Bolt"] } } }
+  ]
+}

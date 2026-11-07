@@ -79,41 +79,26 @@ census did not settle.
 
 
 
-- Hapatra, the Desert Fang: `_Target:UptoOneTargetPermanentEachPlayerControls`
-
-- Hapatra, the Desert Frost: `_Target:UptoOneTargetPermanentEachPlayerControls`
 
 
 
 
 
-- Hexhaven Dueling Arena: `_Permanents:AttackedThisTurn`
-
-- Hexhaven Invigorator: `_Trigger:WhenAPermanentIsDealtDamage`
 
 
 
 
-- Identity Echo:
-  `_Action:RevealCardsFromTheTopOfLibraryUntilACardOfTypeIsRevealed`
 
 
 
-- Inspired Tethermage:
-  `_Trigger:WhenAPlayerPutsAnyNumberOfCountersOfTypeOnAPermanent`
 
-- Jace's Machinations: `_Action:CreatePlayerEffectUntil`
 
-- Jace, Reality Sculptor: `field: Loyalty`
 
-- Jiang Yanggu, Alone: `_Trigger:WhenACreatureAttacksAPlayerAlone`
 
-- Jiang Yanggu, Never Alone: `_CreatableToken:NamedTokenWithPT`
 
-- Karn, Argent Defender:
-  `_Rule:PermanentsEnteringTheBattlefieldDontCauseAbilitiesToTrigger`
 
-- Karn, Gilded Guardian: `_GameNumber:NumColorsAmongPermanents`
+
+
 
 
 - Kindred Judgment: `_Action:ChooseACreatureType`

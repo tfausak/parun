@@ -1,0 +1,34 @@
+{
+  "description": "CR 120.3 / 603.2 Hexhaven Invigorator dealt 2 damage may search for up to two land cards and put them onto the battlefield tapped",
+  "note": "Shock deals 2 to the Invigorator; the library holds three lands, so a search taking all three is refused and one taking two lands is not. Both land onto the battlefield tapped; the Forest and the Divination stay in the library.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "R",
+        "battlefield": [{ "card": "Hexhaven Invigorator", "label": "inv" }],
+        "hand": [{ "card": "Shock", "label": "shock" }],
+        "library": [{ "card": "Island" }, { "card": "Swamp" }, { "card": "Forest" }, { "card": "Divination" }]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$shock", "targets": ["$inv"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of $inv"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": "Exercises" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Answer": { "prompt": "Search", "with": ["Island", "Swamp", "Forest"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Search", "with": ["Island", "Swamp"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["Forest", "Divination"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Island", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Swamp", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "Island", "tapped": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "Swamp", "tapped": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Library", "card": "Forest", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$inv", "damage": 2 } } }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "description": "CR 111.4 / 513.1 Jiang Yanggu, Never Alone creates Mowu, a legendary 3/3 green Dog, and at alice's end step untaps the tokens alice controls",
+  "note": "At the end step alice's tapped Bears token untaps; her tapped nontoken Hill Giant and bob's tapped Bears token stay tapped.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Forest", "label": "f3" },
+          { "card": "Forest", "label": "f4" },
+          { "card": "Grizzly Bears", "label": "tok", "token": true, "tapped": true },
+          { "card": "Hill Giant", "label": "giant", "tapped": true }
+        ],
+        "hand": [{ "card": "Jiang Yanggu, Never Alone", "label": "jiang" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Grizzly Bears", "label": "bob-tok", "token": true, "tapped": true }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$jiang", "mana": ["$f1", "$f2", "$f3", "$f4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Mowu", "power": 3, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "Mowu", "subtypes": ["Dog"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Supertypes", "object": "Mowu", "is": ["Legendary"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Colors", "object": "Mowu", "is": ["Green"] } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of Jiang Yanggu, Never Alone"] } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Tapped": { "object": "$tok", "tapped": false } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Tapped": { "object": "$giant", "tapped": true } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Tapped": { "object": "$bob-tok", "tapped": true } } }
+  ]
+}

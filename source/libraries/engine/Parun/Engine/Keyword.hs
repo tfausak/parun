@@ -26,6 +26,7 @@ import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.AffectedUnless as AffectedUnless
 import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Aggregation as Aggregation
+import qualified Parun.Types.AloneAmong as AloneAmong
 import qualified Parun.Types.Anchor as Anchor
 import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
@@ -6870,7 +6871,7 @@ exalted =
             ( AttackTrigger.Attacker
                 AttackerTrigger.defaultValue
                   { AttackerTrigger.creature = Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You],
-                    AttackerTrigger.company = AttackCompany.Alone
+                    AttackerTrigger.company = AttackCompany.Alone AloneAmong.EveryAttacker
                   }
             )
         )
