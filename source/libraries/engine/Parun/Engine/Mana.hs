@@ -2608,11 +2608,13 @@ canPayCommitting subject capacity spending pid committed committedEnergy claimed
 -- group pins it to the walk's answer.
 --
 -- A cost the pool and the plain sources pay is answered by plainPayable,
--- also without the walk, which then answers only what that leaves.
+-- also without the walk, and one the board's mana ceiling cannot reach by
+-- ceilingAdmits; the walk then answers only what those two leave.
 canPayCommittingGiven :: PaymentSubject.PaymentSubject -> ManaSpending -> Sources -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> Natural -> Natural -> [Claim] -> ManaCost -> GameState -> Bool
 canPayCommittingGiven subject spending sources pcs pid committed committedEnergy claimed cost gs
   | any demandsNothing (resolutions spending cost) = activatingNothing pid committed committedEnergy claimed gs
   | plainPayable subject spending sources pid committed committedEnergy claimed cost gs = True
+  | not (ceilingAdmits subject spending sources pid cost gs) = False
   | otherwise = not (null (payableResolutionsGiven subject spending sources pcs pid committed committedEnergy claimed cost gs))
   where
     demandsNothing (demands, generic, life) = null demands && generic == 0 && life == 0
@@ -2692,6 +2694,51 @@ plainPayable subject spending swept pid committed committedEnergy claimed cost g
           demandedIn subset = Natural.length (filter (`elem` subset) wanted_)
        in sourceLifePayable swept (committed + life)
             && all (\subset -> demandedIn subset <= couldServe subset) (List.subsequences (Set.toList (Set.fromList wanted_)))
+
+-- What one group of a source's routes (groupsOf) could add to a board at most,
+-- as its yields' units, each a supply admitting no payment: the PROFILE
+-- sourceCeiling sums `times` over. Nothing for a group announcing an X or
+-- doubling the pool, whose yield the walk measures against the cost
+-- (payableResolutionsGiven's `xCeiling`, CR 701.10f).
+ceilingProfile :: [SpendManaAsThough.SpendManaAsThough] -> (GroupKey, [([ManaUnit], Activations.Activations, Maybe Natural)]) -> Maybe ([[Supply]], Natural)
+ceilingProfile clauses ((activations, _, doubling, announcing), entries)
+  | announcing || not (Map.null doubling) = Nothing
+  | otherwise = Just (ListUtils.nubOrd [List.sort (fmap supply units) | (units, _, _) <- entries, not (null units)], Activations.times activations)
+  where
+    supply unit = rewriteSupply clauses (supplyOf (const Set.empty) unit)
+
+-- A NECESSARY condition for payableResolutionsGiven, asked before it because
+-- it costs no walk: Hall's condition over each resolution's own demands,
+-- against the pool and every group taken at its ceiling, each activation
+-- making whichever of its yields serves the demands at hand best. What a group
+-- eats, the life and energy it pays and the objects it claims are dropped, and
+-- so is CR 106.6's restriction, all of which only refuse more; so where this
+-- fails the walk does too. sourceCeiling sums the groups by profile once per
+-- sweep, so this is a pass over distinct profiles rather than sources.
+--
+-- True, deciding nothing, where the board holds a group announcing an X, one
+-- doubling the pool, or CR 116.2c's life for mana, each of whose mana grows
+-- with the cost. Parun.ManaSpec's "mana ceiling" group pins this to the walk's
+-- answer.
+ceilingAdmits :: PaymentSubject.PaymentSubject -> ManaSpending -> Sources -> PlayerId -> ManaCost -> GameState -> Bool
+ceilingAdmits subject spending swept pid cost gs = case sourceCeiling swept of
+  Nothing -> True
+  Just ceiling_ -> any (reachable ceiling_) (resolutions spending cost)
+  where
+    clauses = sourceClauses swept
+    costClauses = PlayerEffect.spendManaAsThoughForGiven clauses pid subject gs
+    servesCost
+      | costClauses == clauses = serves
+      | otherwise = serves . rewriteSupply costClauses
+    pooled = [rewriteSupply clauses (supplyOf (const Set.empty) unit) | unit <- unitsOf (Game.poolOf pid gs)]
+    reachable ceiling_ (demands, generic, _) =
+      let wanted_ = demands <> List.genericReplicate generic anyTypeDemand
+          servesAny subset supply = any (servesCost supply) subset
+          couldServe subset =
+            Natural.length (filter (servesAny subset) pooled)
+              + sum [times * List.foldl' max 0 (fmap (Natural.length . filter (servesAny subset)) yields) | (yields, times) <- Map.toList ceiling_]
+          demandedIn subset = Natural.length (filter (`elem` subset) wanted_)
+       in all (\subset -> demandedIn subset <= couldServe subset) (List.subsequences (Set.toList (Set.fromList wanted_)))
 
 -- CR 118.3 asked of the board activating no mana ability: the claims, CR
 -- 107.14's energy and CR 119.4's life the rest of the cost spends, held by
@@ -3246,7 +3293,12 @@ data Sources = MkSources
     -- supplies it offers, and the same supplies summed over every plain
     -- source: what plainPayable reads in place of the walk.
     sourcePlain :: Map.Map ObjectId [(Supply, Natural)],
-    sourcePlainTotal :: Map.Map Supply Natural
+    sourcePlainTotal :: Map.Map Supply Natural,
+    -- Every group of every source by its ceilingProfile, with the activations
+    -- summed over groups sharing one: what ceilingAdmits reads in place of the
+    -- walk. Nothing where some group has no profile or the player has CR
+    -- 116.2c's life for mana.
+    sourceCeiling :: Maybe (Map.Map [[Supply]] Natural)
   }
 
 -- The supply sweep of `pid`'s board under `capacity`, and what Sources measures
@@ -3260,6 +3312,7 @@ supplySourcesGiven capacity grants pcs pid gs =
       supplies = fmap (\oid -> manaSuppliesGiven 0 capacity watch rewritesOf pcs pid (borrowed oid) oid gs) ids
       clauses = PlayerEffect.spendManaAsThough pid gs
       plain = Map.fromList [(oid, offered) | (oid, routes) <- zip ids supplies, Just offered <- [plainSupplies clauses oid routes]]
+      lifeForMana = PlayerEffect.lifeForMana pid gs
    in MkSources
         { sourceIds = ids,
           sourceCapacity = capacity,
@@ -3270,7 +3323,8 @@ supplySourcesGiven capacity grants pcs pid gs =
           sourceClauses = clauses,
           sourcePlain = plain,
           sourcePlainTotal = Map.fromListWith (+) (concat (Map.elems plain)),
-          sourceLifeForMana = PlayerEffect.lifeForMana pid gs,
+          sourceCeiling = if null lifeForMana then Map.fromListWith (+) <$> traverse (ceilingProfile clauses) (concatMap groupsOf supplies) else Nothing,
+          sourceLifeForMana = lifeForMana,
           sourceLifePayable = Event.lifePayable pid gs
         }
 

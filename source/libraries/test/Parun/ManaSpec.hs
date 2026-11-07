@@ -2787,6 +2787,46 @@ plainSourcesSpec s registry = Spec.describe s "plain sources" $ do
     Spec.assertEqWith s "CR 119.4 but not twenty-one" (ask 21 0 [] [red]) (False, False)
     Spec.assertEqWith s "CR 107.14 no energy pays none" (ask 0 1 [] [red]) (False, False)
 
+-- Mana.canPayCommittingGiven asks Mana.ceilingAdmits before the walk: Hall's
+-- condition against the pool and every group at its ceiling, what each eats,
+-- pays and claims dropped. Each case pins it beside the walk's answer: where
+-- the ceiling says no the walk must too. Transmogrant Altar eats a {B} for its
+-- {C}{C}{C}, Treasonous Ogre pays life and Springleaf Drum taps a creature, all
+-- of which the ceiling overlooks; Doubling Cube's mana grows with the pool, so
+-- a board holding it has no ceiling.
+manaCeilingSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+manaCeilingSpec s registry = Spec.describe s "mana ceiling" $ do
+  Spec.it s "#6552 CR 118.3 a cost the ceiling refuses the walk refuses too" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    birds <- S.printingOf s registry "Birds of Paradise"
+    drum <- S.printingOf s registry "Springleaf Drum"
+    ogre <- S.printingOf s registry "Treasonous Ogre"
+    altar <- S.printingOf s registry "Transmogrant Altar"
+    piker <- S.printingOf s registry "Goblin Piker"
+    cube <- S.printingOf s registry "Doubling Cube"
+    let place printings gs = List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) gs printings
+        board extra = place ([mountain, birds, drum, ogre, altar, piker] <> extra) (Setup.emptyGame S.bothPlayers)
+        sweep gs = (Mana.supplySourcesGiven Cost.manaActivations (Projection.controlGrants gs) (Projection.projectAll gs) S.alice gs, Projection.projectAll gs)
+        gs0 = board []
+        (sources, pcs) = sweep gs0
+        ask symbols =
+          let cost = ManaCost.MkManaCost symbols
+           in ( Mana.ceilingAdmits PaymentSubject.ForNeither ManaSpending.AsProduced sources S.alice cost gs0,
+                not (null (Mana.payableResolutionsGiven PaymentSubject.ForNeither ManaSpending.AsProduced sources pcs S.alice 0 0 [] cost gs0))
+              )
+        blue = ManaSymbol.OfType (ManaType.Colored Color.Blue)
+        colorless = ManaSymbol.OfType ManaType.Colorless
+        generics = fmap (\n -> (n, ask [ManaSymbol.Generic n])) [0 .. 20]
+    Spec.assertBool s (Maybe.isJust (Mana.sourceCeiling sources)) "the board has a ceiling"
+    Spec.assertEqWith s "the Birds and the Drum make two blue" (ask [blue, blue]) (True, True)
+    Spec.assertEqWith s "but not three" (ask [blue, blue, blue]) (False, False)
+    Spec.assertEqWith s "the Altar's three colorless take its {B}, which the walk finds" (ask [colorless, colorless, colorless]) (True, True)
+    Spec.assertEqWith s "and no source makes a fourth" (ask [colorless, colorless, colorless, colorless]) (False, False)
+    Spec.assertEqWith s "no generic cost the ceiling refuses is one the walk pays" [n | (n, (False, True)) <- generics] []
+    Spec.assertBool s (any (\(_, answer) -> answer == (False, False)) generics) "the ceiling refuses some generic cost"
+    Spec.assertBool s (any (\(_, answer) -> answer == (True, False)) generics) "and leaves to the walk one only what it drops refuses"
+    Spec.assertEqWith s "Doubling Cube leaves the board no ceiling" (Mana.sourceCeiling (fst (sweep (board [cube])))) Nothing
+
 -- alice, active, in her precombat main phase: one Transmogrant Altar, one Goblin
 -- Piker for the sacrifice to take, and optionally a Swamp to pay the {B} and a
 -- pair of spells in her hand. Returns the Altar and whichever spells were dealt.
@@ -4041,6 +4081,7 @@ spec s registry = Spec.describe s "Parun.Engine.Mana" $ do
   pluralBoardSpec s registry
   demandsNoManaSpec s registry
   plainSourcesSpec s registry
+  manaCeilingSpec s registry
   claimMatchingSpec s
   grinningIgnusSpec s registry
   mysticGateSpec s registry
