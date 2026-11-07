@@ -1,0 +1,33 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "graveyard": [{"card": "Dryad Arbor"}, {"card": "Lightning Bolt"}],
+        "hand": [{"card": "Return to the Light Realms", "label": "rtlr"}],
+        "library": [{"card": "Plains"}, {"card": "Plains"}],
+        "manaPool": "WWWWWWWWW",
+        "name": "alice"
+      },
+      {
+        "graveyard": [{"card": "Hill Giant"}],
+        "library": [{"card": "Plains"}, {"card": "Plains"}],
+        "name": "bob"
+      },
+      {
+        "library": [{"card": "Plains"}, {"card": "Plains"}],
+        "name": "carol"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 110.4a: Return to the Light Realms leaves a land creature card, other cards and an opponent's graveyard alone",
+  "note": "The negative of the companion scenario, which returns four cards and so raises CR 613.7m's ordering prompt: here at most one card would return under a wrong filter, so a wrong return reddens a check, not that prompt. Dryad Arbor is a creature card but a land; Hill Giant is in bob's graveyard.",
+  "timeline": [
+    {"do": {"Cast": {"object": "$rtlr"}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"do": "Pass", "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Count": {"card": "Dryad Arbor", "count": 1, "player": "alice", "zone": "Graveyard"}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Count": {"card": "Hill Giant", "count": 1, "player": "bob", "zone": "Graveyard"}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Count": {"card": "Lightning Bolt", "count": 1, "player": "alice", "zone": "Graveyard"}}, "player": "alice", "step": "PrecombatMain", "turn": 1}
+  ]
+}

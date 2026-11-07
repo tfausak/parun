@@ -1,0 +1,28 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [{"card": "Hill Giant", "label": "giant"}],
+        "hand": [{"card": "Rise of the Deathbringer", "label": "r1"}],
+        "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}],
+        "manaPool": "BBBBB",
+        "name": "alice"
+      },
+      {
+        "battlefield": [{"card": "Chains of Mephistopheles", "label": "chains"}],
+        "library": [{"card": "Plains"}, {"card": "Plains"}],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 614.6 / 121.1: Rise of the Deathbringer's life loss counts the cards drawn this way, not the number it asked for",
+  "note": "Hill Giant's power asks for three draws. Under Chains of Mephistopheles, with alice's hand empty, each draw is replaced by milling a card, so nothing is drawn and she loses no life: three would be the asked-for number.",
+  "timeline": [
+    {"do": {"Cast": {"modes": [0], "object": "$r1"}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"do": "Pass", "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Count": {"card": "Plains", "count": 3, "player": "alice", "zone": "Graveyard"}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Life": {"life": 20, "player": "alice"}}, "player": "alice", "step": "PrecombatMain", "turn": 1}
+  ]
+}

@@ -2222,6 +2222,7 @@ public-execution
 pull-from-eternity
 pulling-teeth
 pulmonic-sliver
+puppet-crafting
 purelace
 purging-scythe
 pursued-whale
@@ -2301,6 +2302,7 @@ recall
 reciprocate
 reckless-brute
 reclusive-artificer
+recursive-recruitment
 red-cliffs-armada
 red-mana-battery
 red-priest-of-yawgmoth
@@ -2310,6 +2312,7 @@ redeem
 redirect
 reduce-to-ashes
 reflecting-pool
+refute-destiny
 relentless-advance
 relentless-assault
 relentless-rats
@@ -2331,6 +2334,7 @@ repeat-offender
 repeated-reverberation
 reprisal
 reprocess
+repurposed-enforcer
 research-development
 resistance-fighter
 resolute-archangel
@@ -2352,6 +2356,7 @@ reverse-damage
 reverse-polarity
 reverse-the-sands
 revoke-privileges
+rewrite-regrets
 rhovanion-rampager
 rhox
 rhox-faithmender
@@ -2378,6 +2383,7 @@ riptide-gearhulk
 rise-fall
 rise-from-the-grave
 rise-of-the-dark-realms
+rise-of-the-deathbringer
 rishadan-cutpurse
 rite-of-replication
 rites-of-flourishing
@@ -2397,6 +2403,7 @@ rogues-gloves
 roiling-horror
 rolling-stones
 rooftop-nuisance
+room-of-refuge
 root-maze
 root-snare
 rootha-mastering-the-moment
@@ -2425,6 +2432,7 @@ rune-sealed-wall
 runed-halo
 runic-armasaur
 runic-repetition
+ruric-thar-biomagus
 rust-goliath
 rustic-clachan
 sabertooth-mauler

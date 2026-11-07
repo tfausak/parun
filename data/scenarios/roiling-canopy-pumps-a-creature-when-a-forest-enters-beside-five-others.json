@@ -1,0 +1,39 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {"card": "Forest"}, {"card": "Forest"}, {"card": "Forest"}, {"card": "Forest"}, {"card": "Forest"},
+          {"card": "Grizzly Bears", "label": "bears"}
+        ],
+        "hand": [{"card": "Roiling Canopy", "label": "canopy"}, {"card": "Forest", "label": "forest"}],
+        "library": [{"card": "Plains"}, {"card": "Plains"}],
+        "name": "alice"
+      },
+      {
+
+        "library": [{"card": "Plains"}, {"card": "Plains"}],
+        "name": "bob"
+      },
+      {
+        "library": [{"card": "Plains"}, {"card": "Plains"}],
+        "name": "carol"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 603.4 / 614.1c: Roiling Canopy enters tapped, taps for {G}, and pumps a creature when a Forest enters beside five other Forests",
+  "note": "Played on turn 1, the Canopy enters tapped and is no Forest, so nothing triggers. On turn 4 alice plays a Forest beside her five others, and the Canopy's trigger gives Grizzly Bears +3/+3; the untapped Canopy then adds {G}. Parun.CardTriggerSpec's Roiling Canopy group proves the exclusions, whose wrongly fired trigger would raise an unscheduled target prompt here.",
+  "timeline": [
+    {"do": {"PlayLand": "$canopy"}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Tapped": {"object": "Roiling Canopy", "tapped": true}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"View": {"of": "Stack", "is": []}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"do": {"PlayLand": "$forest"}, "player": "alice", "step": "PrecombatMain", "turn": 4},
+    {"do": {"ChooseTargets": {"target": ["$bears"]}}, "player": "alice", "step": "PrecombatMain", "turn": 4},
+    {"do": "Pass", "player": "alice", "step": "PrecombatMain", "turn": 4},
+    {"check": {"PowerToughness": {"object": "$bears", "power": 5, "toughness": 5}}, "player": "alice", "step": "PrecombatMain", "turn": 4},
+    {"do": {"Take": {"action": "ActivateManaAbility Roiling Canopy"}}, "player": "alice", "step": "PrecombatMain", "turn": 4},
+    {"check": {"View": {"of": "ManaPool", "player": "alice", "is": [{"manaType": {"type": "Colored", "value": "Green"}, "tags": [], "retention": "Ordinary", "restriction": null, "rider": null, "sourceChoices": null}]}}, "player": "alice", "step": "PrecombatMain", "turn": 4}
+  ]
+}

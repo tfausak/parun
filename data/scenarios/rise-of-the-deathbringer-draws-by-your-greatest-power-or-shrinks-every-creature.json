@@ -1,0 +1,39 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [{"card": "Hill Giant", "label": "giant"}, {"card": "Grizzly Bears", "label": "bears"}],
+        "hand": [{"card": "Rise of the Deathbringer", "label": "r1"}, {"card": "Rise of the Deathbringer", "label": "r2"}],
+        "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}],
+        "manaPool": "BBBBBBBBBB",
+        "name": "alice"
+      },
+      {
+        "battlefield": [{"card": "Craw Wurm", "label": "wurm"}],
+        "library": [{"card": "Plains"}, {"card": "Plains"}],
+        "name": "bob"
+      },
+      {
+        "battlefield": [{"card": "Serra Angel", "label": "angel"}],
+        "library": [{"card": "Plains"}, {"card": "Plains"}],
+        "name": "carol"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 700.2 / 121.1: Rise of the Deathbringer draws cards equal to the greatest power among its controller's creatures and loses that much life, or gives every creature -3/-3",
+  "note": "alice's greatest power is Hill Giant's 3; bob's Craw Wurm (6) is not hers. The first copy draws three Plains and costs three life. The second gives every creature -3/-3: alice's Giant and Bears die, the Wurm is 3/1, carol's Angel 1/1.",
+  "timeline": [
+    {"do": {"Cast": {"modes": [0], "object": "$r1"}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"do": "Pass", "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Count": {"card": "Plains", "count": 3, "player": "alice", "zone": "Hand"}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Life": {"life": 17, "player": "alice"}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"do": {"Cast": {"modes": [1], "object": "$r2"}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"do": "Pass", "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"PowerToughness": {"object": "$wurm", "power": 3, "toughness": 1}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"PowerToughness": {"object": "$angel", "power": 1, "toughness": 1}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Count": {"card": "Hill Giant", "count": 1, "player": "alice", "zone": "Graveyard"}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Count": {"card": "Grizzly Bears", "count": 1, "player": "alice", "zone": "Graveyard"}}, "player": "alice", "step": "PrecombatMain", "turn": 1}
+  ]
+}

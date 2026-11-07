@@ -1,0 +1,29 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "graveyard": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Lightning Bolt", "label": "bolt"}],
+        "hand": [{"card": "Restore with Empathy", "label": "rwe"}],
+        "life": 13,
+        "manaPool": "GGG",
+        "name": "alice"
+      },
+      {
+        "graveyard": [{"card": "Hill Giant", "label": "giant"}],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 115.1 / 119.3: Restore with Empathy returns a permanent card from its controller's graveyard to hand and gains 4 life",
+  "note": "On the same mana, an instant card in alice's graveyard and a creature card in bob's are refused. Grizzly Bears returns to her hand and she goes from 13 to 17 life.",
+  "timeline": [
+    {"player": "alice", "refuse": {"Cast": {"object": "$rwe", "targets": ["$bolt"]}}, "step": "PrecombatMain", "turn": 1},
+    {"player": "alice", "refuse": {"Cast": {"object": "$rwe", "targets": ["$giant"]}}, "step": "PrecombatMain", "turn": 1},
+    {"do": {"Cast": {"object": "$rwe", "targets": ["$bears"]}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"do": "Pass", "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Count": {"card": "Grizzly Bears", "count": 1, "player": "alice", "zone": "Hand"}}, "player": "alice", "step": "PrecombatMain", "turn": 1},
+    {"check": {"Life": {"player": "alice", "life": 17}}, "player": "alice", "step": "PrecombatMain", "turn": 1}
+  ]
+}
