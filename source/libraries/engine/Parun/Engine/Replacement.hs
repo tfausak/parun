@@ -3125,7 +3125,8 @@ revealableFromHand pid filter_ gs =
 
 -- CR 701.4a: what a player may behold as `entering` enters -- revealableFromHand
 -- above, then the permanents they control matched the same way, in id order.
--- The entering object is not yet among them (CR 614.12).
+-- The entering object is left out: CR 614.12 applies the replacement before
+-- it enters.
 beholdableOnEntry :: PlayerId -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
 beholdableOnEntry pid entering filter_ gs =
   let viewOf = Projection.viewsOf gs
