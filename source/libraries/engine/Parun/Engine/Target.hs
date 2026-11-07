@@ -2284,7 +2284,8 @@ zoneHolding gs recipient = do
 --
 -- A lone reader whose bound is a bare Members count is answered EXACTLY first,
 -- from membersBoundValues, with no search at all (Parun.TargetSpec's "CR 601.2c
--- a pair of victims must share one count, past the cap too"). Any other shape
+-- a pair of victims must share one count, past the cap too"; for a modal
+-- trigger, data/scenarios' synthetic-wide-muster-offers-only-its-legal-mode-on-a-wide-board). Any other shape
 -- is searched, CAPPED at subsetBudget assignments, past which the mode is judged
 -- fillable: a false offer the caster takes back with nothing changed (CR
 -- 601.2c, 601.2e, 734.1). selectionLegal judges every announcement exactly.

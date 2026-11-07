@@ -2237,7 +2237,7 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
   -- Past Target.subsetBudget the bound is not enumerated: forty Rats are 10701
   -- announcements of at most three. A bare Members bound is still answered
   -- exactly (Target.membersBoundValues), so the Hill Giant no announcement reaches
-  -- is not offered, and the joint check agrees (#6115).
+  -- is not offered, and the joint check agrees.
   Spec.it s "CR 601.2c past the subset budget the sibling-count bound is answered exactly" $ do
     verdictBoard s registry 40 $ \verdict rats piker giant board verdictId -> do
       let victims = offeredVictims verdict board
@@ -2289,7 +2289,7 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
       let after = castVerdict 0 (drop 26 mine) giant board verdictId
       Spec.assertBool s (notElem giant (Game.zoneMembers Zone.Battlefield S.bob after)) "tapping the four Rats, the Hill Giant is destroyed"
     countedBoard s registry "Synthetic Wide Verdict" (replicate 30 "Goblin Piker") "Goblin Piker" $ \_ _ board verdictId ->
-      Spec.assertBool s (not (verdictOffered verdictId board)) "with thirty red gauges no announcement is legal, past the cap too, and the cast is not offered (#6115)"
+      Spec.assertBool s (not (verdictOffered verdictId board)) "with thirty red gauges no announcement is legal, past the cap too, and the cast is not offered"
 
   -- Synthetic Paired Verdict {3}{B} Sorcery (data/cards/synthetic-paired-verdict.json):
   -- Wide Verdict destroying "two target creatures" an opponent controls, so one
